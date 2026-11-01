@@ -18,6 +18,13 @@ export default {
     auto: { name: 'Tự động', sub: 'Mở rộng theo số dự án' },
     hq: { name: 'Tập đoàn', sub: 'Phòng ban · tối đa 18 dự án' },
   },
+  myProjects: {
+    title: 'Dự án của tôi',
+    placeholder: 'Mỗi dòng một dự án, ví dụ:\nINFO\nHỒNG PHÚC\nPHỤ TÙNG SỈ\nNHÀ GỖ',
+    save: 'Lưu danh sách',
+    saved: 'Đã lưu {n} dự án',
+    note: 'Phiên nào có tên kho mã, thư mục, tiêu đề hay dự án Cowork trùng một tên trong danh sách sẽ ngồi ở khu của dự án đó, và văn phòng luôn có chỗ cho cả danh sách. Chỉ lưu tên trên máy này; không đọc gì từ tài khoản của bạn. Phiên đang mở đổi chỗ sau khi tải lại trang.',
+  },
   layoutNote: 'Đổi kiểu văn phòng sẽ dựng lại văn phòng: trang tải lại và các phiên quay về ngay.',
   times: {
     auto: { name: 'Tự động', sub: 'Theo giờ thật' },

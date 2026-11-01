@@ -22,7 +22,7 @@ export function setConn(on) { const c = $('conn'); c.dataset.state = on ? 'on' :
    the nearest free area. Areas are remembered on this device, so a project comes back to the same desks tomorrow; an
    area someone else remembers is the last one handed to a newcomer. Only when every area is taken do projects share. */
 const deskOf = new Map(), rowTeam = new Map();
-const projOf = (s) => s?.git?.repo || String(s?.dir || '').split('/').filter(Boolean).pop() || tr('activity.live.otherProject');
+const projOf = (s) => s?.proj || s?.git?.repo || String(s?.dir || '').split('/').filter(Boolean).pop() || tr('activity.live.otherProject');
 // partners sit face to face across a pod's screen (back-left, then front-right…): one faces the camera, the other's
 // screens do; a room fills its first pod before the second
 const SEAT_ORDER = [0, 3, 1, 2, 4, 7, 5, 6];
@@ -70,7 +70,7 @@ export function freeDesk(id) {
    so the next load builds the right size. When there are more projects than the building has areas for, the page
    reloads into a bigger one: the sessions come straight back from the server. */
 const SHRINK_AFTER = 3 * 864e5, GROW_GAP = 15_000;
-export const projectsNow = () => new Set([...sessions.values()].map(projOf)).size;
+export const projectsNow = () => new Set([...[...sessions.values()].map(projOf), ...(state.myProjects || [])]).size;
 function rememberNeed(need, now = Date.now()) {
   let rec = null; try { rec = JSON.parse(localStorage.getItem(NEED_KEY) || 'null'); } catch { /* storage blocked */ }
   const n = Number(rec?.n) || 0, at = Number(rec?.at) || 0;
@@ -120,7 +120,7 @@ export function upsertSession(s, walkIn = true) {
   let w = workers.get(s.id);
   if (!w && !leavingIds.has(s.id)) w = addWorker(s, walkIn && had === false && state.connectedOnce);
   if (w) {
-    w.setName(short(dn(s), 26));
+    w.setName(short(s.src === 'cowork' ? `${tr('people.coworkTag')} · ${dn(s)}` : dn(s), 26));
     const live = new Set((s.subs || []).map((x) => x.id));
     for (const [aid, sw] of subs) if (sw.parent === w && !live.has(aid)) dropSub(aid);
     for (const x of s.subs || []) { if (!subs.has(x.id)) spawnSub(w, x.id, x.type); const sw = subs.get(x.id); if (sw && x.desc) sw.desc = x.desc; }

@@ -37,6 +37,7 @@ import { createLoopGuard, LOOP_DEFAULTS, LOOP_MIN, LOOP_N } from './loops.mjs';
 import { createTenure, FAREWELL_DAYS, FAREWELL_DEFAULT } from './tenure.mjs';
 import { cacheClock, cacheFromResume, cacheFromStatus, cacheGuess } from '../src/shared/cache-clock.js';
 import { createOtel } from './otel.mjs';
+import { createMyProjects } from './myprojects.mjs';
 import { managedEnvs, otelOwner } from './otel-setup.mjs';
 import { pickLang, createT } from '../src/i18n/index.js';
 
@@ -52,6 +53,7 @@ const SESS_DIR = path.join(CLAUDE_DIR, 'sessions');
 if (process.env.OFFICE_LOG) { const out = fs.createWriteStream(process.env.OFFICE_LOG, { flags: 'a' }); process.stdout.write = process.stderr.write = out.write.bind(out); }
 const DATA_DIR = process.env.OFFICE_DATA_DIR ? path.resolve(process.env.OFFICE_DATA_DIR) : path.join(ROOT, 'data');   // tests and a second dev copy use their own
 const PAGE_FILES = new Set(['/favicon.ico', '/icon.svg', '/apple-icon.png', '/opengraph-image.jpg', '/twitter-image.jpg', '/manifest.webmanifest', '/sw.js', '/icon-512.png']);   // (app/: the tab icons, the share card, the app on a phone's home screen; public/: its worker and big icon)
+const myProjects = createMyProjects(DATA_DIR);
 const prefs = createPrefs(DATA_DIR), { tr } = prefs;   // tr('area.key', vars): words in the office's language (src/i18n)
 const num = (n, digits) => createT(prefs.lang()).num(n, digits);   // a number written the office's way (1,000 / 1.000)
 setI18n({ tr, num, lang: prefs.lang });   // the Mac drawer's tips (system.mjs) speak the same language
@@ -293,10 +295,12 @@ const pub = (s) => ({ id: s.id, pid: s.pid, name: s.name, title: s.title || '', 
   lastAt: s.lastEventAt || s.createdAt, doneAt: s.doneAt || 0, todos: s.todos || [], lastReply: s.lastReply || '', origin: s.origin || '',
   bg: s.bg ? [...s.bg.values()].slice(0, 6) : [],
   dayFirst: s.dayFirst || null,
+  proj: myProjects.match([s.coworkProject, s.title, gitRepoName(s), path.basename(s.cwd || '')]), src: s.src || '',
   stuck: s.stuck || null,
   cache: cacheOut(s),
   git: gitOf(s),
   usage: s.usage?.model ? { cost: Math.round(s.usage.cost * 100) / 100, ...liveCtx(s), model: s.usage.model, out: s.usage.out } : null });
+const gitRepoName = (s) => { const r = s.cwd && git.repoOf(s.cwd); return r ? r.name : ''; };
 function gitOf(s) { const r = s.cwd && git.repoOf(s.cwd); return r ? { repo: r.name, branch: r.branch, dirty: r.dirty, ahead: r.ahead, ci: r.ci, ciName: r.ciName, ciUrl: r.ciUrl, born: r.born || null } : null; }
 // context: exact from the status line while it reports (last 15 min), else estimated from the transcript
 const liveCtx = (s) => (s.live?.ctxMax && s.live.ctx != null && Date.now() - s.live.at < 15 * 60e3 ? { ctx: s.live.ctx, ctxMax: s.live.ctxMax, exact: true } : { ctx: s.usage.ctx, ctxMax: ctxMax(s.usage) });
@@ -940,7 +944,7 @@ function count(s, tool, sub) {
 
 let lastHookAt = 0;
 const startedAt = Date.now();
-async function onHook(p) {
+async function onHook(p, src = '') {
   lastHookAt = Date.now();
   const ev = p.hook_event_name, sid = p.session_id;
   if (!ev || !sid) return;
@@ -956,6 +960,8 @@ async function onHook(p) {
     broadcast({ k: 'sess', s: pub(s) });
   }
   const now = Date.now();
+  if (src === 'cowork') s.src = 'cowork';   // (the Cowork plugin's hook says so: hooks/send.mjs --source cowork)
+  if (s.src === 'cowork' && typeof p.cowork_project === 'string') s.coworkProject = p.cowork_project.slice(0, 80);
   s.lastEventAt = now;
   { const day = new Date(now).toLocaleDateString('sv'); if (ev !== 'SessionEnd' && s.dayFirst?.day !== day) s.dayFirst = { day, at: now }; }   // (its first sign of life each day: the lobby's attendance terminal)
   if (p.transcript_path) s.transcript = p.transcript_path;
@@ -2107,7 +2113,7 @@ const server = http.createServer((req, res) => {
     req.on('data', (c) => { size += c.length; if (size <= 8_000_000) chunks.push(c); });
     req.on('end', () => {
       res.writeHead(200, { 'Content-Type': 'application/json' }).end('{}');
-      try { onHook(JSON.parse(Buffer.concat(chunks).toString('utf8'))).catch((err) => console.error('hook', err)); }
+      try { onHook(JSON.parse(Buffer.concat(chunks).toString('utf8')), req.headers['x-office-source'] === 'cowork' ? 'cowork' : '').catch((err) => console.error('hook', err)); }
       catch { /* not JSON: ignore */ }
     });
     return;
@@ -2514,6 +2520,17 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
+  if (req.method === 'POST' && url.pathname === '/api/my-projects') {   // the names of "my projects": { projects: [...] }
+    const sameOrigin = sameOriginOf(req);
+    if (!authorized(req, url) || !sameOrigin || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false, message: tr('server.forbidden') }); return; }
+    readJson(req).then((b) => {
+      if (!b || !Array.isArray(b.projects)) { json(res, 400, { ok: false, message: tr('server.badRequest') }); return; }
+      const list = myProjects.set(b.projects);
+      json(res, 200, { ok: true, projects: list });
+      for (const x of sessions.values()) broadcast({ k: 'sess', s: pub(x) });
+    });
+    return;
+  }
   if (req.method === 'POST' && url.pathname === '/api/todos') {
     const sameOrigin = sameOriginOf(req);
     if (!authorized(req, url) || !sameOrigin || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false, message: tr('server.forbidden') }); return; }
@@ -2554,7 +2571,7 @@ const server = http.createServer((req, res) => {
   // everything as it is now, the first message a page gets (the Mac's own addresses and PIN only for the Mac)
   const snapNow = (local) => {
     const lanOn = lanIsOn();
-    return { k: 'snap', lang: prefs.lang(), sessions: [...sessions.values()].map(pub), perms: [...pending.values()].map(permPub), feed, stats, local, todos, limits: limitsOut(), limitsNote: noteText(), trophies: trophies.pub(),
+    return { k: 'snap', lang: prefs.lang(), myProjects: myProjects.list(), sessions: [...sessions.values()].map(pub), perms: [...pending.values()].map(permPub), feed, stats, local, todos, limits: limitsOut(), limitsNote: noteText(), trophies: trophies.pub(),
       lan: local && lanOn ? lanUrl() : null, lanBase: local && lanOn ? lanUrl(false) : null, pin: local ? currentPin() : null,
       ts: local && lanOn ? tsUrl() : null, tsHere: !!tsUrl(), phoneApprove: !!prefs.get('phoneApprove'), phoneTasks: !!prefs.get('phoneTasks'), lanFixed: local && lanFixed, build: BUILD };
   };

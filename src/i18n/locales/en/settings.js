@@ -18,6 +18,13 @@ export default {
     auto: { name: 'Auto', sub: 'Grows with your projects' },
     hq: { name: 'Headquarters', sub: 'Departments · up to 18 projects' },
   },
+  myProjects: {
+    title: 'My projects',
+    placeholder: 'One project a line, for example:\nINFO\nHONG PHUC\nSPARE PARTS\nWOOD HOUSE',
+    save: 'Save list',
+    saved: '{n} projects saved',
+    note: 'A session whose repository, folder, title or Cowork project matches a name in the list sits in the area of that project, and the office always has room for the whole list. Names are kept on this computer only; nothing is read from your account. Sessions already open move after the page reloads.',
+  },
   layoutNote: 'Changing the floor plan rebuilds the office: the page reloads and your sessions come straight back.',
   times: {
     auto: { name: 'Auto', sub: 'Follows the clock' },

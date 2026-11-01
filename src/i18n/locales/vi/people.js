@@ -1,5 +1,6 @@
 export default {
   director: 'Giám đốc',
+  coworkTag: 'Cowork',
   subagent: 'trợ lý',
   team: '{n} trợ lý',
   needsApproval: 'Chờ duyệt',

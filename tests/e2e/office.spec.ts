@@ -1258,3 +1258,36 @@ test('the office grows with its projects: past six it builds headquarters, past 
   for (const [i, id] of ids.entries()) await request.post('/event', { data: { hook_event_name: 'SessionEnd', session_id: id, cwd: path.join(HOME_DIR, `grow-proj-${i}`), transcript_path: '', reason: 'other' } });
   expect(errors).toEqual([]);
 });
+
+test('my projects: a list in Settings makes room for every name, and a Cowork session sits in its project with a Cowork name tag', async ({ page, request }) => {
+  test.setTimeout(240_000);
+  const errors = watchErrors(page);
+  type Floor = { plan: string; projects: number; people: { id: string; project: string }[] };
+  const floor = () => page.evaluate(() => (window as unknown as { __office: { floor: () => unknown } }).__office.floor()) as Promise<Floor>;
+  const names = ['INFO', 'HỒNG PHÚC', 'PHỤ TÙNG SỈ', 'NHÀ GỖ', 'KHO HÀNG', 'KẾ TOÁN', 'BÁN LẺ', 'GIAO NHẬN'];
+  const id = `e2e-cowork-${Date.now()}`, cwd = path.join(HOME_DIR, 'hong-phuc'); fs.mkdirSync(cwd, { recursive: true });
+  try {
+    // the server keeps the list (accents and case do not matter when matching) and refuses what is not a list
+    expect((await request.post('/api/my-projects', { data: { projects: 'INFO' } })).status()).toBe(400);
+    const saved = await request.post('/api/my-projects', { data: { projects: [...names, 'info', '  '] } });
+    expect(saved.ok()).toBe(true);
+    expect((await saved.json()).projects).toEqual(names);
+    await request.post('/event', { headers: { 'X-Office-Source': 'cowork' }, data: { hook_event_name: 'SessionStart', session_id: id, cwd, transcript_path: path.join(cwd, 't.jsonl'), source: 'startup' } });
+    await request.post('/event', { headers: { 'X-Office-Source': 'cowork' }, data: { hook_event_name: 'UserPromptSubmit', session_id: id, cwd, transcript_path: path.join(cwd, 't.jsonl'), prompt: 'tạo file ghi chú.txt' } });
+    await page.goto('/?layout=auto&debug');
+    // eight names: more than the company floor seats, so the office builds headquarters on its own
+    await expect(page.locator('html')).toHaveAttribute('data-plan', /^hq/, { timeout: 90_000 });
+    await expect(page.locator('#stage canvas')).toBeVisible();
+    await expect.poll(async () => (await floor()).projects, { timeout: 60_000 }).toBeGreaterThanOrEqual(8);
+    await expect.poll(async () => (await floor()).people.map((p) => p.project).includes('HỒNG PHÚC'), { timeout: 30_000 }).toBe(true);
+    // the settings list shows the names, and the Cowork session's name tag says Cowork
+    await page.locator('#btn-look').click();
+    await expect(page.locator('#mp-list')).toHaveValue(names.join('\n'));
+    await expect(page.locator('#mp-save')).toBeVisible();
+    await expect.poll(() => page.evaluate(() => [...(window as unknown as { __office: { workers: Map<string, { tagText?: { data: string } }> } }).__office.workers.values()].map((w) => w.tagText?.data ?? '').join('|')), { timeout: 20_000 }).toContain('Cowork · ');
+  } finally {
+    await request.post('/api/my-projects', { data: { projects: [] } });
+    await request.post('/event', { data: { hook_event_name: 'SessionEnd', session_id: id, cwd, transcript_path: '', reason: 'other' } });
+  }
+  expect(errors).toEqual([]);
+});

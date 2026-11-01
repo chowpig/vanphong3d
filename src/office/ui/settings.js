@@ -40,6 +40,16 @@ function setLang(l) {
   fetch(`/api/prefs${TOKEN ? `?k=${encodeURIComponent(TOKEN)}` : ''}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lang: l }) })
     .then((r) => (r.ok ? location.replace(u) : viaUrl())).catch(viaUrl);
 }
+// "My projects": one name a line. Saved on the server (data/myprojects.json), which tells every open page; the page
+// reloads so the sessions already open sit in their projects' areas.
+function saveMyProjects() {
+  const ta = $('mp-list'); if (!ta || STATIC) return;
+  const projects = ta.value.split('\n').map((x) => x.trim()).filter(Boolean);
+  fetch(`/api/my-projects${TOKEN ? `?k=${encodeURIComponent(TOKEN)}` : ''}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projects }) })
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error('save'))))
+    .then((r) => { state.myProjects = r.projects; ta.value = r.projects.join('\n'); toast(tr('settings.myProjects.saved', { n: r.projects.length })); setTimeout(() => location.reload(), 900); })
+    .catch(() => toast(tr('server.forbidden')));
+}
 // the four tabs of Settings; the last one opened comes back next time
 const TABS = ['office', 'people', 'display', 'more'];
 let tabNow = 'office';
@@ -104,6 +114,7 @@ export function setup() {
   document.addEventListener('click', (e) => { if (!popPlan.hidden && e.target.isConnected && !e.target.closest('#pop-plan, #btn-plan')) togglePlan(false); });
   popLook.addEventListener('click', (e) => {
     const tb = e.target.closest('[data-st-tab]'); if (tb) { showTab(tb.dataset.stTab); return; }
+    if (e.target.closest('#mp-save')) { saveMyProjects(); return; }
     if (e.target.closest('#st-close')) { togglePop(false); btnLook.focus(); return; }
     const sc = e.target.closest('[data-scene]'); if (sc) { setScene(sc.dataset.scene); return; }
     const lk = e.target.closest('[data-look]'); if (lk) { setLook(lk.dataset.look); return; }

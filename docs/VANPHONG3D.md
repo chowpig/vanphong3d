@@ -38,6 +38,13 @@ Nguồn: [khanh020905/my-office](https://github.com/khanh020905/my-office) (MIT,
 - Đã chạy trên Windows 10 (Node 24, PowerShell 5.1): test (95 pass, 3 skip theo thiết kế trên win32), typecheck, lint, build, smoke và `test:e2e:smoke` (5/5) đều pass. Đã sửa `npm start` và `my-office start` (trước đó hỏng trên Windows).
 - E2E Playwright đầy đủ dùng `fake-claude.sh` (sh/curl/od/pkill): server không spawn được file `.sh` trực tiếp trên Windows, nên các test giao việc/phiên nền chỉ chạy được trên macOS/Linux. Bộ `@smoke` thì chạy được.
 
+## Dự án của tôi và Cowork
+
+- Cài đặt → Văn phòng → "Dự án của tôi": mỗi dòng một tên dự án (ví dụ INFO, HỒNG PHÚC, PHỤ TÙNG SỈ, NHÀ GỖ). Lưu ở `data/myprojects.json` trên máy này; không đọc gì từ tài khoản claude.ai.
+- Phiên có tên kho mã, thư mục, tiêu đề hoặc dự án Cowork trùng một tên (không phân biệt dấu, hoa thường, gạch nối) sẽ ngồi ở khu của dự án đó; văn phòng tự mở rộng đủ chỗ cho cả danh sách.
+- Cowork: `cowork-plugin/` gửi sự kiện (đánh dấu `X-Office-Source: cowork`) tới văn phòng; nhân vật hiện tên "Cowork · …". **Chưa kiểm chứng:** Cowork chạy trong máy ảo, chưa xác nhận máy ảo gọi được `127.0.0.1:4310`. Bạn tự cài plugin và chép `data/token` (xem `cowork-plugin/README.md`).
+- Chưa làm: tự lấy danh sách project/phiên cũ từ tài khoản (cần xuất dữ liệu hoặc API có đăng nhập).
+
 ## Việc còn lại
 1. Test e2e "điện thoại giao việc phải được Mac cho phép" đã viết lại cho LAN (`tests/e2e/office.spec.ts`), chạy trên macOS/Linux; logic cổng đã kiểm tay trên Windows.
 2. Đã gỡ hẳn mã tunnel/`viaTunnel` khỏi `server/index.mjs`, `topbar.js`, `demo.js`. `/api/tunnel` không còn (404); trạng thái cửa sổ điện thoại nay ở `GET /api/phone/status` (chỉ loopback). `/api/live` vẫn còn nhưng không còn nơi nào gọi.

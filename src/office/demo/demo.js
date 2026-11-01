@@ -229,6 +229,7 @@ export function applyMsg(d, quiet = false) {
   if (d.k === 'snap') {
     const ids = new Set(d.sessions.map((s) => s.id));
     for (const id of [...sessions.keys()]) if (!ids.has(id)) (quiet ? dropSessionNow : removeSession)(id);
+    if (Array.isArray(d.myProjects)) { state.myProjects = d.myProjects; const ta = document.getElementById('mp-list'); if (ta && document.activeElement !== ta) ta.value = d.myProjects.join('\n'); }
     for (const s of d.sessions) upsertSession(s, false);
     state.feed = d.feed || []; state.stats = d.stats || {}; renderFeed();
     if ('local' in d) {   // only the live snapshot carries these

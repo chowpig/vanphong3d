@@ -63,6 +63,11 @@ export default async function SettingsPanel() {
           </div>
           <p className="pop-note wx-now" id="wx-now">{t('ui.topBar.weatherHint')}</p>
           <div className="pop-toggles">{toggle('season', true)}</div>
+
+          <h3>{t('settings.myProjects.title')}</h3>
+          <textarea id="mp-list" className="mp-list" rows={5} maxLength={1200} spellCheck={false} placeholder={t('settings.myProjects.placeholder')} aria-label={t('settings.myProjects.title')}></textarea>
+          <button type="button" className="st-save" id="mp-save">{t('settings.myProjects.save')}</button>
+          <p className="pop-note">{t('settings.myProjects.note')}</p>
         </section>
 
         <section className="st-panel" id="st-panel-people" role="tabpanel" aria-labelledby="st-tab-people" data-st-panel="people" hidden>

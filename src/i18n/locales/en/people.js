@@ -2,6 +2,7 @@
 // lunch and coffee, and the sleepy lines when you click someone who is resting. Speech bubbles: keep them short.
 export default {
   director: 'Director',
+  coworkTag: 'Cowork',
   subagent: 'subagent',
   // the small badge on a boss's name tag
   team: { one: '{n} subagent', other: '{n} subagents' },
