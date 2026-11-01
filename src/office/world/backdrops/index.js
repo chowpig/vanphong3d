@@ -1,12 +1,10 @@
-// Choosing the backdrop: city, countryside or beach.
+// Choosing the backdrop: only the office itself.
 import * as THREE from 'three';
 import { state } from '../../core/state.js';
 import { $, hhmm, officeNow } from '../../core/env.js';
 import { scene } from '../../scene/renderer.js';
-import { buildCity } from './city.js';
-import { buildCountry } from './countryside.js';
-import { buildBeach } from './beach.js';
-import { cityDay, cityNight, viewTex } from '../windows.js';
+import { buildOffice } from './office.js';
+import { viewTex } from '../windows.js';
 import { wxChip } from '../../life/weather.js';
 import { isNightHour, night, setNight } from '../room-update.js';
 import { renderSessionHead } from '../../ui/session-drawer.js';
@@ -17,7 +15,7 @@ import { t as tr } from '../../../i18n/index.js';
 export let THEMES;
 export let THEME;
 export function setScene(name, apply = true) {
-  const t = THEMES[name] || THEMES.city;
+  const t = THEMES[name] || THEMES.office;
   if (!t.group) { t.group = new THREE.Group(); t.group.userData.noMerge = true; scene.add(t.group); t.live = t.build(t.group); t.live.night(night); }
   if (!t.wins) t.wins = [viewTex(t.view, false), viewTex(t.view, true)];
   for (const x of Object.values(THEMES)) if (x.group) x.group.visible = x === t;
@@ -29,14 +27,12 @@ export function setScene(name, apply = true) {
 }
 
 export function setup() {
-  /* ---------- backdrop: city / countryside / beach ---------- */
+  /* ---------- backdrop: the office alone (a lawn and a path round the building) ---------- */
   THEMES = {
-    city: { label: tr('world.scene.city'), build: buildCity, fog: ['#CCD8E4', '#16223E'], wins: [cityDay, cityNight] },
-    country: { label: tr('world.scene.country'), build: buildCountry, fog: ['#D6E4D3', '#14222C'], view: 'country' },
-    beach: { label: tr('world.scene.beach'), build: buildBeach, fog: ['#D2E6F1', '#12223A'], view: 'beach' },
+    office: { label: tr('world.scene.office'), build: buildOffice, fog: ['#D4DEE6', '#16223E'], view: 'sky' },
   };
-  THEME = THEMES.city;
-  { let saved = 'city'; try { saved = localStorage.getItem('office-scene') || 'city'; } catch { /* storage blocked */ } setScene(THEMES[saved] ? saved : 'city', false); }
+  THEME = THEMES.office;
+  setScene('office', false);
   if (!state.nightManual) setNight(isNightHour()); else setNight(night);
   setInterval(() => {
     { const v = hhmm(officeNow().getTime()) + wxChip(), c = $('clock'); if (c.textContent !== v) c.textContent = v; }   // (changes once a minute)

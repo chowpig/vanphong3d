@@ -3,7 +3,7 @@
 export default {
   noWebgl: "This browser can't turn on WebGL, so the 3D office can't be drawn.",
   softwareGl: 'Your browser is drawing 3D without a GPU, so the office runs in light mode.',
-  scene: { city: 'City', country: 'Countryside', beach: 'Beach' },
+  scene: { office: 'Office' },
   // the water cooler's little screen
   cooler: '{Mac} CPU',
   // door plaques on the company floor: a title and an optional line under it

@@ -1,7 +1,7 @@
 export default {
   noWebgl: 'Trình duyệt này không bật được WebGL nên không vẽ được văn phòng 3D.',
   softwareGl: 'Trình duyệt đang vẽ 3D không có GPU: văn phòng chạy chế độ nhẹ.',
-  scene: { city: 'Thành phố', country: 'Đồng quê', beach: 'Biển' },
+  scene: { office: 'Văn phòng' },
   cooler: 'CPU {mac}',
   plaque: {
     director: 'GIÁM ĐỐC',

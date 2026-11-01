@@ -45,7 +45,9 @@ export function viewTex(kind, nightMode) {
     if (nightMode) { g.fillStyle = '#FFF3C4'; g.beginPath(); g.arc(w * 0.78, h * 0.2, 26, 0, Math.PI * 2); g.fill(); for (let i = 0; i < 90; i++) { g.fillStyle = `rgba(255,255,255,${rand(0.3, 0.85)})`; g.fillRect(rand(0, w), rand(0, h * 0.5), 2, 2); } }
     else { g.fillStyle = 'rgba(255,255,255,.9)'; for (const [cx, cy, r] of [[180, 80, 38], [228, 72, 48], [276, 86, 34], [690, 120, 32], [735, 110, 42]]) { g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fill(); } }
     const hill = (base, amp, col, seed) => { g.fillStyle = col; g.beginPath(); g.moveTo(0, h); for (let x = 0; x <= w; x += 8) { const t = x / w; const y = base - amp * Math.pow(Math.abs(Math.sin(t * 9 + seed)), 3) - amp * 0.25 * Math.sin(t * 23 + seed); g.lineTo(x, y); } g.lineTo(w, h); g.fill(); };
-    if (kind === 'country') {
+    if (kind === 'sky') {
+      // nothing but sky and soft clouds: no skyline, no scenery to look at
+    } else if (kind === 'country') {
       hill(h * 0.62, h * 0.32, nightMode ? '#1E2C3C' : '#9DB6B0', 1); hill(h * 0.7, h * 0.22, nightMode ? '#1A2633' : '#7E9E86', 4);
       g.fillStyle = nightMode ? '#1B2A22' : '#8DBA55'; g.fillRect(0, h * 0.72, w, h * 0.28);
       g.fillStyle = nightMode ? '#22352A' : '#C9B45A'; for (let r = 0; r < 4; r++) g.fillRect(0, h * (0.76 + r * 0.06), w, 3);

@@ -7,7 +7,6 @@ import { getT } from '@/i18n/server';
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH || '';
 const LAYOUTS = ['cozy', 'pro', 'hq'] as const;
-const SCENES = [['city', 'sc-city'], ['country', 'sc-country'], ['beach', 'sc-beach']] as const;
 const TIMES = ['auto', 'day', 'night'] as const;
 const LOOKS = ['toy', 'pixar'] as const;
 const QUALITY = [['auto', 0], ['low', 1], ['medium', 2], ['high', 3]] as const;
@@ -46,13 +45,6 @@ export default async function SettingsPanel() {
             ))}
           </div>
           <p className="pop-note">{t('settings.layoutNote')}</p>
-
-          <h3>{t('ui.topBar.scenery')}</h3>
-          <div className="st-cards st-cards--3">
-            {SCENES.map(([k, art]) => (
-              <button key={k} type="button" className="scene" data-scene={k} aria-pressed="false"><span className={`sc-art ${art}`}></span><b>{t(`ui.topBar.scenes.${k}`)}</b><small>{t(`ui.topBar.scenes.${k}Sub`)}</small></button>
-            ))}
-          </div>
 
           <h3>{t('ui.topBar.time')}</h3>
           <div className="st-cards st-cards--3">
