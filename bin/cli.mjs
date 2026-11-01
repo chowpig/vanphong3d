@@ -27,10 +27,8 @@ const EVENTS = ['SessionStart', 'SessionEnd', 'UserPromptSubmit', 'PreToolUse', 
 // The hooks post each event to the office: curl where the shell has it (macOS, Linux), a small node script on Windows.
 // Paths use forward slashes there, which both cmd and Git Bash accept.
 const WIN = process.platform === 'win32', fwd = (p) => p.replace(/\\/g, '/');
-const SEND = WIN ? `"${fwd(process.execPath)}" "${fwd(path.join(ROOT, 'hooks', 'send.mjs'))}"` : '';
-const hookCmd = (route, wait) => (WIN ? `${SEND} http://127.0.0.1:${PORT}${route}${wait ? '' : ' --async'}`
-  : wait ? `curl -s --max-time 50 -H 'Content-Type: application/json' --data-binary @- http://127.0.0.1:${PORT}${route} || true`
-    : `curl -s -m 2 -o /dev/null -H 'Content-Type: application/json' --data-binary @- http://127.0.0.1:${PORT}${route} || true`);
+const SEND = `"${fwd(process.execPath)}" "${fwd(path.join(ROOT, 'hooks', 'send.mjs'))}"`;   // node on every platform: it adds the office's key
+const hookCmd = (route, wait) => `${SEND} http://127.0.0.1:${PORT}${route}${wait ? '' : ' --async'}`;
 const EVENT_CMD = hookCmd('/event', false);
 const PERM_CMD = hookCmd('/hook/permission', true);
 // Claude's questions (AskUserQuestion) and plans (ExitPlanMode) are answered through PreToolUse, the documented way.
@@ -38,8 +36,7 @@ const ASK_CMD = hookCmd('/hook/question', true);
 const ASK_MATCHER = 'AskUserQuestion|ExitPlanMode';
 // Before each step, a quick word with the office (server/loops.mjs): a call that keeps failing the same way is blocked.
 // 0.3 s at most, and nothing printed when the office is down or slow: the call goes ahead as if there were no hook.
-const LOOP_CMD = WIN ? `${SEND} http://127.0.0.1:${PORT}/hook/loop --fast`
-  : `curl -s -m 0.3 -H 'Content-Type: application/json' --data-binary @- http://127.0.0.1:${PORT}/hook/loop || true`;
+const LOOP_CMD = `${SEND} http://127.0.0.1:${PORT}/hook/loop --fast`;
 // The status line feeds the plan's 5-hour / 7-day usage; an existing status line keeps running through ours.
 const STATUS_SCRIPT = path.join(ROOT, 'hooks', 'status-line.mjs'), STATUS_PREV = path.join(ROOT, 'data', 'statusline-prev.json');
 const STATUS_CMD = WIN ? `"${fwd(process.execPath)}" "${fwd(STATUS_SCRIPT)}"` : `"${process.execPath}" "${STATUS_SCRIPT}"`;

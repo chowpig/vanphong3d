@@ -43,7 +43,7 @@ if [ "$1" = --bg ]; then
   for f in "$BG"/*.json; do [ -f "$f" ] && grep -q "\"sessionId\":\"$sid\"" "$f" && id=$(basename "$f" .json); done   # (carried on: the same one)
   row "$id" "$sid" working ',"pid":1,"status":"busy"'
   (
-    post() { curl -s -m 2 -o /dev/null -H 'Content-Type: application/json' -H "X-Office-Job: $id" -H "X-Office-Inbox: $FAKE_INBOX" --data-binary "$2" "$OFFICE$1"; }
+    post() { curl -s -m 2 -o /dev/null -H 'Content-Type: application/json' -H "X-Office-Key: $(cat "$OFFICE_DATA_DIR/token" 2>/dev/null)" -H "X-Office-Job: $id" -H "X-Office-Inbox: $FAKE_INBOX" --data-binary "$2" "$OFFICE$1"; }
     ev() { post /event "{\"session_id\":\"$sid\",\"cwd\":\"$PWD\",\"hook_event_name\":\"$1\"$2}"; }
     post /hook/bind "{\"session_id\":\"$sid\",\"cwd\":\"$PWD\",\"hook_event_name\":\"SessionStart\",\"source\":\"startup\"}"
     ev SessionStart ',"source":"startup"'; ev UserPromptSubmit ",\"prompt\":\"$prompt\""
@@ -52,8 +52,8 @@ if [ "$1" = --bg ]; then
     case "$prompt" in *approval*)
       req="{\"session_id\":\"$sid\",\"cwd\":\"$PWD\",\"hook_event_name\":\"PermissionRequest\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"npm run e2e-bg\"}}"
       # both its hooks, as the real one runs them: the usual one (answered at once) and the office's own, that waits
-      short=$(curl -s -m 50 -H 'Content-Type: application/json' --data-binary "$req" "$OFFICE/hook/permission"); printf 'short=[%s]\n' "$short" >> "$BG/$id.hooks"
-      got=$(curl -s -m 300 -H 'Content-Type: application/json' --data-binary "$req" "$OFFICE/hook/permission?long=1"); printf 'long=%s\n' "$got" >> "$BG/$id.hooks"
+      short=$(curl -s -m 50 -H 'Content-Type: application/json' -H "X-Office-Key: $(cat "$OFFICE_DATA_DIR/token" 2>/dev/null)" --data-binary "$req" "$OFFICE/hook/permission"); printf 'short=[%s]\n' "$short" >> "$BG/$id.hooks"
+      got=$(curl -s -m 300 -H 'Content-Type: application/json' -H "X-Office-Key: $(cat "$OFFICE_DATA_DIR/token" 2>/dev/null)" --data-binary "$req" "$OFFICE/hook/permission?long=1"); printf 'long=%s\n' "$got" >> "$BG/$id.hooks"
       case "$got" in *'"allow"'*) said="Done in the background: allowed." ;; *) said="Done in the background: not allowed." ;; esac ;;
     esac
     case "$prompt" in *slowly*) sleep 25 ;; esac
@@ -84,7 +84,7 @@ case " $* " in *" -p "*)
   printf '%s\n' "$*" >> "$HOME/.fake-claude.log"   # (what it was asked to resume, for the tests to read)
   # its SessionStart hook from the office's --settings: which task it is, and its inbox (FAKE_INBOX, a socket the test listens on)
   bind=$(printf '%s' "$*" | grep -o "http://127.0.0.1:[0-9]*/hook/bind?task=[0-9a-z]*" | head -1)
-  [ -n "$bind" ] && [ -n "$FAKE_INBOX" ] && curl -s -m 2 -o /dev/null -H 'Content-Type: application/json' -H "X-Office-Inbox: $FAKE_INBOX" --data-binary '{"session_id":"e2e-task-1","hook_event_name":"SessionStart"}' "$bind"
+  [ -n "$bind" ] && [ -n "$FAKE_INBOX" ] && curl -s -m 2 -o /dev/null -H 'Content-Type: application/json' -H "X-Office-Key: $(cat "$OFFICE_DATA_DIR/token" 2>/dev/null)" -H "X-Office-Inbox: $FAKE_INBOX" --data-binary '{"session_id":"e2e-task-1","hook_event_name":"SessionStart"}' "$bind"
   echo '{"type":"system","subtype":"init","session_id":"e2e-task-1"}'
   echo '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Read","input":{"file_path":"/e2e/README.md"}}]}}'
   sleep 1

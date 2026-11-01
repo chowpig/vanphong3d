@@ -26,7 +26,8 @@ try {
   const page = await fetch(`${base}/`); assert.equal(page.status, 200);
   assert.ok(/<html lang="en" data-os="\w+"/.test(await page.text()), 'the page should start with <html lang="en" data-os="…"> (is the build current?)');
   step('page renders');
-  const ev = await fetch(`${base}/event`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 'smoke', cwd: ROOT }) });
+  const noKey = await fetch(`${base}/event`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); assert.equal(noKey.status, 403);   // a hook without the key is refused
+  const ev = await fetch(`${base}/event`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Office-Key': fs.readFileSync(path.join(data, 'token'), 'utf8').trim() }, body: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 'smoke', cwd: ROOT }) });
   assert.equal(ev.status, 200);
   step('hooks accepted');
   const sys = await (await fetch(`${base}/api/sys`)).json();

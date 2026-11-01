@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { defineConfig } from '@playwright/test';
 
@@ -7,6 +8,10 @@ const PORT = Number(process.env.E2E_PORT) || 4399, OUT = process.env.E2E_OUT || 
 // a home folder of its own too: the office never reads (or, adding an account, writes) the real ~/.claude folders
 export const HOME_DIR = path.resolve(OUT, 'home');
 export const DATA_DIR = path.resolve(OUT, 'office-data');
+// the key every hook carries (data/token): made here so the requests the tests send can carry it too
+fs.mkdirSync(DATA_DIR, { recursive: true });
+const TOKEN_FILE = path.join(DATA_DIR, 'token');
+if (!fs.existsSync(TOKEN_FILE)) fs.writeFileSync(TOKEN_FILE, 'e2e-office-key-0123456789', { mode: 0o600 });
 export default defineConfig({
   testDir: 'tests/e2e',
   outputDir: OUT,
@@ -14,7 +19,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   workers: 2,                       // each test builds a whole 3D office: two at a time is plenty
   expect: { timeout: 30_000 },      // the office takes a few seconds to build on a busy machine or a CI runner
-  use: { baseURL: `http://127.0.0.1:${PORT}`, viewport: { width: 1440, height: 900 } },
+  use: { baseURL: `http://127.0.0.1:${PORT}`, extraHTTPHeaders: { 'X-Office-Key': fs.readFileSync(TOKEN_FILE, 'utf8').trim() }, viewport: { width: 1440, height: 900 } },
   webServer: {
     command: 'node server/index.mjs',
     url: `http://127.0.0.1:${PORT}/health`,

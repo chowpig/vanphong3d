@@ -547,7 +547,7 @@ const bgOut = () => { const k = bgRun.known(findClaude()); return { on: bgOn(), 
 const tasks = createTasks({
   dataDir: DATA_DIR, claude: () => findClaude(),
   env: () => { const e = { ...process.env }; if (nowDir) e.CLAUDE_CONFIG_DIR = nowDir; return e; },   // (the account new sessions start on)
-  bg: { ...bgRun, want: bgOn, settings: () => bgSettings({ port: PORT, win: WIN, send: SEND }) },
+  bg: { ...bgRun, want: bgOn, settings: () => bgSettings({ port: PORT, win: true, send: SEND }) },
   printSettings: (t) => printSettings({ port: PORT, task: t.id, win: WIN, send: SEND }),   // (a `-p` run tells where its inbox is: server/steer.mjs)
   onStep: (t, x) => cardStep(t.id, stepOf(x.name, x.input)),
   onBg: (t, what, detail) => onBgTask(t, what, detail),
@@ -2097,6 +2097,9 @@ async function openFolder(dir) {
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
+  // vanphong3d: hooks must carry the key in data/token (hooks/send.mjs adds it), so another local process or a rogue
+  // client cannot inject events or answer approvals on the user's behalf.
+  if (req.method === 'POST' && (url.pathname === '/event' || url.pathname.startsWith('/hook/')) && !sameBytes(req.headers['x-office-key'] || '', TOKEN)) { res.writeHead(403).end(); return; }
   if (req.method === 'POST' && url.pathname === '/event') {
     if (!isLoopback(req)) { res.writeHead(403).end(); return; }
     const chunks = []; let size = 0;

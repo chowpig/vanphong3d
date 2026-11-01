@@ -6,11 +6,16 @@
 //   node hooks/send.mjs http://127.0.0.1:4310/hook/loop --fast    (every step: the office's answer within 0.3 s, else none)
 //   … --wait 86400   (waits that many seconds: a background session the office started, server/bg-sessions.mjs)
 //   … --job          (says which session the office started it is: the name of its CLAUDE_JOB_DIR, and its inbox)
+import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const [url, ...flags] = process.argv.slice(2), quick = flags.includes('--async'), fast = flags.includes('--fast');
 const wait = Number(flags[flags.indexOf('--wait') + 1]) || 55;
 const headers = { 'Content-Type': 'application/json' };
+// the key the office checks (data/token); without it the office answers 403 and the hook just does nothing
+const dataDir = process.env.OFFICE_DATA_DIR || path.join(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), 'data');
+try { headers['X-Office-Key'] = fs.readFileSync(path.join(dataDir, 'token'), 'utf8').trim(); } catch { /* the office never ran here */ }
 if (flags.includes('--job') && process.env.CLAUDE_JOB_DIR) headers['X-Office-Job'] = path.basename(process.env.CLAUDE_JOB_DIR);
 if (flags.includes('--job') && process.env.CLAUDE_CODE_MESSAGING_SOCKET) headers['X-Office-Inbox'] = process.env.CLAUDE_CODE_MESSAGING_SOCKET;
 const chunks = [];

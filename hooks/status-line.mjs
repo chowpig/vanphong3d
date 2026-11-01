@@ -23,7 +23,7 @@ try { d = JSON.parse(raw) || {}; } catch { /* print the default line anyway */ }
 const pc = d.prompt_cache && typeof d.prompt_cache === 'object' ? d.prompt_cache : null;
 const cache = pc && { warm: pc.warm, caching_observed: pc.caching_observed, ttl: pc.ttl, expires_at: pc.expires_at, recache_tokens_if_cold: pc.recache_tokens_if_cold };
 const body = JSON.stringify({ session_id: d.session_id, rate_limits: d.rate_limits, context_window: d.context_window, cost: d.cost, prompt_cache: cache || undefined });
-const forward = fetch(`http://127.0.0.1:${PORT}/hook/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: AbortSignal.timeout(400) }).catch(() => {});
+const forward = fetch(`http://127.0.0.1:${PORT}/hook/status`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Office-Key': (() => { try { return fs.readFileSync(path.join(process.env.OFFICE_DATA_DIR || path.join(ROOT, 'data'), 'token'), 'utf8').trim(); } catch { return ''; } })() }, body, signal: AbortSignal.timeout(400) }).catch(() => {});
 
 let prev = null;
 try { prev = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'statusline-prev.json'), 'utf8')); } catch { /* none */ }
