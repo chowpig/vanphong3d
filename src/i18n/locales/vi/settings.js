@@ -18,6 +18,10 @@ export default {
     auto: { name: 'Tự động', sub: 'Mở rộng theo số dự án' },
     hq: { name: 'Tập đoàn', sub: 'Phòng ban · tối đa 18 dự án' },
   },
+  showCode: {
+    label: 'Hiện cả phiên Claude Code',
+    note: 'Mặc định văn phòng chỉ vẽ các cuộc trò chuyện Chat (và Cowork). Bật mục này để vẽ cả các phiên Claude Code (terminal, VS Code, tab Code). Trang tải lại sau khi đổi.',
+  },
   myProjects: {
     title: 'Dự án của tôi',
     placeholder: 'Mỗi dòng một dự án, ví dụ:\nINFO\nHỒNG PHÚC\nPHỤ TÙNG SỈ\nNHÀ GỖ',

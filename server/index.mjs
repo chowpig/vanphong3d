@@ -55,7 +55,9 @@ if (process.env.OFFICE_LOG) { const out = fs.createWriteStream(process.env.OFFIC
 const DATA_DIR = process.env.OFFICE_DATA_DIR ? path.resolve(process.env.OFFICE_DATA_DIR) : path.join(ROOT, 'data');   // tests and a second dev copy use their own
 const PAGE_FILES = new Set(['/favicon.ico', '/icon.svg', '/apple-icon.png', '/opengraph-image.jpg', '/twitter-image.jpg', '/manifest.webmanifest', '/sw.js', '/icon-512.png']);   // (app/: the tab icons, the share card, the app on a phone's home screen; public/: its worker and big icon)
 const myProjects = createMyProjects(DATA_DIR);
-const prefs = createPrefs(DATA_DIR), { tr } = prefs;   // tr('area.key', vars): words in the office's language (src/i18n)
+const prefs = createPrefs(DATA_DIR), { tr } = prefs;
+/** do the characters include Claude Code's sessions? Off: only Chat and Cowork conversations are drawn (Settings turns it on; OFFICE_SHOW_CODE=1 is the default until it is set there) */
+const showCode = () => (typeof prefs.get('showCode') === 'boolean' ? prefs.get('showCode') : process.env.OFFICE_SHOW_CODE === '1');   // tr('area.key', vars): words in the office's language (src/i18n)
 const num = (n, digits) => createT(prefs.lang()).num(n, digits);   // a number written the office's way (1,000 / 1.000)
 setI18n({ tr, num, lang: prefs.lang });   // the Mac drawer's tips (system.mjs) speak the same language
 const DESKS = 9;
@@ -2524,6 +2526,16 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
+  if (req.method === 'POST' && url.pathname === '/api/show-code') {   // draw Claude Code's sessions too: { on }
+    const sameOrigin = sameOriginOf(req);
+    if (!authorized(req, url) || !sameOrigin || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false, message: tr('server.forbidden') }); return; }
+    readJson(req).then((b) => {
+      if (!b || typeof b.on !== 'boolean') { json(res, 400, { ok: false, message: tr('server.badRequest') }); return; }
+      prefs.set('showCode', b.on);
+      json(res, 200, { ok: true, on: showCode() });
+    });
+    return;
+  }
   if (req.method === 'POST' && url.pathname === '/api/my-projects') {   // the names of "my projects": { projects: [...] }
     const sameOrigin = sameOriginOf(req);
     if (!authorized(req, url) || !sameOrigin || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false, message: tr('server.forbidden') }); return; }
@@ -2575,7 +2587,7 @@ const server = http.createServer((req, res) => {
   // everything as it is now, the first message a page gets (the Mac's own addresses and PIN only for the Mac)
   const snapNow = (local) => {
     const lanOn = lanIsOn();
-    return { k: 'snap', lang: prefs.lang(), myProjects: myProjects.list(), sessions: [...sessions.values()].map(pub), perms: [...pending.values()].map(permPub), feed, stats, local, todos, limits: limitsOut(), limitsNote: noteText(), trophies: trophies.pub(),
+    return { k: 'snap', lang: prefs.lang(), myProjects: myProjects.list(), showCode: showCode(), sessions: [...sessions.values()].map(pub), perms: [...pending.values()].map(permPub), feed, stats, local, todos, limits: limitsOut(), limitsNote: noteText(), trophies: trophies.pub(),
       lan: local && lanOn ? lanUrl() : null, lanBase: local && lanOn ? lanUrl(false) : null, pin: local ? currentPin() : null,
       ts: local && lanOn ? tsUrl() : null, tsHere: !!tsUrl(), phoneApprove: !!prefs.get('phoneApprove'), phoneTasks: !!prefs.get('phoneTasks'), lanFixed: local && lanFixed, build: BUILD };
   };

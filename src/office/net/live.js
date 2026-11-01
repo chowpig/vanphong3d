@@ -113,7 +113,11 @@ export function updateTeamTags() {
     tg.o.element.title = projs.length > 1 ? tr('activity.live.teamShared', { name, others: projs.slice(1).join(', ') }) : tr('activity.live.teamTitle', { name });
   });
 }
+/** Chat and Cowork conversations are always drawn; a Claude Code session only when Settings says so (and in the demo, a replay, the static site) */
+const DEMO = new URLSearchParams(location.search).has('demo');
+export const shown = (s) => !!s?.src || !!state.showCode || DEMO || STATIC || replay.on;
 export function upsertSession(s, walkIn = true) {
+  if (!shown(s)) { if (sessions.has(s.id)) removeSession(s.id); return; }
   s.desk = proDesk(s);   // (every layout: the project's area)
   const had = sessions.has(s.id);
   sessions.set(s.id, s);

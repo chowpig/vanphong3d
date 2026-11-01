@@ -40,6 +40,13 @@ function setLang(l) {
   fetch(`/api/prefs${TOKEN ? `?k=${encodeURIComponent(TOKEN)}` : ''}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lang: l }) })
     .then((r) => (r.ok ? location.replace(u) : viaUrl())).catch(viaUrl);
 }
+// Claude Code's sessions are not drawn unless this is on (the server keeps it; the page reloads)
+function saveShowCode(on) {
+  if (STATIC) return;
+  fetch(`/api/show-code${TOKEN ? `?k=${encodeURIComponent(TOKEN)}` : ''}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ on }) })
+    .then((r) => (r.ok ? location.reload() : Promise.reject(new Error('save'))))
+    .catch(() => { const c = $('show-code'); if (c) c.checked = !on; toast(tr('server.forbidden')); });
+}
 // "My projects": one name a line. Saved on the server (data/myprojects.json), which tells every open page; the page
 // reloads so the sessions already open sit in their projects' areas.
 function saveMyProjects() {
@@ -115,6 +122,7 @@ export function setup() {
   popLook.addEventListener('click', (e) => {
     const tb = e.target.closest('[data-st-tab]'); if (tb) { showTab(tb.dataset.stTab); return; }
     if (e.target.closest('#mp-save')) { saveMyProjects(); return; }
+    if (e.target.closest('#show-code')) { saveShowCode(e.target.closest('#show-code').checked); return; }
     if (e.target.closest('#st-close')) { togglePop(false); btnLook.focus(); return; }
     const sc = e.target.closest('[data-scene]'); if (sc) { setScene(sc.dataset.scene); return; }
     const lk = e.target.closest('[data-look]'); if (lk) { setLook(lk.dataset.look); return; }

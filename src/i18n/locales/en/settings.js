@@ -18,6 +18,10 @@ export default {
     auto: { name: 'Auto', sub: 'Grows with your projects' },
     hq: { name: 'Headquarters', sub: 'Departments · up to 18 projects' },
   },
+  showCode: {
+    label: 'Also show Claude Code sessions',
+    note: 'By default the office only draws Chat (and Cowork) conversations. Turn this on to draw Claude Code sessions too (terminal, VS Code, the Code tab). The page reloads after a change.',
+  },
   myProjects: {
     title: 'My projects',
     placeholder: 'One project a line, for example:\nINFO\nHONG PHUC\nSPARE PARTS\nWOOD HOUSE',

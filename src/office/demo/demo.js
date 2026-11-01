@@ -229,9 +229,10 @@ export function applyMsg(d, quiet = false) {
   if (d.k === 'snap') {
     const ids = new Set(d.sessions.map((s) => s.id));
     for (const id of [...sessions.keys()]) if (!ids.has(id)) (quiet ? dropSessionNow : removeSession)(id);
+    if ('showCode' in d) { state.showCode = !!d.showCode; const c = document.getElementById('show-code'); if (c) c.checked = state.showCode; }
     if (Array.isArray(d.myProjects)) { state.myProjects = d.myProjects; const ta = document.getElementById('mp-list'); if (ta && document.activeElement !== ta) ta.value = d.myProjects.join('\n'); }
     for (const s of d.sessions) upsertSession(s, false);
-    state.feed = d.feed || []; state.stats = d.stats || {}; renderFeed();
+    state.feed = (d.feed || []).filter((e) => sessions.has(e.sess) || !e.sess); state.stats = d.stats || {}; renderFeed();
     if ('local' in d) {   // only the live snapshot carries these
       perms.clear(); for (const p of d.perms || []) perms.set(p.id, p); renderPerms(); reportPresence();
       if (!quiet) chatLoad();   // (the group chat as it is now: after a reconnect, what was missed)
@@ -248,6 +249,7 @@ export function applyMsg(d, quiet = false) {
   else if (d.k === 'gone') { if (!quiet) chatLeft(sessions.get(d.id)); (quiet ? dropSessionNow : removeSession)(d.id); }
   else if (d.k === 'ev') {
     if (d.stats) state.stats = d.stats; upsertSession(d.s, !quiet);
+    if (!sessions.has(d.s?.id)) return;   // (a Claude Code session that is not drawn: no feed line either)
     if (!quiet) onEvent(d.e); else if (!d.e.quiet && d.e.type !== 'start') addFeed(d.e);
   }
   else if (d.k === 'stats') { state.stats = d.stats; if (d.s) upsertSession(d.s, !quiet); }

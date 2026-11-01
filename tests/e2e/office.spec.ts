@@ -1336,3 +1336,35 @@ test('the view: the wheel zooms a little at a time, W A S D slide it across the 
   expect(Math.hypot(p3.x - p2s.x, p3.z - p2s.z)).toBeLessThan(0.15);
   expect(errors).toEqual([]);
 });
+
+test('only Chat and Cowork conversations are drawn unless Settings asks for Claude Code sessions too', async ({ page, request }) => {
+  test.setTimeout(240_000);
+  const errors = watchErrors(page);
+  const stamp = Date.now(), code = `e2e-code-${stamp}`, chat = `e2e-chat-${stamp}`, cwd = path.join(HOME_DIR, `showcode-${stamp}`);
+  fs.mkdirSync(cwd, { recursive: true });
+  const ev = (id: string, name: string, headers: Record<string, string> = {}, extra: Record<string, unknown> = {}) => request.post('/event', { headers, data: { hook_event_name: name, session_id: id, cwd, transcript_path: path.join(cwd, 't.jsonl'), source: 'startup', prompt: 'hello', ...extra } });
+  try {
+    expect((await request.post('/api/show-code', { data: { on: 'yes' } })).status()).toBe(400);
+    expect((await request.post('/api/show-code', { data: { on: false } })).ok()).toBe(true);
+    await ev(code, 'SessionStart'); await ev(code, 'UserPromptSubmit');
+    await ev(chat, 'SessionStart', { 'X-Office-Source': 'chat' }, { office_title: 'Test AI' }); await ev(chat, 'UserPromptSubmit', { 'X-Office-Source': 'chat' }, { office_title: 'Test AI' });
+    await page.addInitScript(() => { try { localStorage.setItem('office-quality', 'low'); localStorage.setItem('office-autocam', 'off'); } catch { /* private mode */ } });
+    await page.goto('/?debug&layout=pro');
+    await expect(page.locator('#stage canvas')).toBeVisible({ timeout: 120_000 });
+    const tags = () => page.evaluate(() => [...(window as unknown as { __office: { workers: Map<string, { tagText?: { data: string } }> } }).__office.workers.values()].map((w) => w.tagText?.data ?? ''));
+    const has = async (text: string) => (await tags()).some((x) => x.includes(text));
+    await expect.poll(() => has('Chat · Test AI'), { timeout: 60_000 }).toBe(true);   // (called "Chat · Test AI")
+    expect(await has(`showcode-${stamp}`)).toBe(false);   // (the Claude Code session is not drawn)
+    // Settings can draw them too
+    await page.locator('#btn-look').click();
+    await expect(page.locator('#show-code')).not.toBeChecked();
+    await request.post('/api/show-code', { data: { on: true } });
+    await page.reload();
+    await expect(page.locator('#stage canvas')).toBeVisible({ timeout: 120_000 });
+    await expect.poll(() => has(`showcode-${stamp}`), { timeout: 60_000 }).toBe(true);
+  } finally {
+    await request.post('/api/show-code', { data: { on: true } });
+    for (const id of [code, chat]) await ev(id, 'SessionEnd', id === chat ? { 'X-Office-Source': 'chat' } : {}, { reason: 'other' });
+  }
+  expect(errors).toEqual([]);
+});

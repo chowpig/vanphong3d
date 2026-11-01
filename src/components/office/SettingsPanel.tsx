@@ -68,6 +68,8 @@ export default async function SettingsPanel() {
           <textarea id="mp-list" className="mp-list" rows={5} maxLength={1200} spellCheck={false} placeholder={t('settings.myProjects.placeholder')} aria-label={t('settings.myProjects.title')}></textarea>
           <button type="button" className="st-save" id="mp-save">{t('settings.myProjects.save')}</button>
           <p className="pop-note">{t('settings.myProjects.note')}</p>
+          <label className="mp-code"><input type="checkbox" id="show-code" /> <span>{t('settings.showCode.label')}</span></label>
+          <p className="pop-note">{t('settings.showCode.note')}</p>
         </section>
 
         <section className="st-panel" id="st-panel-people" role="tabpanel" aria-labelledby="st-tab-people" data-st-panel="people" hidden>
