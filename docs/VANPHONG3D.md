@@ -19,11 +19,12 @@ Nguồn: [khanh020905/my-office](https://github.com/khanh020905/my-office) (MIT,
 - Hook, status line và phiên nền đều gọi `node hooks/send.mjs`; cần Node >= 20.9 trong PATH.
 - `data/token` và `data/pin` nằm trong thư mục dự án: trên Windows quyền file `0o600` không có tác dụng, nên đừng đặt dự án ở thư mục dùng chung nhiều người.
 - Tính năng giữ máy thức (`caffeinate`) chỉ có trên macOS và đã không còn dùng.
-- Chưa chạy thử trên Windows thật. CI gốc có job `windows-latest` (test + build + smoke) — nên bật GitHub Actions cho repo để kiểm tra.
-- E2E Playwright dùng `fake-claude.sh` (sh): trên Windows cần Git Bash/WSL.
+- Đã chạy trên Windows 10 (Node 24, PowerShell 5.1): test (95 pass, 3 skip theo thiết kế trên win32), typecheck, lint, build, smoke và `test:e2e:smoke` (5/5) đều pass. Đã sửa `npm start` và `my-office start` (trước đó hỏng trên Windows).
+- E2E Playwright đầy đủ dùng `fake-claude.sh` (sh/curl/od/pkill): server không spawn được file `.sh` trực tiếp trên Windows, nên các test giao việc/phiên nền chỉ chạy được trên macOS/Linux. Bộ `@smoke` thì chạy được.
 
-## Chưa làm
-1. Playwright e2e chưa chạy (sandbox không GPU); phần kiểm tra "điện thoại giao việc phải được Mac cho phép" cần viết lại cho LAN.
-2. Chuỗi i18n về tunnel chưa dọn (không ảnh hưởng chạy).
-3. Quét lịch sử git của repo gốc (bản clone nông chỉ có 1 commit) và bật Dependabot.
-4. `npm audit`: `minimatch` mức moderate ở devDependency của eslint (không vào bản chạy).
+## Việc còn lại
+1. Test e2e "điện thoại giao việc phải được Mac cho phép" đã viết lại cho LAN (`tests/e2e/office.spec.ts`), chạy trên macOS/Linux; logic cổng đã kiểm tay trên Windows.
+2. Mã server vẫn còn nhánh `tunnel`/`viaTunnel` đã bị vô hiệu (`prefs.set('tunnel', undefined)`); chưa gỡ hẳn khỏi `server/index.mjs`.
+3. Lịch sử git của repo gốc (93 commit) đã quét bằng regex các mẫu secret thường gặp: không có kết quả, không có file nhạy cảm. Chưa quét entropy cao.
+4. Dependabot: `.github/dependabot.yml` (npm + github-actions, hàng tuần).
+5. `npm audit`: 16 cảnh báo moderate, đều ở chuỗi devDependency của eslint (`minimatch`); 0 ở dependency chạy thật (`npm audit --omit=dev`).
