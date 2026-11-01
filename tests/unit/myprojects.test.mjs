@@ -33,6 +33,17 @@ test('a session is matched to a listed project by its first clue that names one'
   assert.equal(mp.match([]), '');
 });
 
+test('a Chat conversation that cannot say its project is matched by a listed name inside its title', () => {
+  const mp = createMyProjects(tmp());
+  mp.set(['INFO', 'HỒNG PHÚC', 'PHỤ TÙNG', 'PHỤ TÙNG SỈ']);
+  assert.equal(mp.match(['Tìm TV Hồng Phúc 1'], { loose: true }), 'HỒNG PHÚC');
+  assert.equal(mp.match(['Tìm TV Hồng Phúc 1']), '', 'a session with a folder of its own is only matched exactly');
+  assert.equal(mp.match(['báo giá phụ tùng sỉ tháng 11'], { loose: true }), 'PHỤ TÙNG SỈ', 'the longest name wins');
+  assert.equal(mp.match(['Gọi office_report cho Test AI'], { loose: true }), '');
+  assert.equal(mp.match(['informatics'], { loose: true }), '', 'whole words only');
+  assert.equal(mp.match([undefined, '', 'INFO: kế hoạch'], { loose: true }), 'INFO');
+});
+
 test('the list is kept in the data folder and comes back', () => {
   const d = tmp(); createMyProjects(d).set(['A b', 'C']);
   assert.deepEqual(createMyProjects(d).list(), ['A b', 'C']);

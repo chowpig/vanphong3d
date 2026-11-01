@@ -34,10 +34,16 @@ export function createMyProjects(dataDir) {
       return list;
     },
     /** the listed project a session belongs to: the first of its clues (Cowork project, repository, folder, title) that names one, else '' */
-    match(clues) {
+    match(clues, { loose = false } = {}) {
       if (!list.length) return '';
       const keys = new Map(list.map((n) => [norm(n), n]));
       for (const c of clues) { const hit = keys.get(norm(c)); if (hit) return hit; }
+      // loose (a Chat or Cowork conversation, which cannot say its project): a listed name as whole words in a clue,
+      // e.g. the title "Tìm TV Hồng Phúc 1" belongs to HỒNG PHÚC; the longest name wins
+      if (loose) {
+        const found = [...keys].filter(([k]) => k && clues.some((c) => ` ${norm(c)} `.includes(` ${k} `))).sort((x, y) => y[0].length - x[0].length)[0];
+        if (found) return found[1];
+      }
       return '';
     },
   };
