@@ -37,6 +37,7 @@ async function withListener(fn, { peer = { address: '127.0.0.1', netmask: '255.0
   try { await fn(srv.address().port, got); } finally { srv.close(); srv.closeAllConnections?.(); }
 }
 const send = (port, args, input, env = {}) => new Promise((resolve) => {
+  env = { OFFICE_COWORK_ASSUME_VM: '1', ...env };
   const dir = path.resolve(import.meta.dirname, '../../cowork-plugin/hooks/cowork-send.mjs');
   const p = spawn(process.execPath, [dir, `http://127.0.0.1:${port}/event`, ...args], { env: { ...process.env, ...env } });
   let out = ''; p.stdout.on('data', (d) => { out += d; }); p.on('close', () => resolve(out)); p.stdin.end(input);
@@ -62,6 +63,14 @@ test('a caller off the adapter\'s subnet is refused outright', async () => {
     assert.equal((await fetch(`http://127.0.0.1:${port}/event`, { method: 'POST', headers: { 'X-Office-Key': 'k3y' }, body: '{"a":1}' })).status, 403);
     assert.deepEqual(got, []);
   }, { peer: { address: '169.254.173.253', netmask: '255.255.0.0' } });
+});
+
+test('on the computer itself the plugin stays silent: Claude Code already reports there', async () => {
+  await withListener(async (port, got) => {
+    const out = await send(port, ['--async'], '{"hook_event_name":"SessionStart","session_id":"x"}', { OFFICE_COWORK_ASSUME_VM: '' });
+    const probed = await send(port, ['--probe'], '{}', { OFFICE_COWORK_ASSUME_VM: '' });
+    assert.equal(out, ''); assert.equal(probed, ''); assert.deepEqual(got, []);
+  });
 });
 
 test('the plugin script finds the office, sends the event as Cowork, and says so in the chat when probing', async () => {

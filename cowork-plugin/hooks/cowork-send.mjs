@@ -37,6 +37,10 @@ const find = (hosts) => Promise.race([Promise.any(hosts.map(alive)).catch(() => 
 
 try {
   const hosts = hostsToTry(), host = await find(hosts);
+  // On this computer itself (the office answers on 127.0.0.1) this is a Claude Code session, which the office already hears
+  // from its own hooks: sending it again would count every step twice and call it Cowork. Only Cowork's virtual machine,
+  // which cannot see 127.0.0.1, needs this plugin. (OFFICE_COWORK_ASSUME_VM=1: for the tests.)
+  if (host === '127.0.0.1' && !process.env.OFFICE_COWORK_ASSUME_VM) process.exit(0);
   if (host) {
     try { fs.writeFileSync(memo, JSON.stringify({ host, at: Date.now() })); } catch { /* read-only: asked again next time */ }
     if (!probe) await fetch(`http://${host}:${port}/event`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Office-Key': key, 'X-Office-Source': 'cowork' }, body, signal: AbortSignal.timeout(2000) }).catch(() => {});
