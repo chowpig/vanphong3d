@@ -1,12 +1,6 @@
 // Words the server writes: event and tool labels, chat notes, API errors, the phone PIN page, plan-limit labels, replies
 // to Claude's hooks, and the Mac drawer's cleanup tips (server/system.mjs). The server translates when it makes them.
 export default {
-  tunnel: {
-    noPlatform: 'There is no cloudflared for this system yet.',
-    downloadFailed: "Couldn't download cloudflared (status {status}). Check the network and turn it on again.",
-    ready: 'Away from home: {url}',
-    dropped: 'The tunnel dropped, connecting again…',
-  },
   move: {
     notOpen: 'This session is no longer open.',
     noAccount: "Can't find that account.",

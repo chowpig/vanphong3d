@@ -394,6 +394,21 @@ test('giving Claude work from the chat: a folder or a tagged conversation, the r
   expect(asked()).toContain('Attached image');
   await zc.locator('.zc-to-x').click();
   await expect(zc.locator('.zc-to-chip')).not.toHaveClass(/is-on/);
+  // from a phone (the home network's listener, with the PIN): refused until the Mac allows it
+  const lanOn = await (await request.post('/api/lan', { data: { on: true } })).json();
+  if (lanOn.lanBase) {   // (a computer with no network address has no phone to try)
+    const base = String(lanOn.lanBase).replace(/\/$/, ''), origin = new URL(base).origin;
+    const login = await request.post(`${base}/pin`, { headers: { Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' }, data: `pin=${lanOn.pin}`, maxRedirects: 0 });
+    const cookie = String(login.headers()['set-cookie'] || '').split(';')[0];
+    expect(cookie).not.toBe('');
+    const dir = (await (await request.get('/api/tasks')).json()).projects[0].dir;
+    const give = () => request.post(`${base}/api/tasks`, { headers: { Origin: origin, Cookie: cookie }, data: { dir, text: 'from the phone' } });
+    expect((await give()).status()).toBe(403);
+    await request.post('/api/tasks/allow', { data: { on: true } });
+    expect((await give()).status()).toBe(200);
+    await request.post('/api/tasks/allow', { data: { on: false } });
+  }
+  await request.post('/api/lan', { data: { on: false } });
   expect(errors).toEqual([]);
 });
 

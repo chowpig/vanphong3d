@@ -143,7 +143,7 @@ export default {
     running: '{n} running.',
     notAllowed: 'Giving work from a phone isn’t allowed yet. On the Mac: 📱 Phone → turn on “Give Claude work from a phone”.',
     noDir: 'That folder or conversation isn’t on the Mac.',
-    noMic: 'This browser can’t listen yet. Use the 🎤 on your phone’s keyboard, or open the office through its https (Cloudflare) link.',
+    noMic: 'This browser can’t listen yet. Use the 🎤 on your phone’s keyboard, or open the office through an https address.',
     micBlocked: 'The browser hasn’t allowed the microphone. Allow it for this page and try again.',
     ask: 'Give this as work to {name} (📁 {folder})?',
     askYes: 'Give work',

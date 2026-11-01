@@ -1,10 +1,4 @@
 export default {
-  tunnel: {
-    noPlatform: 'Máy này chưa có cloudflared cho hệ điều hành của nó.',
-    downloadFailed: 'Không tải được cloudflared (mã {status}). Kiểm tra mạng rồi bật lại.',
-    ready: 'Dùng khi ra ngoài: {url}',
-    dropped: 'Đường hầm bị ngắt, đang nối lại…',
-  },
   move: {
     notOpen: 'Phiên này không còn mở.',
     noAccount: 'Không thấy tài khoản này.',

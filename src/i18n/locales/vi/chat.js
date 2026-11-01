@@ -141,7 +141,7 @@ export default {
     running: '{n} việc đang chạy.',
     notAllowed: 'Chưa cho phép giao việc từ điện thoại. Trên Mac: mở 📱 Điện thoại, bật “Cho phép giao việc từ điện thoại”.',
     noDir: 'Không thấy thư mục hay cuộc trò chuyện đó trên Mac.',
-    noMic: 'Trình duyệt này chưa nghe được giọng nói. Dùng nút 🎤 trên bàn phím điện thoại, hoặc mở qua link https (Cloudflare).',
+    noMic: 'Trình duyệt này chưa nghe được giọng nói. Dùng nút 🎤 trên bàn phím điện thoại, hoặc mở qua địa chỉ https.',
     micBlocked: 'Trình duyệt chưa cho dùng micro. Cho phép micro cho trang này rồi thử lại.',
     ask: 'Giao việc này cho {name} (📁 {folder})?',
     askYes: 'Giao việc',
