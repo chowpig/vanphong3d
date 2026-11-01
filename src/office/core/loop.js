@@ -17,6 +17,7 @@ import { lite } from '../ui/lite.js';
 import { particles, rocketState, updateRoom } from '../world/room-update.js';
 import { updateMarkers } from '../ui/activity.js';
 import { setView } from '../ui/camera-bar.js';
+import { panStep, setupCamKeys } from '../interact/cam-keys.js';
 import { updateProps } from '../interact/props.js';
 import { updateErrands } from '../people/errands.js';
 import { updateGatherings } from '../people/gatherings.js';
@@ -191,6 +192,7 @@ export function loop(now = 0) {
   }
   const sel = state.selectedId && workers.get(state.selectedId);
   if (sel) focusTarget.set(sel.pos.x, 0.9, sel.pos.y);
+  panStep(dt0, focusTarget);
   const delta = _camDelta.copy(focusTarget).sub(controls.target).multiplyScalar(Math.min(1, dt0 * 4));
   controls.target.add(delta); camera.position.add(delta);
   if (state.zoomGoal !== null) { camera.zoom += (state.zoomGoal - camera.zoom) * Math.min(1, dt0 * 4); camera.updateProjectionMatrix(); if (Math.abs(state.zoomGoal - camera.zoom) < 0.005) state.zoomGoal = null; }
@@ -209,6 +211,7 @@ export function setup() {
   focusTarget = HOME.clone();
   state.zoomGoal = null;
   controls.addEventListener('start', () => { state.zoomGoal = null; setView(null); });
+  setupCamKeys();
   for (const ev of ['pointerdown', 'pointermove', 'wheel', 'keydown', 'touchstart']) addEventListener(ev, () => { lastInput = performance.now(); }, { passive: true, capture: true });
   renderer.shadowMap.autoUpdate = false;
   scene.matrixWorldAutoUpdate = false;   // (updateWorld above does it, once a frame)

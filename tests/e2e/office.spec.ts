@@ -1291,3 +1291,48 @@ test('my projects: a list in Settings makes room for every name, and a Cowork se
   }
   expect(errors).toEqual([]);
 });
+
+test('the view: the wheel zooms a little at a time, W A S D slide it across the floor, and typing in a box does not', async ({ page }) => {
+  test.setTimeout(180_000);
+  const errors = watchErrors(page);
+  type Cam = { camera: { zoom: number; position: { x: number; y: number; z: number } } };
+  const cam = () => page.evaluate(() => { const c = (window as unknown as Cam & { __office: Cam }).__office.camera; return { zoom: c.zoom, x: c.position.x, z: c.position.z }; });
+  await page.setViewportSize({ width: 1100, height: 700 });
+  await page.addInitScript(() => { try { localStorage.setItem('office-quality', 'low'); localStorage.setItem('office-autocam', 'off'); } catch { /* private mode */ } });
+  await page.goto('/?demo&debug&layout=pro');
+  await expect(page.locator('#stage canvas')).toBeVisible({ timeout: 120_000 });
+  await page.waitForFunction(() => !!(window as unknown as { __office?: unknown }).__office, null, { timeout: 60_000 });
+  await page.waitForTimeout(2500);
+  const box = (await page.locator('#stage canvas').boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  // one notch in: a few percent, not a jump
+  const z0 = (await cam()).zoom;
+  await page.mouse.wheel(0, -100);
+  await expect.poll(async () => (await cam()).zoom / z0, { timeout: 15_000 }).toBeGreaterThan(1.04);
+  await page.waitForTimeout(1500);
+  const r1 = (await cam()).zoom / z0;
+  expect(r1).toBeLessThan(1.15);
+  // and out again: back to where it was
+  await page.mouse.wheel(0, 100);
+  await expect.poll(async () => Math.abs((await cam()).zoom / z0 - 1), { timeout: 15_000 }).toBeLessThan(0.03);
+  // D slides the view sideways, W forward (the camera's position moves with its target)
+  const p0 = await cam();
+  await page.keyboard.down('KeyD'); await page.waitForTimeout(2500); await page.keyboard.up('KeyD');
+  await page.waitForTimeout(800);
+  const p1 = await cam();
+  expect(Math.hypot(p1.x - p0.x, p1.z - p0.z)).toBeGreaterThan(0.3);
+  await page.keyboard.down('KeyW'); await page.waitForTimeout(2500); await page.keyboard.up('KeyW');
+  await page.waitForTimeout(800);
+  const p2 = await cam();
+  expect(Math.hypot(p2.x - p1.x, p2.z - p1.z)).toBeGreaterThan(0.3);
+  // (let the view finish easing to where the keys left it, then type)
+  await page.waitForTimeout(6000);
+  const p2s = await cam();
+  // typing "wasd" in a text box leaves the view alone
+  await page.evaluate(() => { const i = document.createElement('input'); i.id = 'cam-probe'; document.body.append(i); i.focus(); });
+  await page.keyboard.down('KeyD'); await page.waitForTimeout(2500); await page.keyboard.up('KeyD');   // (as long as the earlier hold that moved the view)
+  await page.waitForTimeout(800);
+  const p3 = await cam();
+  expect(Math.hypot(p3.x - p2s.x, p3.z - p2s.z)).toBeLessThan(0.15);
+  expect(errors).toEqual([]);
+});
