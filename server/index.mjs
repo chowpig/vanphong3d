@@ -533,7 +533,7 @@ const STAFF_NAME = { __reception: 'people.staff.receptionist', __hr: 'people.sta
 chat = createChatEngine({
   tr, now: () => Date.now(),
   // (only the conversations the office draws: Chat and Cowork, and Claude Code's sessions when Settings shows them)
-  members: () => [...sessions.values()].filter((s) => s.src || showCode()).map((s) => ({ id: s.id, name: s.title || s.name || 'claude', status: s.status, task: s.lastPrompt ? clip(oneLine(unwrapPaste(s.lastPrompt)), 80) : '', last: s.last, counts: s.counts, project: myProjects.match([s.coworkProject, s.title, gitRepoName(s), path.basename(s.cwd || '')], { loose: !!s.src }) || (s.src && s.coworkProject) || path.basename(s.cwd || '') })),
+  members: () => [...sessions.values()].filter((s) => s.src || showCode()).map((s) => ({ id: s.id, name: s.title || s.name || 'claude', status: s.status, task: s.lastPrompt ? clip(oneLine(unwrapPaste(s.lastPrompt)), 80) : '', last: s.last, counts: s.counts, project: myProjects.match([s.coworkProject, s.title, gitRepoName(s), path.basename(s.cwd || '')], { loose: !!s.src }) || (s.src && s.coworkProject) || (s.src && s.title) || path.basename(s.cwd || '') })),
   staffName: (key) => (STAFF_NAME[key] ? tr(STAFF_NAME[key]) : null),
   store: {
     load: () => { try { return JSON.parse(fs.readFileSync(CHAT_FILE, 'utf8')); } catch { return null; } },
