@@ -1368,3 +1368,29 @@ test('only Chat and Cowork conversations are drawn unless Settings asks for Clau
   }
   expect(errors).toEqual([]);
 });
+
+test('a Chat conversation in a project sits in a department room: one project, one room, however few there are', async ({ page, request }) => {
+  test.setTimeout(300_000);
+  const errors = watchErrors(page);
+  type Floor = { plan: string; units: number; depts: number; people: { id: string; project: string; unit: number }[] };
+  const floor = () => page.evaluate(() => (window as unknown as { __office: { floor: () => unknown } }).__office.floor()) as Promise<Floor>;
+  const stamp = Date.now(), ids = ['Marketing', 'Kế toán'].map((p, i) => ({ id: `e2e-room-${stamp}-${i}`, project: p }));
+  const cwdOf = (p: string) => path.join(HOME_DIR, 'Chat', p);
+  const chat = (id: string, project: string, name: string, extra: Record<string, unknown> = {}) => request.post('/event', { headers: { 'X-Office-Source': 'chat' }, data: { hook_event_name: name, session_id: id, cwd: cwdOf(project), transcript_path: '', source: 'startup', office_title: `Chat ${project}`, office_project: project, prompt: `việc của ${project}`, ...extra } });
+  try {
+    for (const { id, project } of ids) { fs.mkdirSync(cwdOf(project), { recursive: true }); await chat(id, project, 'SessionStart'); await chat(id, project, 'UserPromptSubmit'); }
+    await page.addInitScript(() => { try { if (!sessionStorage.getItem('e2e-fresh')) { sessionStorage.setItem('e2e-fresh', '1'); localStorage.removeItem('office-need'); localStorage.removeItem('office-rooms'); }   /* (clean once: the page reloads itself when it grows) */ localStorage.setItem('office-quality', 'low'); localStorage.setItem('office-autocam', 'off'); } catch { /* private mode */ } });
+    await page.goto('/?layout=auto&debug');
+    // two projects only, yet the office builds the headquarters: they get rooms, not pods
+    await expect(page.locator('html')).toHaveAttribute('data-plan', /^hq/, { timeout: 120_000 });
+    await expect(page.locator('#stage canvas')).toBeVisible();
+    await expect.poll(async () => (await floor()).people.filter((p) => ids.some((x) => x.project === p.project)).length, { timeout: 60_000 }).toBe(2);
+    const f = await floor(), mine = f.people.filter((p) => ids.some((x) => x.project === p.project));
+    expect(f.depts).toBeGreaterThanOrEqual(4);
+    expect(mine.every((p) => p.unit >= 6), 'both in department rooms (units 0-5 are the company floor\'s pods)').toBe(true);
+    expect(new Set(mine.map((p) => p.unit)).size, 'one room each').toBe(2);
+  } finally {
+    for (const { id, project } of ids) await chat(id, project, 'SessionEnd', { reason: 'other' });
+  }
+  expect(errors).toEqual([]);
+});

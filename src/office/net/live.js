@@ -50,10 +50,11 @@ function proDesk(s) {
   let d = -1;
   const room = mine.find((u) => free(u).length);   // 1. its area, a desk free
   if (room != null) d = free(room)[0];
-  if (d < 0) { const u = (homes[proj] || []).find((x) => x < UNITS.length && empty(x)); if (u != null) d = claim(u); }   // 2. where it sat before
+  if (d < 0) { const roomFree = s.src && all.some((y) => UNITS[y].dept >= 0 && empty(y)); const u = (homes[proj] || []).find((x) => x < UNITS.length && empty(x) && (!roomFree || UNITS[x].dept >= 0)); if (u != null) d = claim(u); }   // 2. where it sat before (a Chat or Cowork project: only a department room, while one is free)
   if (d < 0) {   // 3. a free area: next to its own, else one nobody calls home
     const claimed = new Set(Object.entries(homes).filter(([p]) => p !== proj).flatMap(([, us]) => us));
-    const pick = all.filter(empty).sort((a, b) => (mine.length ? Math.min(...mine.map((m) => near(a, m))) - Math.min(...mine.map((m) => near(b, m))) : 0) || (claimed.has(a) - claimed.has(b)) || a - b)[0];
+    const room = (u) => (UNITS[u].dept >= 0 ? 1 : 0);   // (a Chat or Cowork conversation: a department room if one is free, else a pod)
+    const pick = all.filter(empty).sort((a, b) => (s.src ? room(b) - room(a) : 0) || (mine.length ? Math.min(...mine.map((m) => near(a, m))) - Math.min(...mine.map((m) => near(b, m))) : 0) || (claimed.has(a) - claimed.has(b)) || a - b)[0];
     if (pick != null) d = claim(pick);
   }
   if (d < 0) { let best = -1, most = 0; for (const u of all) if (free(u).length > most) { most = free(u).length; best = u; } if (best >= 0) d = free(best)[0]; }   // 4. every area taken: share
@@ -80,7 +81,9 @@ let growTimer = 0;
 export function checkGrowth() {
   if (!AUTO || STATIC || replay.on || !state.connectedOnce) return;
   const need = projectsNow(); rememberNeed(need);
-  const want = planFor(need);
+  const rooms = (state.myProjects || []).length > 0 || [...sessions.values()].some((s) => s.proj || s.src);   // (named projects: each has a department room)
+  if (rooms) { try { if (Date.now() - (Number(localStorage.getItem('office-rooms')) || 0) > 36e5) localStorage.setItem('office-rooms', String(Date.now())); } catch { /* storage blocked */ } }
+  const want = planFor(need, rooms);
   if (capacity(want.layout, want.extra) <= capacity(LAYOUT, EXTRA)) return;
   let last = 0; try { last = Number(sessionStorage.getItem('office-grown')) || 0; } catch { /* storage blocked */ }
   const wait = last + GROW_GAP - Date.now();

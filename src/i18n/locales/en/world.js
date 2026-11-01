@@ -39,7 +39,7 @@ export default {
   dept: {
     free: 'DEPARTMENT {n}',
     freeSub: 'free for the next project',
-    name: '{name}',
+    name: '{name} room',
     sub: 'Department {n}',
     hq: 'HEADQUARTERS',
     hqSub: 'Departments',

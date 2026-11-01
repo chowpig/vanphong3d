@@ -65,7 +65,8 @@ export function setup() {
     const rows = Math.max(0, Math.min(MAX_EXTRA, Math.floor(Number(qs.get('rows')) || 0)));
     if (AUTO) {
       let need = 0; try { need = Number(JSON.parse(localStorage.getItem(NEED_KEY) || 'null')?.n) || 0; } catch { /* storage blocked */ }
-      const p = planFor(qs.has('rows') ? 10 + 2 * rows : need);
+      let rooms = false; try { rooms = Date.now() - (Number(localStorage.getItem('office-rooms')) || 0) < 3 * 864e5; } catch { /* storage blocked */ }   // (named projects were seen in the last 3 days)
+      const p = planFor(qs.has('rows') ? 10 + 2 * rows : need, rooms);
       LAYOUT = p.layout; EXTRA = p.extra;
     } else { LAYOUT = MODE; EXTRA = MODE === 'hq' ? rows : 0; }
   }

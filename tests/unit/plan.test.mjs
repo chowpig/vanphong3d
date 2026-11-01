@@ -16,6 +16,11 @@ test('the plan a number of projects needs: pro up to 6, hq beyond it, two more r
   assert.deepEqual(planFor(500), { layout: 'hq', extra: MAX_EXTRA });
   assert.deepEqual(planFor(undefined), { layout: 'pro', extra: 0 });
   assert.deepEqual(planFor(-3), { layout: 'pro', extra: 0 });
+  // named projects (a Chat conversation in a project, the "My projects" list) get department rooms, so even one builds the headquarters
+  assert.deepEqual(planFor(0, true), { layout: 'hq', extra: 0 });
+  assert.deepEqual(planFor(1, true), { layout: 'hq', extra: 0 });
+  assert.deepEqual(planFor(11, true), planFor(11));
+  assert.deepEqual(planFor(3, false), { layout: 'pro', extra: 0 });
   // the plan always seats the projects it was picked for (until the cap)
   for (let n = 0; n <= 18; n++) { const p = planFor(n); assert.ok(capacity(p.layout, p.extra) >= n, `${n} projects fit`); }
   assert.equal(capacity('cozy'), SEATS.cozy);

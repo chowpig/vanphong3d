@@ -33,7 +33,7 @@ export default {
   dept: {
     free: 'PHÒNG BAN {n}',
     freeSub: 'chờ dự án tiếp theo',
-    name: '{name}',
+    name: 'Phòng {name}',
     sub: 'Phòng ban {n}',
     hq: 'TRỤ SỞ',
     hqSub: 'Các phòng ban',

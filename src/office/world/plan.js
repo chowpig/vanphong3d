@@ -11,10 +11,12 @@ export const capacity = (layout, extra = 0) => (layout === 'hq' ? SEATS.hq + 2 *
 export const wingZ1 = (extra = 0) => BASE_Z1 + ROW_D * extra;
 export const wingDepth = (extra = 0) => wingZ1(extra) + 8;   // the whole building, back wall (z -8) to the wing's end
 
-/** The plan a number of projects needs: the company floor seats 6, the wing 4 rooms more, then 2 for each extra row. */
-export function planFor(projects) {
+/** The plan a number of projects needs: the company floor seats 6, the wing 4 rooms more, then 2 for each extra row.
+ *  `rooms`: there are named projects (Chat conversations in a project, or the "My projects" list), which get a department
+ *  room each, so even a few of them build the headquarters. */
+export function planFor(projects, rooms = false) {
   const n = Math.max(0, Math.floor(Number(projects) || 0));
-  if (n <= SEATS.pro) return { layout: 'pro', extra: 0 };
+  if (n <= SEATS.pro) return rooms ? { layout: 'hq', extra: 0 } : { layout: 'pro', extra: 0 };
   return { layout: 'hq', extra: Math.min(MAX_EXTRA, Math.max(0, Math.ceil((n - SEATS.hq) / 2))) };
 }
 
