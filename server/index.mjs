@@ -2368,9 +2368,7 @@ const server = http.createServer((req, res) => {
     if (!isLoopback(req) || !sameOrigin || (req.method === 'POST' && !String(req.headers['content-type'] || '').startsWith('application/json'))) { json(res, 403, { ok: false, message: tr('server.api.approveOnMac') }); return; }
     if (req.method === 'GET') { Promise.race([bgRun.probe(findClaude()).catch(() => null), new Promise((r) => setTimeout(r, 4000))]).then(() => json(res, 200, tunnelOut())); return; }   // (whether this Claude Code has background sessions: looked at once)
     readJson(req).then((b) => {
-      prefs.set('tunnel', b?.on ? true : undefined);
-      fsp.appendFile(ACTION_LOG, `${new Date().toISOString()} tunnel ${b?.on ? 'on' : 'off'}\n`).catch(() => {});
-      if (b?.on) startTunnel(); else stopTunnel();
+      if (b?.on) { json(res, 403, { ...tunnelOut(), ok: false, message: 'Internet tunnel is removed in vanphong3d (security).' }); return; }
       json(res, 200, tunnelOut());
     });
     return;
@@ -2688,7 +2686,6 @@ setInterval(syncLan, 30_000).unref();
    that only the Mac may do (hooks, stopping processes, accounts, these switches) refuses it, as it refuses a phone.
    Off: cloudflared stops and the listener closes, cutting off whoever was in. OFFICE_TUNNEL_CMD: a stand-in (tests). */
 const tunnel = { state: 'off', url: '', host: '', error: '', pid: 0, srv: null, port: 0, tries: 0, gen: 0, watch: null };
-const TUNNEL_PID = path.join(DATA_DIR, 'tunnel.pid'), CF_BIN = path.join(DATA_DIR, 'bin', process.platform === 'win32' ? 'cloudflared.exe' : 'cloudflared');
 const tunnelOut = () => ({ ok: true, on: !!prefs.get('tunnel'), state: tunnel.state, url: tunnel.url, error: tunnel.error, port: tunnel.port, pin: currentPin(),
   awake: process.platform === 'darwin' ? { held: !!awakeProc, ac: powerAC } : null, rc: rcAtStartup(), tasks: !!prefs.get('phoneTasks'), bg: bgOut() });
 // Giving Claude work from a phone is Claude Code's own Remote Control: with remoteControlAtStartup in its settings every
@@ -2718,114 +2715,13 @@ function keepAwake(on) {
     clearInterval(powerT); powerT = null;
   }
 }
-async function cloudflared() {
-  if (process.env.OFFICE_TUNNEL_CMD) return process.env.OFFICE_TUNNEL_CMD;
-  if (fs.existsSync(CF_BIN)) return CF_BIN;
-  const onPath = await new Promise((resolve) => execFile(process.platform === 'win32' ? 'where' : 'which', ['cloudflared'], { timeout: 4000 }, (err, out) => resolve(err ? '' : String(out).split('\n')[0].trim())));
-  if (onPath) return onPath;
-  const arch = process.arch === 'arm64' ? 'arm64' : 'amd64';
-  const asset = { darwin: `cloudflared-darwin-${arch}.tgz`, linux: `cloudflared-linux-${arch}`, win32: 'cloudflared-windows-amd64.exe' }[process.platform];
-  if (!asset) throw new Error(tr('server.tunnel.noPlatform'));
-  tunnel.state = 'download';
-  const r = await fetch(`https://github.com/cloudflare/cloudflared/releases/latest/download/${asset}`, { signal: AbortSignal.timeout(180_000) });
-  if (!r.ok) throw new Error(tr('server.tunnel.downloadFailed', { status: r.status }));
-  fs.mkdirSync(path.dirname(CF_BIN), { recursive: true });
-  const tmp = `${CF_BIN}.download`;
-  fs.writeFileSync(tmp, Buffer.from(await r.arrayBuffer()));
-  if (asset.endsWith('.tgz')) { await new Promise((resolve, reject) => execFile('tar', ['-xzf', tmp, '-C', path.dirname(CF_BIN)], (err) => (err ? reject(err) : resolve()))); fs.rmSync(tmp, { force: true }); }
-  else fs.renameSync(tmp, CF_BIN);
-  fs.chmodSync(CF_BIN, 0o755);
-  return CF_BIN;
-}
-// a cloudflared left running by an office that stopped without stopping it (only if that pid is still a cloudflared:
-// pids get reused)
-function killStaleTunnel() {
-  try {
-    const pid = Number(fs.readFileSync(TUNNEL_PID, 'utf8'));
-    const comm = pid > 1 && alive(pid) && process.platform !== 'win32' ? execFileSync('ps', ['-o', 'comm=', '-p', String(pid)], { timeout: 4000 }).toString() : '';
-    if (/cloudflared|tunnel/i.test(path.basename(comm.trim()))) process.kill(pid, 'SIGTERM');
-  } catch { /* none, or gone */ }
-  fs.rmSync(TUNNEL_PID, { force: true });
-}
-// The tunnel outlives a restart of the office (an update, say): cloudflared runs on its own, writing to data/tunnel.log, and
-// leads to a port that doesn't change (OFFICE_TUNNEL_PORT, else the office's + 7), so the office coming back takes the
-// same cloudflared and the same address (data/tunnel.json) and the phone's link still works. Only the switch stops it.
-const TUNNEL_FILE = path.join(DATA_DIR, 'tunnel.json'), TUNNEL_LOG = path.join(DATA_DIR, 'tunnel.log'), TUNNEL_PORT = Number(process.env.OFFICE_TUNNEL_PORT) || PORT + 7;
-const isCloudflared = (pid) => { try { return process.platform !== 'win32' && /cloudflared/.test(path.basename(execFileSync('ps', ['-o', 'comm=', '-p', String(pid)], { timeout: 4000 }).toString().trim())); } catch { return false; } };
-const readJsonFile = (f) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return null; } };
-async function listenTunnel() {
-  if (tunnel.srv) return;
-  const handle = server.listeners('request')[0], srv = http.createServer((req, res) => { req.viaTunnel = true; handle(req, res); });
-  await new Promise((resolve, reject) => { srv.once('error', reject); srv.listen(TUNNEL_PORT, '127.0.0.1', resolve); });
-  tunnel.srv = srv; tunnel.port = TUNNEL_PORT;
-}
-function tunnelUp(pid, url) {
-  Object.assign(tunnel, { pid, url, host: new URL(url).host, state: 'on', tries: 0, error: '' });
-  try { fs.writeFileSync(TUNNEL_FILE, JSON.stringify({ pid, url, port: tunnel.port })); } catch { /* read-only data */ }
-  console.log(`[my-office] ${tr('server.tunnel.ready', { url })}`);
-  clearInterval(tunnel.watch);
-  tunnel.watch = setInterval(() => {   // (it may drop: the network went away, Cloudflare closed it; again, later each time)
-    if (!tunnel.pid || alive(tunnel.pid)) return;
-    clearInterval(tunnel.watch); Object.assign(tunnel, { pid: 0, url: '', host: '' }); fs.rmSync(TUNNEL_FILE, { force: true });
-    if (!prefs.get('tunnel')) { tunnel.state = 'off'; return; }
-    tunnel.state = 'error'; tunnel.error = tr('server.tunnel.dropped');
-    if (++tunnel.tries <= 6) setTimeout(() => { if (prefs.get('tunnel')) startTunnel(); }, Math.min(60_000, 3000 * 2 ** tunnel.tries)).unref();
-  }, 5000);
-  tunnel.watch.unref();
-}
-async function startTunnel() {
-  if (tunnel.pid || tunnel.state === 'download' || tunnel.state === 'starting') return;
-  keepAwake(true);
-  const gen = ++tunnel.gen;
-  tunnel.state = 'starting'; tunnel.error = ''; tunnel.url = ''; tunnel.host = '';
-  try {
-    await listenTunnel();
-    // the one left running before a restart, to the same port: the same address
-    const saved = readJsonFile(TUNNEL_FILE);
-    if (saved?.url && saved.port === tunnel.port && saved.pid > 1 && alive(saved.pid) && isCloudflared(saved.pid)) { tunnelUp(saved.pid, saved.url); return; }
-    killStaleTunnel();
-    const cmd = await cloudflared();
-    if (gen !== tunnel.gen || !prefs.get('tunnel')) return;
-    tunnel.state = 'starting';
-    fs.writeFileSync(TUNNEL_LOG, '');
-    const out = fs.openSync(TUNNEL_LOG, 'a');
-    const proc = spawn(cmd, ['tunnel', '--no-autoupdate', '--url', `http://127.0.0.1:${tunnel.port}`], { stdio: ['ignore', out, out], detached: true, windowsHide: true });
-    fs.closeSync(out); proc.unref();
-    proc.on('error', (err) => { tunnel.error = String(err.message || err).slice(0, 200); });
-    try { fs.writeFileSync(TUNNEL_PID, String(proc.pid)); } catch { /* read-only data */ }
-    // its address, from its log
-    const t0 = Date.now();
-    await new Promise((resolve) => {
-      const look = () => {
-        if (gen !== tunnel.gen) { resolve(); return; }
-        let log = ''; try { log = fs.readFileSync(TUNNEL_LOG, 'utf8'); } catch { /* not yet */ }
-        const m = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/.exec(log);
-        if (m) { tunnelUp(proc.pid, m[0]); resolve(); return; }
-        if (!alive(proc.pid) || Date.now() - t0 > 90_000) { tunnel.state = 'error'; tunnel.error ||= clip(oneLine(log.split('\n').filter(Boolean).pop() || tr('server.tunnel.dropped')), 200); try { process.kill(proc.pid); } catch { /* gone */ } resolve(); return; }
-        setTimeout(look, 500);
-      };
-      look();
-    });
-  } catch (err) {
-    if (gen !== tunnel.gen) return;
-    tunnel.state = 'error'; tunnel.error = String(err.message || err).slice(0, 200);
-  }
-}
-function stopTunnel() {
-  tunnel.gen++;
-  keepAwake(false); clearInterval(tunnel.watch);
-  if (tunnel.pid) { try { process.kill(tunnel.pid, 'SIGTERM'); } catch { /* gone */ } }
-  fs.rmSync(TUNNEL_PID, { force: true }); fs.rmSync(TUNNEL_FILE, { force: true });
-  if (tunnel.srv) { tunnel.srv.close(); tunnel.srv.closeAllConnections?.(); tunnel.srv = null; tunnel.port = 0; }
-  Object.assign(tunnel, { state: 'off', url: '', host: '', error: '', tries: 0, pid: 0 });
-}
-// (the office stopping: cloudflared keeps going for when it comes back; staying awake ends with it, caffeinate -w)
+// (the office stopping: staying awake ends with it, caffeinate -w)
 process.on('exit', () => { try { awakeProc?.kill(); } catch { /* gone */ } otel.saveSync(); });
 for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, () => process.exit(0));
 
 server.listen(PORT, HOST, () => {
   syncLan();
-  if (prefs.get('tunnel')) startTunnel(); else killStaleTunnel();
+  prefs.set('tunnel', undefined);   // vanphong3d: no internet tunnel, ever
   scanSessions();
   scanCleanups().catch(() => {});   // macOS paths; elsewhere there may be nothing to scan
   trackOwners();
