@@ -1,6 +1,6 @@
 // Settings popover: backdrop, floor plan, look, time, toggles.
 import { state } from '../core/state.js';
-import { $, LAYOUT, PLANS, STATIC } from '../core/env.js';
+import { $, MODE, MODES, STATIC } from '../core/env.js';
 import { bubbleText } from './event-text.js';
 import { labels } from '../scene/renderer.js';
 import { subs, workers } from '../people/workers.js';
@@ -22,9 +22,9 @@ export let popLook;
 let btnLook;
 // switching the floor plan rebuilds the whole office, so the page reloads (sessions come back from the server)
 function setLayout(l) {
-  if (l === LAYOUT || !PLANS.includes(l)) return;
+  if (l === MODE || !MODES.includes(l)) return;
   try { localStorage.setItem('office-layout', l); } catch { /* storage blocked */ }
-  toast(tr({ pro: 'settings.toPro', hq: 'settings.toHq', cozy: 'settings.toCozy' }[l]));
+  toast(tr({ auto: 'settings.toAuto', pro: 'settings.toPro', hq: 'settings.toHq', cozy: 'settings.toCozy' }[l]));
   const u = new URL(location.href); u.searchParams.delete('layout'); setTimeout(() => location.replace(u), 250);
 }
 // the language belongs to the whole office (the server writes some of the words too): save it there, then every open page
@@ -86,7 +86,7 @@ export function syncTimeBtns() { const m = state.nightManual ? (night ? 'night' 
 export function setup() {
   /* ---------- appearance popover: backdrop, character look, time of day ---------- */
   popLook = $('pop-look'); btnLook = $('btn-look');
-  for (const b of document.querySelectorAll('[data-layout]')) b.setAttribute('aria-pressed', String(b.dataset.layout === LAYOUT));
+  for (const b of document.querySelectorAll('[data-layout]')) b.setAttribute('aria-pressed', String(b.dataset.layout === MODE));
   btnLook.addEventListener('click', (e) => { e.stopPropagation(); togglePop(); });
   try { tabNow = localStorage.getItem('office-settings-tab') || 'office'; } catch { /* storage blocked */ }
   // tabs by keyboard: left / right / Home / End; Esc closes the panel

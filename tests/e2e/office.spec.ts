@@ -1219,3 +1219,58 @@ test('the machine drawer says why it is slow, closes idle sessions in one go and
   await expect(body.locator('.auto-close [role="radio"]').first()).toHaveAttribute('aria-checked', 'false');
   expect(errors).toEqual([]);
 });
+
+test('a headquarters with every extra row starts in demo mode without errors', { tag: '@smoke' }, async ({ page }) => {
+  test.setTimeout(180_000);   // (the biggest building: a slow machine takes a while to draw it)
+  const errors = watchErrors(page);
+  await page.goto('/?demo&layout=hq&rows=4&debug');
+  await expect(page.locator('#stage canvas')).toBeVisible({ timeout: 90_000 });
+  await expect(page.locator('html')).toHaveAttribute('data-plan', 'hq+4');
+  await expect(page.locator('#rail-list .ri').first()).toBeVisible({ timeout: 20_000 });
+  await page.waitForTimeout(3000);
+  const f = await page.evaluate(() => (window as unknown as { __office: { floor: () => { units: number; desks: number; depts: number } } }).__office.floor());
+  expect(f.depts).toBe(12);
+  expect(f.units).toBe(6 + 12);
+  expect(f.desks).toBe(12 + 8 * 12);
+  expect(errors).toEqual([]);
+});
+
+test('the office grows with its projects: past six it builds headquarters, past ten more rooms, and everyone walks to their desk', async ({ page, request }) => {
+  test.setTimeout(420_000);
+  const errors = watchErrors(page);
+  type Floor = { plan: string; units: number; desks: number; depts: number; projects: number; people: { id: string; project: string; desk: number; unit: number; station: string | null; away: number | null }[] };
+  const floor = () => page.evaluate(() => (window as unknown as { __office: { floor: () => unknown } }).__office.floor()) as Promise<Floor>;
+  const stamp = Date.now(), ids = Array.from({ length: 13 }, (_, i) => `e2e-grow-${stamp}-${i}`);
+  await page.goto('/?layout=auto&debug');
+  await expect(page.locator('html')).toHaveAttribute('data-plan', 'pro');
+  await expect(page.locator('html')).toHaveAttribute('data-mode', 'auto');
+  // thirteen projects, each with one session: the company floor seats six
+  for (const [i, id] of ids.entries()) {
+    const cwd = path.join(HOME_DIR, `grow-proj-${i}`); fs.mkdirSync(cwd, { recursive: true });
+    if (!fs.existsSync(path.join(cwd, '.git'))) execFileSync('git', ['init', '-q'], { cwd });   // (a project of its own: the office names a project by its repository)
+    await request.post('/event', { data: { hook_event_name: 'SessionStart', session_id: id, cwd, transcript_path: path.join(cwd, 't.jsonl'), source: 'startup' } });
+    await request.post('/event', { data: { hook_event_name: 'UserPromptSubmit', session_id: id, cwd, transcript_path: path.join(cwd, 't.jsonl'), prompt: `work on project ${i}` } });
+  }
+  // the page rebuilds itself: headquarters with two extra rows (ten areas + two per row = 14 seats, 13 needed)
+  await expect(page.locator('html')).toHaveAttribute('data-plan', 'hq+2', { timeout: 90_000 });
+  await expect(page.locator('#stage canvas')).toBeVisible();
+  await expect.poll(async () => (await floor()).projects, { timeout: 60_000 }).toBe(13);
+  const f = await floor();
+  expect(f.depts).toBe(8);
+  expect(f.units).toBe(6 + 8);
+  expect(f.desks).toBe(12 + 8 * 8);
+  // every project has an area of its own (no two share a unit), and the extra rooms are in use
+  const mine = f.people.filter((p) => /^grow-proj-\d+$/.test(p.project));
+  expect(mine.length).toBe(13);
+  expect(new Set(mine.map((p) => p.unit)).size).toBe(13);
+  expect(mine.some((p) => p.desk >= 12 + 8 * 4)).toBe(true);
+  // and they all get there: walked in through the doors and along the corridors to their chairs
+  await expect.poll(async () => (await floor()).people.filter((p) => /^grow-proj-\d+$/.test(p.project) && p.away != null && p.away < 1.6).length, { timeout: 240_000, intervals: [3000] }).toBe(13);
+  // a page opened again keeps the size (no reload loop), and a smaller need does not shrink the building at once
+  const n = await page.evaluate(() => JSON.parse(localStorage.getItem('office-need') || 'null'));
+  expect(n.n).toBe(13);
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-plan', 'hq+2');
+  for (const [i, id] of ids.entries()) await request.post('/event', { data: { hook_event_name: 'SessionEnd', session_id: id, cwd: path.join(HOME_DIR, `grow-proj-${i}`), transcript_path: '', reason: 'other' } });
+  expect(errors).toEqual([]);
+});

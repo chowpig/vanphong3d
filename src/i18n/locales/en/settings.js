@@ -1,6 +1,7 @@
 export default {
   language: 'Language',
   switchingLang: 'Switching language…',
+  toAuto: 'The office will grow with your projects…',
   toPro: 'Building the company office…',
   toHq: 'Building headquarters…',
   toCozy: 'Heading back to the cozy office…',
@@ -14,7 +15,8 @@ export default {
   layouts: {
     cozy: { name: 'Cozy', sub: 'One open room · 9 desks' },
     pro: { name: 'Company', sub: 'A whole floor · 12 desks' },
-    hq: { name: 'Headquarters', sub: 'Four departments · 44 desks' },
+    auto: { name: 'Auto', sub: 'Grows with your projects' },
+    hq: { name: 'Headquarters', sub: 'Departments · up to 18 projects' },
   },
   layoutNote: 'Changing the floor plan rebuilds the office: the page reloads and your sessions come straight back.',
   times: {

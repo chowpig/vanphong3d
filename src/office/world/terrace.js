@@ -2,7 +2,8 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { state } from '../core/state.js';
-import { HQ, PRO, rand } from '../core/env.js';
+import { EXTRA, GROW, HQ, PRO, rand } from '../core/env.js';
+import { ROW_D } from './plan.js';
 import { scene } from '../scene/renderer.js';
 import { canvasTex, cyl, mat, put, rbox } from '../scene/blocks.js';
 
@@ -81,16 +82,16 @@ export function setup() {
     for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { g.fillStyle = `hsl(216, 9%, ${25 + rand(-3, 3)}%)`; g.fillRect(i * sz + 2, j * sz + 2, sz - 4, sz - 4); }
   });
   tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping;
-   tileTex.repeat.set(PRO ? 7 : 6, HQ ? 11 : PRO ? 6 : 5);
+   tileTex.repeat.set(PRO ? 7 : 6, HQ ? (11 * (37.2 + GROW)) / 37.2 : PRO ? 6 : 5);
   // headquarters: the terrace runs on round the wing (front edge at z 28.7 instead of 11.7)
-  terrace = new THREE.Mesh(HQ ? new THREE.BoxGeometry(24.6, 0.3, 37.2) : PRO ? new THREE.BoxGeometry(24.6, 0.3, 20.2) : new THREE.BoxGeometry(21, 0.3, 17.4), mat('#3A3F47', { map: tileTex, roughness: 0.85 }));
-  if (HQ) terrace.position.set(3.4, -0.42, 10.1); else if (PRO) terrace.position.set(3.4, -0.42, 1.6); else terrace.position.set(1.6, -0.42, 2.0);
+  terrace = new THREE.Mesh(HQ ? new THREE.BoxGeometry(24.6, 0.3, 37.2 + GROW) : PRO ? new THREE.BoxGeometry(24.6, 0.3, 20.2) : new THREE.BoxGeometry(21, 0.3, 17.4), mat('#3A3F47', { map: tileTex, roughness: 0.85 }));
+  if (HQ) terrace.position.set(3.4, -0.42, 10.1 + GROW / 2); else if (PRO) terrace.position.set(3.4, -0.42, 1.6); else terrace.position.set(1.6, -0.42, 2.0);
    terrace.receiveShadow = true;
    scene.add(terrace);
-  const FZ = HQ ? 28.5 : 11.5;   // the terrace's front railing
+  const FZ = HQ ? 28.5 + GROW : 11.5;   // the terrace's front railing
   if (PRO) { railing(15.5, -8.4, 15.5, FZ); railing(-8.8, FZ, 15.5, FZ); } else { railing(11.9, -6.8, 11.9, 10.5); railing(-8.8, 10.5, 11.9, 10.5); }
-  for (const [x, z] of PRO ? [[15.0, -5.5], [15.0, 0.5], [15.0, 6.5], ...(HQ ? [[15.0, 12.5], [15.0, 18.5], [15.0, 24.5]] : []), [-5, FZ - 0.5], [1, FZ - 0.5], [8.5, FZ - 0.5]] : [[11.3, -4.5], [11.3, 1.5], [11.3, 7.5], [-5, 9.9], [1, 9.9], [7, 9.9]]) bollard(x, z);
-  if (PRO) { planter(14.9, -7.7, 'tree'); planter(14.9, 3.4, 'bush'); if (HQ) { planter(14.9, 14.6, 'bush'); planter(14.9, 21.6, 'tree'); } planter(-7.9, FZ - 0.7, 'tree'); planter(4.6, FZ - 0.7, 'bush'); planter(14.9, FZ - 0.7, 'tree'); }
+  for (const [x, z] of PRO ? [[15.0, -5.5], [15.0, 0.5], [15.0, 6.5], ...(HQ ? [[15.0, 12.5], [15.0, 18.5], [15.0, 24.5], ...Array.from({ length: Math.max(0, Math.floor((FZ - 2 - 30.5) / 6) + 1) }, (_, k) => [15.0, 30.5 + 6 * k]).filter(([, z]) => z < FZ - 1.2)] : []), [-5, FZ - 0.5], [1, FZ - 0.5], [8.5, FZ - 0.5]] : [[11.3, -4.5], [11.3, 1.5], [11.3, 7.5], [-5, 9.9], [1, 9.9], [7, 9.9]]) bollard(x, z);
+  if (PRO) { planter(14.9, -7.7, 'tree'); planter(14.9, 3.4, 'bush'); if (HQ) { planter(14.9, 14.6, 'bush'); planter(14.9, 21.6, 'tree'); for (let r = 0; r < EXTRA; r++) if (33.5 + ROW_D * r < FZ - 2.5) planter(14.9, 33.5 + ROW_D * r, r % 2 ? 'tree' : 'bush'); } planter(-7.9, FZ - 0.7, 'tree'); planter(4.6, FZ - 0.7, 'bush'); planter(14.9, FZ - 0.7, 'tree'); }
   else { planter(10.8, -5.6, 'tree'); planter(10.8, 4.6, 'tree'); planter(-7.2, 9.4, 'tree'); planter(4.2, 9.4, 'bush'); }
   /* outdoor seating on the terrace */
   (function outdoorSet(x, z) {
@@ -103,12 +104,12 @@ export function setup() {
       put(c, rbox(0.46, 0.42, 0.05, mat('#C9A27A'), 0.03), 0, 0.72, -0.2);
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) put(c, cyl(0.02, 0.02, 0.46, metal, 6), sx * 0.19, 0.23, sz * 0.18);
     }
-  })(...(HQ ? [11.6, 27.3] : PRO ? [11.6, 10.3] : [9.9, 0.9]));
+  })(...(HQ ? [11.6, 27.3 + GROW] : PRO ? [11.6, 10.3] : [9.9, 0.9]));
   /* surroundings: three backdrops (city, countryside, beach), each built on first use into its own group, one shown at a
      time. Shared helpers: a seeded random (same layout on every load), vertex-coloured shapes merged per material. */
   skyNight = canvasTex(8, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#060A16'); gr.addColorStop(0.55, '#121B36'); gr.addColorStop(1, '#2A3560'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
   skyDay = canvasTex(8, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#6F9DCC'); gr.addColorStop(0.6, '#B5CCE0'); gr.addColorStop(1, '#E2EAF0'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
   scene.background = skyNight;
-  scene.fog = new THREE.Fog(new THREE.Color('#16223E'), 40, 96);
+  scene.fog = new THREE.Fog(new THREE.Color('#16223E'), 40 + GROW, 96 + GROW * 1.5);
   state.envSeed = 20261026;
 }

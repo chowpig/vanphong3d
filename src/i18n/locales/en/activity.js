@@ -56,5 +56,6 @@ export default {
     team: 'Team {name}{more} · {n}',
     teamShared: "{name}'s desks, shared with: {others}",
     teamTitle: 'Desks of the {name} project',
+    growing: '{n} projects: building more rooms and desks…',
   },
 };

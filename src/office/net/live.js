@@ -2,14 +2,15 @@
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { state } from '../core/state.js';
-import { $, el, short } from '../core/env.js';
+import { $, AUTO, EXTRA, LAYOUT, NEED_KEY, STATIC, el, replay, short } from '../core/env.js';
+import { capacity, planFor } from '../world/plan.js';
 import { scene } from '../scene/renderer.js';
 import { CHAIR_IDLE, DESKS, PODS, UNITS, chairs, unitOfDesk } from '../world/desks.js';
 import { canvasTex } from '../scene/blocks.js';
 import { DEPTS } from '../world/layout.js';
 import { DEPT_SIGNS } from '../world/pro/wing.js';
 import { PALETTE, addWorker, dn, dropSub, hash, leaving, leavingIds, sessions, spawnSub, subs, workers } from '../people/workers.js';
-import { queueUi } from '../ui/activity.js';
+import { queueUi, toast } from '../ui/activity.js';
 import { closeSession } from '../ui/session-drawer.js';
 import { t as tr } from '../../i18n/index.js';
 
@@ -64,8 +65,33 @@ export function freeDesk(id) {
   const d = deskOf.get(id); deskOf.delete(id);
   if (d >= 0 && ![...deskOf.values()].some((x) => x >= 0 && unitOfDesk[x] === unitOfDesk[d])) rowTeam.delete(unitOfDesk[d]);
 }
+/* ---------- the office grows with its projects (layout "auto") ----------
+   How many projects have people in the office is remembered (the biggest lately; it only falls after three quiet days),
+   so the next load builds the right size. When there are more projects than the building has areas for, the page
+   reloads into a bigger one: the sessions come straight back from the server. */
+const SHRINK_AFTER = 3 * 864e5, GROW_GAP = 15_000;
+export const projectsNow = () => new Set([...sessions.values()].map(projOf)).size;
+function rememberNeed(need, now = Date.now()) {
+  let rec = null; try { rec = JSON.parse(localStorage.getItem(NEED_KEY) || 'null'); } catch { /* storage blocked */ }
+  const n = Number(rec?.n) || 0, at = Number(rec?.at) || 0;
+  if (need >= n ? (need !== n || now - at > 36e5) : now - at > SHRINK_AFTER) { try { localStorage.setItem(NEED_KEY, JSON.stringify({ n: need, at: now })); } catch { /* storage blocked */ } }
+}
+let growTimer = 0;
+export function checkGrowth() {
+  if (!AUTO || STATIC || replay.on || !state.connectedOnce) return;
+  const need = projectsNow(); rememberNeed(need);
+  const want = planFor(need);
+  if (capacity(want.layout, want.extra) <= capacity(LAYOUT, EXTRA)) return;
+  let last = 0; try { last = Number(sessionStorage.getItem('office-grown')) || 0; } catch { /* storage blocked */ }
+  const wait = last + GROW_GAP - Date.now();
+  if (wait > 0) { clearTimeout(growTimer); growTimer = setTimeout(checkGrowth, wait + 50); return; }   // (a page that has only just grown: let it settle first)
+  try { sessionStorage.setItem('office-grown', String(Date.now())); } catch { /* storage blocked */ }
+  toast(tr('activity.live.growing', { n: need }));
+  setTimeout(() => location.reload(), 900);
+}
 export let teamTags;
 export function updateTeamTags() {
+  checkGrowth();
   const here = teamTags.map((_, u) => [...sessions.values()].filter((s) => s.desk >= 0 && unitOfDesk[s.desk] === u));
   const nameOf = (u) => rowTeam.get(u) || [...new Set(here[u].map(projOf))][0] || '';
   teamTags.forEach((tg, u) => {
@@ -139,6 +165,12 @@ export function setup() {
   TOKEN = new URLSearchParams(location.search).get('k') || '';
   state.connectedOnce = false;
   // a name chip over each team's pod (a department room: over the gap between its two pods): "Team website-ielts · 3"
+  // ?debug: __office.floor() says how big the building is and where each person is against their desk (the tests' way in)
+  if (new URLSearchParams(location.search).has('debug')) setTimeout(function hook() {
+    if (!window.__office) { setTimeout(hook, 200); return; }
+    window.__office.floor = () => ({ plan: document.documentElement.dataset.plan, units: UNITS.length, desks: DESKS.length, depts: DEPTS.length, projects: projectsNow(),
+      people: [...sessions.values()].map((s) => { const w = workers.get(s.id), d = DESKS[s.desk]; return { id: s.id, project: projOf(s), desk: s.desk, unit: unitOfDesk[s.desk], station: w?.station || null, away: d && w ? Math.hypot(w.pos.x - d.x, w.pos.y - d.z) : null }; }) });
+  }, 200);
   teamTags = UNITS.map((u) => {
     const t = el('div', 'team-tag'); const dot = el('i'), txt = el('span'); t.append(dot, txt);
     const o = new CSS2DObject(t);

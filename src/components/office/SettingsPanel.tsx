@@ -6,7 +6,7 @@ import { LANGS } from '@/i18n/index.js';
 import { getT } from '@/i18n/server';
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH || '';
-const LAYOUTS = ['cozy', 'pro', 'hq'] as const;
+const LAYOUTS = ['auto', 'cozy', 'pro', 'hq'] as const;
 const TIMES = ['auto', 'day', 'night'] as const;
 const LOOKS = ['toy', 'pixar'] as const;
 const QUALITY = [['auto', 0], ['low', 1], ['medium', 2], ['high', 3]] as const;
@@ -35,7 +35,7 @@ export default async function SettingsPanel() {
       <div className="st-body">
         <section className="st-panel" id="st-panel-office" role="tabpanel" aria-labelledby="st-tab-office" data-st-panel="office">
           <h3>{t('ui.topBar.office')}</h3>
-          <div className="st-cards st-cards--3">
+          <div className="st-cards st-cards--4">
             {LAYOUTS.map((l) => (
               <button key={l} type="button" className="scene st-layout" data-layout={l} aria-pressed="false">
                 {/* eslint-disable-next-line @next/next/no-img-element -- a small static picture, no optimisation needed */}

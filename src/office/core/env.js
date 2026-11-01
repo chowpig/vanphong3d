@@ -1,6 +1,7 @@
 // Page-wide basics: DOM helpers, the floor plan choice, replay clock, office clock, season, formatting.
 import * as THREE from 'three';
 import { t, num } from '../../i18n/index.js';
+import { MAX_EXTRA, ROW_D, planFor } from '../world/plan.js';
 
 export const $ = (id) => document.getElementById(id);
 // The online demo: a static export with no server behind it (next.config.mjs, OFFICE_STATIC=1). It always runs demo mode.
@@ -11,6 +12,15 @@ export let LAYOUT;
 export let PRO;
 export let HQ;
 export const PLANS = ['cozy', 'pro', 'hq'];
+// what a viewer picks: 'auto' (the office grows with its projects) or one plan
+export const MODES = ['auto', ...PLANS];
+export let MODE;
+export let AUTO;
+// rows of two department rooms added to the headquarters wing (0 to MAX_EXTRA)
+export let EXTRA = 0;
+// how many metres deeper the building is for them
+export let GROW = 0;
+export const NEED_KEY = 'office-need';
 export let small;
 export const V2 = THREE.Vector2;
 export const rand = (a, b) => a + Math.random() * (b - a);
@@ -43,13 +53,27 @@ export const fmtClock = (s) => { s = Math.max(0, Math.floor(s)); return s >= 360
 export function setup() {
   stage = $('stage');
   reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // Floor plan, each viewer's own choice: 'pro' (a company floor, the default), 'cozy' (one open room)
-  // or 'hq' (headquarters: the company floor plus a wing of department rooms). Switching reloads the page;
-  // ?layout=cozy|pro|hq overrides it for one visit.
-  LAYOUT = (() => { const q = new URLSearchParams(location.search).get('layout'); if (PLANS.includes(q)) return q; const def = 'pro'; try { const v = localStorage.getItem('office-layout'); return PLANS.includes(v) ? v : def; } catch { return def; } })();
+  // Floor plan, each viewer's own choice. 'auto' (the default): the office grows with its projects, a company floor for
+  // up to 6, then the headquarters, and a pair more department rooms for every two projects beyond its first 10 (the page
+  // reloads when it must grow, and remembers how many it needed). Or one plan for good: 'cozy', 'pro', 'hq'.
+  // ?layout=auto|cozy|pro|hq overrides it for one visit; ?rows=0..4 adds that many rows of rooms to 'hq'.
+  {
+    const qs = new URLSearchParams(location.search), q = qs.get('layout');
+    let stored = null; try { stored = localStorage.getItem('office-layout'); } catch { /* storage blocked */ }
+    MODE = MODES.includes(q) ? q : MODES.includes(stored) ? stored : 'auto';
+    AUTO = MODE === 'auto';
+    const rows = Math.max(0, Math.min(MAX_EXTRA, Math.floor(Number(qs.get('rows')) || 0)));
+    if (AUTO) {
+      let need = 0; try { need = Number(JSON.parse(localStorage.getItem(NEED_KEY) || 'null')?.n) || 0; } catch { /* storage blocked */ }
+      const p = planFor(qs.has('rows') ? 10 + 2 * rows : need);
+      LAYOUT = p.layout; EXTRA = p.extra;
+    } else { LAYOUT = MODE; EXTRA = MODE === 'hq' ? rows : 0; }
+  }
   // the company floor's rooms, people and habits; headquarters is the company floor plus a wing of departments
   PRO = LAYOUT === 'pro' || LAYOUT === 'hq';
   HQ = LAYOUT === 'hq';
+  GROW = HQ ? EXTRA * ROW_D : 0;
+  document.documentElement.dataset.plan = LAYOUT + (EXTRA ? `+${EXTRA}` : ''); document.documentElement.dataset.mode = MODE;
   small = matchMedia('(max-width: 720px)');
   // The office's wall clock (lunch, the afternoon coffee, the season's decorations). ?at=12:10 or ?at=2026-12-24T20:00
   // pretends it is that time, for screenshots and for trying a season out.

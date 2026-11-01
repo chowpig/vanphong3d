@@ -52,5 +52,6 @@ export default {
     team: 'Nhóm {name}{more} · {n}',
     teamShared: 'Cụm bàn của {name}, ngồi chung: {others}',
     teamTitle: 'Cụm bàn của dự án {name}',
+    growing: '{n} dự án: đang mở rộng phòng ban và bàn làm việc…',
   },
 };

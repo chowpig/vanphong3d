@@ -15,6 +15,16 @@ Nguồn: [khanh020905/my-office](https://github.com/khanh020905/my-office) (MIT,
 - PIN tối thiểu 8 số (mặc định sinh 8 số); cookie "nhớ thiết bị" 30 ngày thay vì 365.
 - LAN vẫn tắt mặc định, chỉ bật khi bạn tự gạt công tắc; không có đường ra internet.
 
+## Văn phòng tự mở rộng (kiểu "Tự động", mặc định)
+- Văn phòng chọn cỡ theo số dự án có người: tới 6 dự án là tầng công ty (`pro`); từ 7 là trụ sở (`hq`, 10 chỗ); mỗi 2 dự án nữa thêm một hàng 2 phòng ban ở cánh nhà, tối đa 4 hàng (18 dự án). Quá 18 thì dùng chung bàn như trước.
+- Khi số dự án vượt sức chứa, trang tự nạp lại vào bản lớn hơn (hiện thông báo), các phiên quay về ngay từ server. Số dự án cần được nhớ trong `localStorage["office-need"]` (giữ mức lớn nhất; chỉ hạ sau 3 ngày); không bao giờ thu nhỏ khi đang mở.
+- Chọn tay vẫn được: Cài đặt → Văn phòng (Ấm cúng / Chuyên nghiệp / Tập đoàn), hoặc `?layout=auto|cozy|pro|hq&rows=0..4` cho một lần xem.
+- Mã: `src/office/world/plan.js` (tính toán thuần: danh sách phòng, đồ thị đi bộ, quy tắc chọn cỡ; có test ở `tests/unit/plan.test.mjs`), `wing.js`, `terrace.js`, `lights.js` theo số hàng; `net/live.js` (`checkGrowth`). E2E: `grows with its projects` (13 dự án → `hq+2`, cả 13 người đi tới bàn).
+- Giới hạn đã biết: mỗi hàng thêm 2 đèn điểm cho mỗi 2 hàng (tối đa +4 đèn); bóng đổ dùng bản đồ 4096 khi tòa nhà dài; tòa nhà lớn nhất (hq+4) nặng hơn trên máy yếu.
+
+## Ngôn ngữ
+- Tiếng Việt là mặc định (`INITIAL_LANG` trong `src/i18n/index.js`); đổi trong Cài đặt hoặc `OFFICE_LANG=en`. Bản dịch vi đủ 2.599/2.599 khóa. Tên sản phẩm "My Office" chưa đổi.
+
 ## Kiểm tra bảo mật (hộp đen, từ địa chỉ LAN)
 - Chưa đăng nhập: mọi route 401/403, `/` chuyển sang `/pin`. Hook/`/event`/`/v1/*` từ LAN: 403 dù có khóa. Host lạ: 421. Đổi PIN từ điện thoại cần PIN hiện tại và có khóa thử sai.
 - Đã sửa: `/api/sys/action` và `/api/sys/auto` (dừng/đóng tiến trình, hẹn giờ đóng phiên) trước đây điện thoại có PIN gọi được; nay chỉ loopback.

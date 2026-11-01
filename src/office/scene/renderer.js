@@ -7,7 +7,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { HQ, PRO, el, small, stage } from '../core/env.js';
+import { GROW, HQ, PRO, el, small, stage } from '../core/env.js';
 import { t as tr } from '../../i18n/index.js';
 
 /* ---------- renderer ---------- */
@@ -52,15 +52,15 @@ export function setup() {
   stage.appendChild(labels.domElement);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.12;
-  HOME = HQ ? new THREE.Vector3(3, 0.3, 9) : PRO ? new THREE.Vector3(3, 0.3, 0.7) : new THREE.Vector3(0, 0.3, 0.2);
-  BASE_ZOOM = (small.matches ? 1.35 : 1) * (HQ ? 0.56 : PRO ? 0.8 : 1);
+  HOME = HQ ? new THREE.Vector3(3, 0.3, 9 + GROW / 2) : PRO ? new THREE.Vector3(3, 0.3, 0.7) : new THREE.Vector3(0, 0.3, 0.2);
+  BASE_ZOOM = (small.matches ? 1.35 : 1) * (HQ ? (0.56 * 34) / (34 + GROW) : PRO ? 0.8 : 1);
   camera.position.set(...(HQ ? [19, 23, 19] : PRO ? [17, 20, 17] : [18, 16, 18])).add(HOME);
   camera.zoom = BASE_ZOOM;
   controls = new OrbitControls(camera, renderer.domElement);
   controls.target.copy(HOME);
   controls.enableDamping = true;
   controls.enablePan = false;
-  controls.minZoom = HQ ? 0.36 : PRO ? 0.5 : 0.7;
+  controls.minZoom = HQ ? (0.36 * 34) / (34 + GROW) : PRO ? 0.5 : 0.7;
    controls.maxZoom = 3.4;
   controls.minPolarAngle = 0.55;
    controls.maxPolarAngle = 1.15;

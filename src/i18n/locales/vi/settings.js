@@ -1,6 +1,7 @@
 export default {
   language: 'Ngôn ngữ',
   switchingLang: 'Đang đổi ngôn ngữ…',
+  toAuto: 'Văn phòng sẽ tự mở rộng theo số dự án…',
   toPro: 'Đang dựng văn phòng chuyên nghiệp…',
   toHq: 'Đang dựng văn phòng tập đoàn…',
   toCozy: 'Đang về văn phòng ấm cúng…',
@@ -14,7 +15,8 @@ export default {
   layouts: {
     cozy: { name: 'Ấm cúng', sub: 'Một phòng mở · 9 bàn' },
     pro: { name: 'Chuyên nghiệp', sub: 'Cả tầng công ty · 12 bàn' },
-    hq: { name: 'Tập đoàn', sub: 'Bốn phòng ban · 44 bàn' },
+    auto: { name: 'Tự động', sub: 'Mở rộng theo số dự án' },
+    hq: { name: 'Tập đoàn', sub: 'Phòng ban · tối đa 18 dự án' },
   },
   layoutNote: 'Đổi kiểu văn phòng sẽ dựng lại văn phòng: trang tải lại và các phiên quay về ngay.',
   times: {

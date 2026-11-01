@@ -4,7 +4,7 @@
 // tips, trophy names).
 import fs from 'node:fs';
 import path from 'node:path';
-import { createT, pickLang, LANGS } from '../src/i18n/index.js';
+import { INITIAL_LANG, createT, pickLang, LANGS } from '../src/i18n/index.js';
 
 /** the choices for closing idle sessions on a timer, in hours (0: off, the default) */
 export const AUTO_CLOSE_HOURS = [2, 4, 8];
@@ -13,7 +13,7 @@ export function createPrefs(dataDir) {
   const file = path.join(dataDir, 'prefs.json');
   let prefs = {};
   try { prefs = JSON.parse(fs.readFileSync(file, 'utf8')) || {}; } catch { /* first run */ }
-  const lang = () => pickLang(prefs.lang || process.env.OFFICE_LANG);
+  const lang = () => pickLang(prefs.lang || process.env.OFFICE_LANG || INITIAL_LANG);
   const save = () => { fs.mkdirSync(dataDir, { recursive: true }); fs.writeFileSync(file, JSON.stringify(prefs, null, 2)); };
   return {
     lang,

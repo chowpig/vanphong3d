@@ -1,6 +1,7 @@
 // The walking graph, desk spots and stations people go to.
 import { HQ, PRO, V2, randInt } from '../core/env.js';
 import { DEPTS, LAY, inside, sofaAt } from '../world/layout.js';
+import { wingGraph } from '../world/plan.js';
 import { DZ, LIFT_X } from '../world/entrance.js';
 import { DESKS, PODS, TEAM_SIZE, dLocal } from '../world/desks.js';
 import { MEET, MEET_SEATS } from '../world/furniture/meeting.js';
@@ -62,28 +63,6 @@ function meetStanding() {
     out.push({ x, z, face: Math.atan2(MEET.x - x, MEET.z - z), node: z > MEET.z ? 'M' : x > MEET.x ? 'P' : 'GR2', sit: false, by: null });
   }
   return out;
-}
-/* headquarters' wing: corridor A along the core (z 9.9), corridor B down the middle (x 3.3), and in each department
-   room a door, a lane between its two pods and the aisles behind each row of chairs. Pod p's aisle nodes are P{p}b0…. */
-function wingGraph() {
-  const nodes = { HAL: [-2.4, 9.9], HB0: [3.3, 9.9], HAR: [7.4, 9.9], HB1: [3.3, 22.2] };
-  const edges = [['L4', 'HAL'], ['R4', 'HAR'], ['HAL', 'HB0'], ['HB0', 'HAR'], ['HB0', 'HB1']];
-  DEPTS.forEach((d, i) => {
-    const pl = 3 + i * 2, pr = pl + 1, zb = d.cz - 1.8, zf = d.cz + 1.8, lane = d.door.side === 'n' ? d.door.at : d.cx;
-    nodes[`D${i}b`] = [lane, zb]; nodes[`D${i}f`] = [lane, zf];
-    edges.push([`D${i}b`, `D${i}f`], [`D${i}b`, `P${pl}b1`], [`P${pl}b1`, `P${pl}b0`], [`D${i}b`, `P${pr}b0`], [`P${pr}b0`, `P${pr}b1`],
-      [`D${i}f`, `P${pl}f1`], [`P${pl}f1`, `P${pl}f0`], [`D${i}f`, `P${pr}f0`], [`P${pr}f0`, `P${pr}f1`]);
-    if (d.door.side === 'n') {   // through the room's back wall from corridor A, into the lane
-      nodes[`D${i}i`] = [lane, d.z0 + 1.0];
-      if (lane !== -2.4) { nodes[`HA${i}`] = [lane, 9.9]; edges.push(['HAR', `HA${i}`], [`HA${i}`, `D${i}i`]); } else edges.push(['HAL', `D${i}i`]);
-      edges.push([`D${i}i`, `D${i}b`]);
-    } else {                     // from corridor B through a side wall, then along that wall to both aisles
-      const x = d.door.side === 'e' ? d.x1 - 0.4 : d.x0 + 0.5, near = d.door.side === 'e' ? pr : pl, k = d.door.side === 'e' ? 1 : 0;
-      nodes[`D${i}i`] = [x, d.door.at]; nodes[`D${i}sb`] = [x, zb]; nodes[`D${i}sf`] = [x, zf];
-      edges.push(['HB1', `D${i}i`], [`D${i}i`, `D${i}sb`], [`D${i}i`, `D${i}sf`], [`D${i}sb`, `P${near}b${k}`], [`D${i}sf`, `P${near}f${k}`]);
-    }
-  });
-  return { nodes, edges };
 }
 /* Places to stand within arm's reach of something (a lamp, the printer). The floor is searched in 10 cm cells kept 20 cm
    clear of furniture, from the spots around the thing outward, and the cell path is pulled tight into a few straight
@@ -192,7 +171,7 @@ export function setup() {
     MTw: [-2.05, -7.45], MB0: [-0.95, -7.45], MB1: [0.2, -7.45], MB2: [1.35, -7.45], MTb: [2.5, -7.45],
     LBd: [3.8, -2.3], LBi: [3.8, -3.8], LBf: [6.25, -3.45], LBm: [4.6, -5.6], CE: [7.4, -2.3],
     L1: [-2.4, -0.3], L2: [-2.4, 3.3], L3: [-2.4, 4.8], L4: [-2.4, 8.4], R1: [7.4, -0.3], R2: [7.4, 3.3], R3: [7.4, 4.8], R4: [7.4, 8.4],
-    M1: [2.5, -0.3], M2: [2.5, 3.3], ...podNodes, ...(HQ ? wingGraph().nodes : {}),
+    M1: [2.5, -0.3], M2: [2.5, 3.3], ...podNodes, ...(HQ ? wingGraph(DEPTS).nodes : {}),
     PA1: [9.3, -2.6], PA2: [9.3, -6.15], PA3: [11.7, -2.6], PA4: [11.7, -6.15], PA5: [9.3, 0.45], PA6: [11.7, 0.45],
     LG1: [9.3, 1.6], LG2: [12.2, 1.5], LGs: [9.5, 3.7], LGr: [12.75, 3.9], LG3: [9.0, 6.0], BK: [0.32, 8.4],   // (BK: in front of the karaoke box's door)
   } : {
@@ -209,7 +188,7 @@ export function setup() {
     ['L0', 'DRi'], ['DRi', 'DRc'], ['DRi', 'DRw'], ['DRw', 'DRs'], ['L0', 'MTd'], ['MTd', 'MTi'], ['MTi', 'MF2'], ['MF2', 'MF1'], ['MF1', 'MF0'], ['MF0', 'MTf'], ['MTf', 'MTw'],
     ['MTw', 'MB0'], ['MB0', 'MB1'], ['MB1', 'MB2'], ['MB2', 'MTb'], ['MTb', 'MTi'], ['MTd', 'LBd'], ['LBd', 'LBi'], ['LBi', 'LBf'], ['LBi', 'LBm'], ['LBd', 'CE'], ['CE', 'R1'],
     ['CE', 'PA1'], ['PA1', 'PA2'], ['PA1', 'PA3'], ['PA2', 'PA4'], ['PA3', 'PA4'], ['PA1', 'PA5'], ['PA3', 'PA6'], ['PA5', 'PA6'],
-    ['PA5', 'LG1'], ['LG1', 'LG2'], ['LG1', 'LGs'], ['LGs', 'LG3'], ['LG3', 'R3'], ['LG2', 'LGr'], ...(HQ ? wingGraph().edges : [])]
+    ['PA5', 'LG1'], ['LG1', 'LG2'], ['LG1', 'LGs'], ['LGs', 'LG3'], ['LG3', 'R3'], ['LG2', 'LGr'], ...(HQ ? wingGraph(DEPTS).edges : [])]
     : [['A', 'BL'], ['BL', 'T0'], ['T0', 'T1'], ['T1', 'T2'], ['T2', 'D'], ['D', 'E'], ['A', 'F'], ['F', 'I'], ['F', 'GL1'], ['BL', 'GL1'],
     ['GL1', 'U0'], ['U0', 'U1'], ['U1', 'U2'], ['U2', 'GR1'], ['GR1', 'D'], ['GL1', 'GL2'], ['I', 'GL2'], ['GL2', 'V0'], ['V0', 'V1'], ['V1', 'V2'],
     ['V2', 'GR2'], ['GR1', 'GR2'], ['GR1', 'P'], ['P', 'E'], ['I', 'J'], ['J', 'K'], ['K', 'GL2'], ['K', 'L'], ['L', 'M'], ['M', 'GR2']];

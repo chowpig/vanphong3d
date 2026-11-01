@@ -25,7 +25,7 @@ function plaque(i, x, y, z, ry) {
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const draw = (name) => {
     const g = c.getContext('2d'), n = i + 1;
-    g.fillStyle = '#1E232B'; g.fillRect(0, 0, 512, 160); g.fillStyle = ACCENTS[i]; g.fillRect(0, 0, 14, 160);
+    g.fillStyle = '#1E232B'; g.fillRect(0, 0, 512, 160); g.fillStyle = ACCENTS[i % ACCENTS.length]; g.fillRect(0, 0, 14, 160);
     g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillStyle = name ? '#F3EFE8' : '#9AA3B0'; g.font = `800 ${name ? 56 : 46}px ${FONT}`;
     const title = name ? tr('world.dept.name', { name }) : tr('world.dept.free', { n }); fitText(g, title, 456); g.fillText(title, 263, 66);
@@ -45,7 +45,7 @@ function sprintBoard(i, x, y, z, ry, w = 1.3, h = 0.8, stand = false) {
   const tex = canvasTex(512, Math.round((512 * h) / w), (g, cw, ch) => {
     g.fillStyle = '#FBFBF8'; g.fillRect(0, 0, cw, ch);
     g.fillStyle = '#1E232B'; g.font = `800 30px ${FONT}`; g.fillText(tr('world.dept.board'), 18, 40);
-    g.fillStyle = ACCENTS[i]; g.fillRect(18, 52, 120, 5);
+    g.fillStyle = ACCENTS[i % ACCENTS.length]; g.fillRect(18, 52, 120, 5);
     const cols = tr('world.dept.cols', null, 'list'), colW = (cw - 36) / 3;
     cols.forEach((t, k) => {
       const cx = 18 + k * colW;
@@ -84,13 +84,13 @@ function buildWing() {
   put(scene, rbox(0.3, 4.2, len, mat('#EEE8DE', { roughness: 0.9 }), 0.04), -8.15, 2.1, mid + 0.15);
   put(scene, rbox(0.42, 0.14, len, '#E2D9C8', 0.03), -8.15, 4.25, mid + 0.15);
   put(scene, rbox(0.06, 0.18, len, '#6E5440', 0.02), -7.97, 0.09, mid + 0.15);
-  for (const z of [12.4, 16.8, 20.6, 24.4]) wallWindow(-7.98, 2.1, z, 1.5, 1.5, Math.PI / 2, 2);
+  for (const z of [12.4, 16.8, 20.6, 24.4, ...DEPTS.filter((_, i) => i >= 4 && i % 2 === 0).flatMap((d) => [d.z0 + 2.0, d.z0 + 5.6])]) wallWindow(-7.98, 2.1, z, 1.5, 1.5, Math.PI / 2, 2);
 
   /* floors: corridors in pale tiles, each room its own carpet */
   const corridor = gridTex('#D7D2CA', 'rgba(120,110,100,.25)', 2);
   floorZone(-8, 14, WING.corA[0], WING.corA[1], corridor, 1.2);
   floorZone(WING.corB[0], WING.corB[1], WING.corA[1], Z1, corridor, 1.2);
-  DEPTS.forEach((d, i) => floorZone(d.x0, d.x1, d.z0, d.z1, speckTex(CARPETS[i], 3000, 0.06), 0.8));
+  DEPTS.forEach((d, i) => floorZone(d.x0, d.x1, d.z0, d.z1, speckTex(CARPETS[i % CARPETS.length], 3000, 0.06), 0.8));
 
   /* walls: the core's front gets two doors; glass between the rooms and the corridors, half walls between rooms */
   const [dw, de] = WING.doors;
@@ -98,17 +98,18 @@ function buildWing() {
   lowWall(-3.6, Z0, 8.6, Z0, [[dw - 0.6 + 3.6, dw + 0.6 + 3.6], [de - 0.6 + 3.6, de + 0.6 + 3.6]]);
   lowWall(8.6, Z0, 14, Z0);
   for (const d of DEPTS.filter((x) => x.door.side === 'n')) glassWall(d.x0, d.z0, d.x1, d.z0, [[d.door.at - 0.6 - d.x0, d.door.at + 0.6 - d.x0]]);
-  const [bx0, bx1] = WING.corB, door = DEPTS[2].door.at - WING.corA[1];
-  glassWall(bx0, WING.corA[1], bx0, Z1, [[door - 0.6, door + 0.6]]);
-  glassWall(bx1, WING.corA[1], bx1, Z1, [[door - 0.6, door + 0.6]]);
-  lowWall(-8, WING.split, bx0, WING.split);
-  lowWall(bx1, WING.split, 14, WING.split);
+  // corridor B's two glass walls have a doorway for every row of rooms; a half wall divides each row from the next
+  const [bx0, bx1] = WING.corB, doors = DEPTS.filter((_, i) => i >= 2 && i % 2 === 0).map((d) => [d.door.at - WING.corA[1] - 0.6, d.door.at - WING.corA[1] + 0.6]);
+  glassWall(bx0, WING.corA[1], bx0, Z1, doors);
+  glassWall(bx1, WING.corA[1], bx1, Z1, doors);
+  for (const z of [WING.split, ...DEPTS.filter((_, i) => i >= 4 && i % 2 === 0).map((d) => d.z0)]) { lowWall(-8, z, bx0, z); lowWall(bx1, z, 14, z); }
 
   /* door plaques: on the face the camera sees (into the room for the back rooms, the corridor for the front left) */
   plaque(0, DEPTS[0].door.at + 1.35, 1.62, DEPTS[0].z0 + 0.045, 0);
   plaque(1, DEPTS[1].door.at + 1.35, 1.62, DEPTS[1].z0 + 0.045, 0);
   plaque(2, bx0 + 0.045, 1.62, DEPTS[2].door.at - 1.35, Math.PI / 2);
   plaque(3, bx1 + 0.045, 1.62, DEPTS[3].door.at + 1.35, Math.PI / 2);
+  DEPTS.forEach((d, i) => { if (i >= 4) plaque(i, i % 2 ? bx1 + 0.045 : bx0 + 0.045, 1.62, d.door.at + (i % 2 ? 1.35 : -1.35), Math.PI / 2); });
 
   /* the rooms: a sprint board, a credenza, plants in the corners; the two front rooms a sofa by the open edge */
   sprintBoard(0, -7.96, 1.5, 14.6, Math.PI / 2, 1.4, 0.9);
@@ -116,17 +117,25 @@ function buildWing() {
   sprintBoard(2, -5.4, 0.78, WING.split + 0.1, 0, 1.3, 0.72);
   sprintBoard(3, 11.9, 0.78, WING.split + 0.1, 0, 1.3, 0.72);
   credenza(-6.3, 11.3); credenza(6.2, 11.3); credenza(-1.3, WING.split + 0.45); credenza(7.3, WING.split + 0.45);
+  // the extra rows: the same board and credenza on each room's corridor-side wall, plants in the corners
+  DEPTS.forEach((d, i) => {
+    if (i < 4) return;
+    const left = i % 2 === 0;
+    sprintBoard(i, left ? -5.4 : 11.9, 0.78, d.z0 + 0.1, 0, 1.3, 0.72);
+    credenza(left ? -1.3 : 7.3, d.z0 + 0.45);
+    for (const [x, z, s, k] of left ? [[-7.5, d.z0 + 0.6, 0.9, 'snake'], [-7.45, d.z1 - 0.5, 1.0, 'monstera'], [1.6, d.z1 - 0.5, 0.95, 'bush']] : [[13.55, d.z0 + 0.6, 0.9, 'snake'], [13.5, d.z1 - 0.5, 1.0, 'monstera'], [5.2, d.z1 - 0.5, 0.95, 'bush']]) potPlant(x, z, s, k);
+  });
   for (const [x, z, s, k] of [[-7.5, 11.25, 1.0, 'monstera'], [1.75, 11.3, 0.9, 'snake'], [-7.5, 17.85, 0.95, 'bush'], [1.75, 17.85, 0.9, 'snake'],
     [4.75, 11.3, 0.9, 'snake'], [13.55, 11.3, 1.0, 'monstera'], [4.75, 17.85, 0.9, 'bush'], [13.55, 17.85, 0.95, 'snake'],
     [-7.5, 18.9, 0.9, 'snake'], [13.55, 18.9, 0.9, 'snake'], [-7.45, 25.5, 1.05, 'monstera'], [1.6, 25.5, 0.95, 'bush'], [5.2, 25.5, 0.95, 'bush'], [13.5, 25.5, 1.05, 'monstera']]) potPlant(x, z, s, k);
-  makeSofa(-5.4, 25.35, 1.9, 0, '#4F6D8F', ['#F2B33D', '#E8742A']);
-  makeSofa(10.2, 25.35, 1.9, 0, '#6B4F3A', ['#BDE0FE', '#E2B04A']);
+  makeSofa(-5.4, Z1 - 0.65, 1.9, 0, '#4F6D8F', ['#F2B33D', '#E8742A']);   // (by the open edge of the last rooms)
+  makeSofa(10.2, Z1 - 0.65, 1.9, 0, '#6B4F3A', ['#BDE0FE', '#E2B04A']);
 
   /* corridors: the company's sign at the end of corridor A, plants where the corridors end */
   put(scene, rbox(0.03, 2.7, 1.6, mat('#2F4A3D', { roughness: 0.9 }), 0.005), -7.985, 1.35, (WING.corA[0] + WING.corA[1]) / 2);
   { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.36, 0.42), new THREE.MeshBasicMaterial({ map: plateTex(tr('world.dept.hq'), tr('world.dept.hqSub'), { bg: '#2F4A3D', fg: '#F3EFE8', sub: '#B9D6C4' }) }));
     m.position.set(-7.965, 1.95, (WING.corA[0] + WING.corA[1]) / 2); m.rotation.y = Math.PI / 2; scene.add(m); }
-  potPlant(13.55, 9.9, 1.1, 'monstera'); potPlant(2.7, 25.55, 0.95, 'bush'); potPlant(3.9, 25.55, 0.95, 'snake');
+  potPlant(13.55, 9.9, 1.1, 'monstera'); potPlant(2.7, Z1 - 0.45, 0.95, 'bush'); potPlant(3.9, Z1 - 0.45, 0.95, 'snake');
 }
 
 export function setup() {

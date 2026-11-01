@@ -1,6 +1,6 @@
 // The camera toolbar.
 import { state } from '../core/state.js';
-import { $, HQ, PRO } from '../core/env.js';
+import { $, GROW, HQ, PRO } from '../core/env.js';
 import { BASE_ZOOM, camera, controls, fpCam } from '../scene/renderer.js';
 import { queueUi, toast } from './activity.js';
 import { drS } from './session-drawer.js';
@@ -22,7 +22,7 @@ export function goView(v) { const V = VIEWS[v]; focusTarget.set(...V.t); state.z
 
 export function setup() {
   /* ---------- camera toolbar ---------- */
-  VIEWS = HQ ? { home: { t: [3, 0.3, 9], z: 1 }, desks: { t: [3, 0.6, 18.2], z: 1.6 }, meeting: { t: [-1.2, 0.6, -5.4], z: 2.8 }, server: { t: [-5.6, 1.0, -0.6], z: 3.3 } }
+  VIEWS = HQ ? { home: { t: [3, 0.3, 9 + GROW / 2], z: 1 }, desks: { t: [3, 0.6, 18.2 + GROW / 2], z: 1.6 }, meeting: { t: [-1.2, 0.6, -5.4], z: 2.8 }, server: { t: [-5.6, 1.0, -0.6], z: 3.3 } }
     : PRO ? { home: { t: [3, 0.3, 0.7], z: 1 }, desks: { t: [2.3, 0.6, 3.6], z: 1.9 }, meeting: { t: [-1.2, 0.6, -5.4], z: 2.0 }, server: { t: [-5.6, 1.0, -0.6], z: 2.4 } }
     : { home: { t: [0, 0.3, 0.2], z: 1 }, desks: { t: [0, 0.6, 0.4], z: 1.75 }, meeting: { t: [5.2, 0.6, 2.4], z: 2.3 }, server: { t: [5.4, 1.0, -4.4], z: 2.2 } };
   // Camera glides to important moments (a permission request, a deploy, an incident) unless you moved it in the last

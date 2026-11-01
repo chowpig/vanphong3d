@@ -1,20 +1,16 @@
 // The floor plans (cozy, pro, hq): where the shared furniture stands, and the headquarters wing.
-import { HQ, PRO } from '../core/env.js';
+import { EXTRA, HQ, PRO } from '../core/env.js';
+import { BASE_Z1, WING as PLAN_WING, wingDepts, wingZ1 } from './plan.js';
 
 export let LAY;
 /* Headquarters = the company floor (z -8 → 9) plus a wing in front of it (z 9 → 26). Two doors in the core's front wall
    (on its left and right aisles) open onto corridor A, which runs the width of the building; corridor B runs down the
    middle. Four department rooms, two pods (eight desks) each: the two at the back open onto corridor A, the two at the
    front onto corridor B. Each room is named after the project that sits in it. */
-export const WING = { z0: 9, z1: 26, corA: [9, 10.8], corB: [2.3, 4.3], split: 18.4, doors: [-2.4, 7.4] };
-export const DEPTS = [
-  { x0: -8, x1: 2.3, z0: 10.8, z1: 18.4, cx: -2.85, door: { side: 'n', at: -2.4 } },
-  { x0: 4.3, x1: 14, z0: 10.8, z1: 18.4, cx: 9.15, door: { side: 'n', at: 9.15 } },
-  { x0: -8, x1: 2.3, z0: 18.4, z1: 26, cx: -3.05, door: { side: 'e', at: 22.2 } },
-  { x0: 4.3, x1: 14, z0: 18.4, z1: 26, cx: 9.5, door: { side: 'w', at: 22.2 } },
-].map((d) => ({ ...d, cz: (d.z0 + d.z1) / 2, pods: [[d.cx - 2.65, (d.z0 + d.z1) / 2], [d.cx + 2.65, (d.z0 + d.z1) / 2]] }));
+export const WING = { ...PLAN_WING, z1: BASE_Z1 };   // z1 and the rooms follow how many rows were added (setup)
+export let DEPTS = wingDepts(0);
 // The ground the office stands on (building, terrace and its edge), for the backdrops to keep clear of
-export const REACH = () => (HQ ? { x0: -11, x1: 16, z0: -9, z1: 29.5 } : { x0: -11, x1: 14.5, z0: -9, z1: 13.5 });
+export const REACH = () => (HQ ? { x0: -11, x1: 16, z0: -9, z1: WING.z1 + 3.5 } : { x0: -11, x1: 14.5, z0: -9, z1: 13.5 });
 // Is (x, z) inside the building with a margin (people never stand closer than `m` to an outer wall)?
 // a point in the sofa's own frame (x along it, z out from its seat toward the coffee table) on the floor plan; the
 // company floor's sofa faces the back wall, where the lounge TV is
@@ -22,12 +18,13 @@ export function sofaAt(lx, lz) { const [x, z, , r] = LAY.sofa, c = Math.cos(r), 
 export const inside = (x, z, m = 0.4) => x > LAY.box.x0 + m && x < LAY.box.x1 - m && z > LAY.box.z0 + m && z < LAY.box.z1 - m;
 
 export function setup() {
+  WING.z1 = HQ ? wingZ1(EXTRA) : BASE_Z1; DEPTS = wingDepts(HQ ? EXTRA : 0);
   /* ---------- the two floor plans ----------
      Cozy: one open room, 16 x 12 m. Pro: a company floor, 22 x 17 m, with a director's office, a meeting room and a
      library along the windows, a server room, lobby and restrooms by the entrance, a pantry and a lounge on the right,
      all around an open-plan dev floor. Furniture both plans share is placed from this table. */
   LAY = PRO ? {
-    box: { x0: -8, x1: 14, z0: -8, z1: HQ ? WING.z1 : 9 }, center: HQ ? [3, 9] : [3, 0.5],
+    box: { x0: -8, x1: 14, z0: -8, z1: HQ ? WING.z1 : 9 }, center: HQ ? [3, (WING.z1 - 8) / 2] : [3, 0.5],
     shelf: [4.95, -7.62, 0], globe: [8.0, -6.55], board: [-3.42, 2.05, 7.25, 0], doorZ: 3.3, clock: [-7.96, 2.15, 1.7, Math.PI / 2],
     racks: [-7.55, -1.47, Math.PI / 2], tv: [-7.96, 3.35, -1.47, Math.PI / 2], neon: [0.2, 3.62, -7.97, 0], rocket: [13.15, 1.75],
     coffee: [10.6, -7.45, Math.PI], aq: [10.45, 8.45], arc: [13.4, 8.45], prn: [-3.15, 0.55],

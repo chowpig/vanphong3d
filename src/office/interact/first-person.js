@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { makeChibi, chibiPose, applyChibiPose } from '../people/chibi-rig.js';
 import { state } from '../core/state.js';
-import { $, HQ, PRO, V2, el, wrapAngle } from '../core/env.js';
+import { $, GROW, HQ, PRO, V2, el, wrapAngle } from '../core/env.js';
 import { camera, controls, fpCam, renderPass, renderer, resize, scene } from '../scene/renderer.js';
 import { cat, petCat } from '../world/props/cat.js';
 import { DOOR_IN, DOOR_OUT } from '../people/navigation.js';
@@ -225,7 +225,7 @@ export function setup() {
   fp = { on: false, third: false, yaw: Math.PI / 2, pitch: -0.06, pos: new V2(DOOR_IN.x + 0.7, DOOR_IN.z), keys: new Set(),
     drag: null, joy: null, grid: null, avatar: null, P: null, near: null, moving: false, t: 0, street: false, carry: null, carryUntil: 0, basket: [], seat: null };
   fade = el('div', 'fp-fade'); $('stage-wrap').append(fade);
-  FPB = HQ ? { x0: -7.85, x1: 15.3, z0: -7.85, z1: 28.3 } : PRO ? { x0: -7.85, x1: 15.3, z0: -7.85, z1: 11.3 } : { x0: -7.85, x1: 11.7, z0: -5.85, z1: 10.3 };
+  FPB = HQ ? { x0: -7.85, x1: 15.3, z0: -7.85, z1: 28.3 + GROW } : PRO ? { x0: -7.85, x1: 15.3, z0: -7.85, z1: 11.3 } : { x0: -7.85, x1: 11.7, z0: -5.85, z1: 10.3 };
   $('btn-fp').addEventListener('click', () => (fp.on ? exitFp() : enterFp()));
   $('fp-exit').addEventListener('click', exitFp);
   $('fp-near').addEventListener('click', interact);

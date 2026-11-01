@@ -19,7 +19,9 @@ export const LANGS = {
   en: { name: 'English', locale: 'en-US', dict: en },
   vi: { name: 'Tiếng Việt', locale: 'vi-VN', dict: vi },
 };
-export const DEFAULT_LANG = 'en';
+export const DEFAULT_LANG = 'en';   // (the reference every other language falls back to)
+// What a new install speaks until someone picks a language in Settings (or sets OFFICE_LANG): vanphong3d is Vietnamese first.
+export const INITIAL_LANG = 'vi';
 export const pickLang = (l) => (typeof l === 'string' && Object.hasOwn(LANGS, l) ? l : DEFAULT_LANG);
 
 const get = (dict, key) => { let o = dict; for (const k of key.split('.')) { if (o == null || typeof o !== 'object') return undefined; o = o[k]; } return o; };
