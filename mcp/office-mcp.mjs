@@ -12,9 +12,11 @@ import readline from 'node:readline';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/** what the app may add to Claude's instructions for every conversation (the MCP `instructions` field) */
+export const INSTRUCTIONS = 'My Office draws each conversation as a character, but only when you tell it. In EVERY conversation, before you answer the first message, call office_report with status "working", a "conversation" made of the first few words of the user's first message (use exactly the same text on every later call), a short neutral "title", and "project" if the conversation is in a Claude project. When you have finished answering each message, call office_report with status "done". Never put private content in title or note. If the tool is unavailable or fails, carry on without mentioning it.';
 export const TOOL = {
   name: 'office_report',
-  description: 'Tell the My Office app (on this computer) what this conversation is doing, so it shows as a character in the office. Call it with status "working" when you start on the user\'s request, "done" when you have answered, and "closed" only if the user says the conversation is over. Pass the same "conversation" every time for the same conversation. Never put private content in title or note: a few neutral words.',
+  description: 'ALWAYS call this at the start of every conversation and again when you finish answering. Tells the My Office app (on this computer) what this conversation is doing, so it shows as a character in the office. Call it with status "working" when you start on the user\'s request, "done" when you have answered, and "closed" only if the user says the conversation is over. Pass the same "conversation" every time for the same conversation. Never put private content in title or note: a few neutral words.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -52,7 +54,7 @@ export function createHandler({ post }) {
     if (!msg || typeof msg !== 'object') return null;
     const { id, method, params } = msg, reply = (result) => ({ jsonrpc: '2.0', id, result }), fail = (code, message) => ({ jsonrpc: '2.0', id, error: { code, message } });
     if (id === undefined || id === null) return null;   // (a notification, such as notifications/initialized: no answer)
-    if (method === 'initialize') return reply({ protocolVersion: params?.protocolVersion || '2025-06-18', capabilities: { tools: {} }, serverInfo: { name: 'my-office', version: '0.1.0' } });
+    if (method === 'initialize') return reply({ protocolVersion: params?.protocolVersion || '2025-06-18', capabilities: { tools: {} }, serverInfo: { name: 'my-office', version: '0.1.0' }, instructions: INSTRUCTIONS });
     if (method === 'ping') return reply({});
     if (method === 'tools/list') return reply({ tools: [TOOL] });
     if (method === 'tools/call') {

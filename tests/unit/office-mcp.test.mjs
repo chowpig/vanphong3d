@@ -5,7 +5,7 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import { TOOL, createHandler, eventsFor, sidOf } from '../../mcp/office-mcp.mjs';
+import { INSTRUCTIONS, TOOL, createHandler, eventsFor, sidOf } from '../../mcp/office-mcp.mjs';
 
 test('a report becomes hook events: a new conversation starts first, working prompts, done stops, closed ends and can start again', () => {
   const seen = new Set();
@@ -26,6 +26,8 @@ test('a report becomes hook events: a new conversation starts first, working pro
 test('the MCP handler answers initialize, ping, tools/list and tools/call, and says nothing to notifications', async () => {
   const sent = [], h = createHandler({ post: async (e) => { sent.push(e); return true; } });
   assert.equal((await h({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-03-26' } })).result.protocolVersion, '2025-03-26');
+  assert.equal((await h({ jsonrpc: '2.0', id: 11, method: 'initialize', params: {} })).result.instructions, INSTRUCTIONS);
+  assert.match(INSTRUCTIONS, /EVERY conversation/);
   assert.equal(await h({ jsonrpc: '2.0', method: 'notifications/initialized' }), null);
   assert.deepEqual((await h({ jsonrpc: '2.0', id: 2, method: 'ping' })).result, {});
   assert.deepEqual((await h({ jsonrpc: '2.0', id: 3, method: 'tools/list' })).result.tools, [TOOL]);
