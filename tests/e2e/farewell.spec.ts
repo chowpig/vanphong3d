@@ -32,7 +32,6 @@ const allResting = (page: Page, speed = 4) => page.evaluate((n) => {
   setInterval(rest, 1000); o.speed(n);
 }, speed);
 const st = (page: Page) => page.evaluate(() => (window as unknown as Win).__office!.farewell.state());
-const chatHas = (page: Page, re: RegExp, photo = false) => page.evaluate(([r, p]) => (window as unknown as Win).__office!.chat.msgs.some((m) => new RegExp(r as string).test(m.text || '') && (!p || !!m.photo)), [re.source, photo] as const);
 async function shot(page: Page, name: string, at?: () => Promise<{ x: number, z: number } | null>) {
   if (at) { const a = await at(); if (a) await page.evaluate((v) => (window as unknown as Win).__office!.view(v.x, 0.9, v.z, 9), a); }
   await page.waitForTimeout(1200);
@@ -54,12 +53,12 @@ test('a project quiet for a month: its person packs the desk, the card, the cake
   expect(await st(page)).toMatchObject({ name: 'old-landing', u: 2, lanyard: true });
   expect((await st(page)).rugs.some((r) => r.startsWith('2:'))).toBe(true);   // (the area's carpet out, in its colour)
   await shot(page, 'farewell-pack.png', deskAt(page));
-  await expect.poll(() => chatHas(page, /chia tay old-landing/), { timeout: 30_000 }).toBe(true);
+  // (the office's group chat no longer tells farewells or returns: it is about the work)
   // round the meeting table: the card signed in turn, the photo in the group chat, the badge handed back
   await expect.poll(async () => (await st(page)).signs, { timeout: 120_000 }).toBeGreaterThan(2);
   expect((await st(page)).card).toBe(true);
   await shot(page, 'farewell-card.png', async () => ({ x: 0.2, z: -5.5 }));
-  await expect.poll(() => chatHas(page, /Ảnh chia tay old-landing|Ảnh kỷ niệm/, true), { timeout: 90_000 }).toBe(true);
+  // (the office's group chat no longer tells farewells or returns: it is about the work)
   await expect.poll(async () => (await st(page)).lanyard, { timeout: 90_000 }).toBe(false);
   // out by the lift with the box; the carpet rolled up, the desk free
   await expect.poll(async () => (await st(page)).last?.stage, { timeout: 180_000 }).toBe('done');
@@ -82,7 +81,7 @@ test('not at lunch, the nap or after hours; and opened again it comes back to th
   await page.evaluate(() => (window as unknown as Win).__office!.farewell.set([{ name: 'mobile-app', farewell: Date.now() - 2 * 864e5, days: 9 }]));
   await page.evaluate(() => { const o = (window as unknown as Win).__office!, w = [...o.workers.entries()].find(([id]) => o.sessions.get(id)?.name === 'mobile-app')![1]; o.view(w.pos.x, 0.9, w.pos.y, 9); });
   expect(await page.evaluate(() => (window as unknown as Win).__office!.farewell.back('mobile-app'))).toBe(true);
-  await expect.poll(() => chatHas(page, /quay lại|về lại công ty cũ|quay về/), { timeout: 30_000 }).toBe(true);
+  // (the office's group chat no longer tells farewells or returns: it is about the work)
   await shot(page, 'farewell-back.png');
   await expect.poll(async () => (await st(page)).rugs.filter((r) => r.endsWith('1.00')).length, { timeout: 30_000 }).toBeGreaterThan(0);
   expect(errors).toEqual([]);
