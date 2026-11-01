@@ -394,20 +394,6 @@ test('giving Claude work from the chat: a folder or a tagged conversation, the r
   expect(asked()).toContain('Attached image');
   await zc.locator('.zc-to-x').click();
   await expect(zc.locator('.zc-to-chip')).not.toHaveClass(/is-on/);
-  // from a phone (through the tunnel's listener, with the PIN): refused until the Mac allows it
-  await request.post('/api/tunnel', { data: { on: true } });
-  await expect.poll(async () => (await (await request.get('/api/tunnel')).json()).state).toBe('on');
-  const t = await (await request.get('/api/tunnel')).json();
-  const via = `http://127.0.0.1:${t.port}`, host = { Host: 'e2e-office-test.trycloudflare.com', Origin: 'https://e2e-office-test.trycloudflare.com' };
-  const login = await request.post(`${via}/pin`, { headers: { ...host, 'Content-Type': 'application/x-www-form-urlencoded' }, data: `pin=${t.pin}`, maxRedirects: 0 });
-  const cookie = String(login.headers()['set-cookie'] || '').split(';')[0];
-  const dir = (await (await request.get('/api/tasks')).json()).projects[0].dir;
-  const give = () => request.post(`${via}/api/tasks`, { headers: { ...host, Cookie: cookie }, data: { dir, text: 'from the phone' } });
-  expect((await give()).status()).toBe(403);
-  await request.post('/api/tasks/allow', { data: { on: true } });
-  expect((await give()).status()).toBe(200);
-  await request.post('/api/tasks/allow', { data: { on: false } });
-  await request.post('/api/tunnel', { data: { on: false } });
   expect(errors).toEqual([]);
 });
 

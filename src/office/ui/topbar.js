@@ -21,7 +21,7 @@ export function notifyWait(s, e) {
   try { const n = new Notification(tr('topbar.waitTitle', { name: dn(s) }), { body: e.label || tr('topbar.waitBody'), tag: 'wait-' + s.id }); n.onclick = () => { window.focus(); openSession(s.id); n.close(); }; } catch { /* unsupported */ }
 }
 
-/* ---------- the phone window: the two ways in (the home network, or anywhere through the Cloudflare tunnel) as tabs, each
+/* ---------- the phone window: the two ways in (the home network; the internet tunnel was removed in vanphong3d), each
    with its switch, its QR code and address; the PIN; and what phones may do (approve, give Claude work, Remote Control),
    each a switch with a line on what it means. Everything is switched here, on the Mac: nothing to type in a terminal. ---------- */
 const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json()).catch(() => null);
@@ -56,10 +56,10 @@ export function renderPhone() {
   const qr = (text) => { const box = el('div', 'qr'); try { new window.QRCode(box, { text, width: 132, height: 132 }); } catch { return el('span'); } return box; };
   // the code beside the address and what to do with it
   const where = (code, shown, lead, foot) => { const row = el('div', 'pm-where'), info = el('div', 'pm-info'); info.append(el('p', 'muted', lead), urlRow(shown)); if (foot) info.append(el('p', 'muted pm-note', foot)); row.append(qr(code), info); return row; };
-  const lanOn = !!state.lanUrl, tunOn = !!tun?.on, tab = pmTab || (tunOn ? 'away' : 'home');
+  const lanOn = !!state.lanUrl, tunOn = false, tab = 'home';   // vanphong3d: no internet tunnel
   // 1. the two ways in, as tabs (a dot: on)
   const tabs = el('div', 'pm-tabs'); tabs.setAttribute('role', 'tablist');
-  for (const [k, on] of [['home', lanOn], ['away', tunOn]]) {
+  for (const [k, on] of [['home', lanOn]]) {
     const b = el('button', `pm-tab${k === tab ? ' is-sel' : ''}`); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(k === tab));
     b.append(el('span', null, tr(k === 'home' ? 'topbar.phone.tabHome' : 'topbar.phone.tabAway')), el('i', `pm-dot${on ? ' is-on' : ''}`, tr(on ? 'topbar.phone.isOn' : 'topbar.phone.isOff')));
     b.addEventListener('click', () => { pmTab = k; renderPhone(); });
@@ -79,17 +79,6 @@ export function renderPhone() {
       conn.append(where(state.lanUrl, state.lanBase, tr('topbar.phone.scan')));
       if (state.tsUrl) conn.append(el('p', 'muted pm-note', tr('topbar.phone.tsOn')), urlRow(state.tsUrl));
     }
-  } else {                // anywhere: the Cloudflare tunnel
-    conn.append(phoneSwitch(tr('topbar.phone.tunSwitch'), tunOn, ['download', 'starting'].includes(tun?.state), async (want) => {
-      const r = await post('/api/tunnel', { on: want }); if (!r?.ok) return false;
-      tun = r; renderPhone(); if (want) loadTunnel().then(renderPhone); return true;
-    }));
-    if (!tunOn) conn.append(el('p', 'muted pm-note', tr('topbar.phone.tunOffNote')));
-    else if (tun.state === 'on' && tun.url) conn.append(where(tun.url, tun.url, tr('topbar.phone.tunOn'), tr('topbar.phone.tunNote')));
-    else if (tun.state === 'error') conn.append(el('p', 'pm-err', tr('topbar.phone.tunError', { error: tun.error || '' })));
-    else conn.append(el('p', 'muted pm-wait', tr(tun.state === 'download' ? 'topbar.phone.tunDownload' : 'topbar.phone.tunStarting')));
-    // the Mac kept awake while it's on (the power adapter only): what that means right now
-    if (tunOn && tun.awake) conn.append(el('p', `pm-awake${tun.awake.ac === false ? ' is-battery' : ''}`, tr(tun.awake.ac === false ? 'topbar.phone.awakeBattery' : 'topbar.phone.awakeOn')));
   }
   // 2. the PIN, for either way in; a new one signs every phone out
   const pinNow = tun?.pin || state.phonePin;

@@ -11,7 +11,7 @@ import os from 'node:os';
 import crypto from 'node:crypto';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
-import { execFile, execFileSync, spawn } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { sysSnapshot, sysAction, scanCleanups, trackOwners, startTrend, setI18n, fmtBytes as sysBytes } from './system.mjs';
 import { OS } from './platform/index.mjs';
 import { redact } from './redact.mjs';

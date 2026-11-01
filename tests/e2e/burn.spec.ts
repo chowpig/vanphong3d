@@ -52,14 +52,6 @@ test('the receiver: this computer only, OTLP JSON only, 4 MB at most, the right 
   expect((await request.post('/v1/logs', { headers: { 'Content-Type': 'application/json' }, data: '{not json' })).status()).toBe(400);
   const big = await request.post('/v1/logs', { headers: { 'Content-Type': 'application/json' }, data: `{"resourceLogs":[],"pad":"${'x'.repeat(4_100_000)}"}` }).catch(() => null);
   if (big) expect(big.status()).toBe(413);   // (or the connection closed on it: either way nothing was read)
-  // through the Cloudflare tunnel's listener: from 127.0.0.1, and still the internet
-  await request.post('/api/tunnel', { data: { on: true } });
-  await expect.poll(async () => (await (await request.get('/api/tunnel')).json()).state, { timeout: 20_000 }).toBe('on');
-  const t = await (await request.get('/api/tunnel')).json();
-  const via = await request.post(`http://127.0.0.1:${t.port}/v1/metrics`, { headers: { Host: 'e2e-office-test.trycloudflare.com', 'Content-Type': 'application/json' }, data: JSON.stringify(m) });
-  expect(via.status()).toBe(403);
-  await request.post('/api/tunnel', { data: { on: false } });
-  await expect.poll(async () => (await (await request.get('/api/tunnel')).json()).state).toBe('off');
   // nothing of that was counted
   expect((await (await request.get('/api/burn?range=today')).json()).total.usd).toBe(0);
 });
