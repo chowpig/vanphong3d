@@ -274,31 +274,7 @@ function relabel(from, to) {
   queueFeed(); queueUi();
 }
 export let liveES = null;
-// Through the Cloudflare quick tunnel a stream's data is held back until it ends (quick tunnels don't do server-sent
-// events): there the page asks instead, GET /api/live, which answers as soon as there is something new (the same messages)
-const VIA_TUNNEL = /\.trycloudflare\.com$/.test(location.hostname);
-function ask() {
-  const stop = new AbortController();
-  liveES = { close: () => stop.abort() };
-  (async () => {
-    let since = -1, fails = 0;
-    while (!stop.signal.aborted) {
-      if (document.hidden) await new Promise((ok) => document.addEventListener('visibilitychange', ok, { once: true }));   // (a phone in a pocket asks nothing)
-      try {
-        const r = await fetch(`/api/live?since=${since}`, { cache: 'no-store', signal: stop.signal });
-        if (r.status === 401) { location.reload(); return; }   // (signed out: back to the PIN)
-        const j = await r.json();
-        fails = 0; setConn(true); since = j.seq;
-        if (!replay.on) for (const d of j.msgs) applyMsg(d);
-      } catch {
-        if (stop.signal.aborted) return;
-        setConn(false); await new Promise((ok) => setTimeout(ok, Math.min(15_000, 1000 * 2 ** fails++)));
-      }
-    }
-  })();
-}
 export function connect() {
-  if (VIA_TUNNEL) { ask(); return; }
   const es = new EventSource(`/stream${TOKEN ? `?k=${encodeURIComponent(TOKEN)}` : ''}`);
   liveES = es;
   es.onopen = () => setConn(true);

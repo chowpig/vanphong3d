@@ -446,8 +446,8 @@ function todoOp(b) {
 /* ---------- SSE ---------- */
 const clients = new Set();
 function send(res, obj) { res.write(`data: ${JSON.stringify(obj)}\n\n`); }
-/* The same messages for a page that asks instead of keeping a stream open: through the Cloudflare quick tunnel, which holds
-   a stream's data back until it ends (quick tunnels don't do server-sent events), GET /api/live?since=<n> waits up to 25 s
+/* The same messages for a page that asks instead of keeping a stream open (a proxy that holds a stream's data back until
+   it ends), GET /api/live?since=<n> waits up to 25 s
    for what was broadcast after message n and answers as soon as there is something. The last 400 are kept. */
 const backlog = [], waiting = new Set();
 let sent = 0, polledAt = 0;   // (sent: how many messages so far, the number of the last)
@@ -1141,19 +1141,17 @@ async function readLog(s, n = 120, agentId = null) {
 }
 
 /* ---------- HTTP ---------- */
-// (a request through the Cloudflare tunnel comes from cloudflared on 127.0.0.1 but is from the internet: never this Mac)
-const isLoopback = (req) => !req.viaTunnel && ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
-// who is asking, for the PIN's lockouts and the action log: through the tunnel, the address Cloudflare saw
-const clientIp = (req) => (req.viaTunnel ? String(req.headers['cf-connecting-ip'] || 'tunnel').slice(0, 64) : req.socket.remoteAddress);
-// a POST from this office's own page (not another site's): http on this computer and the LAN, https through the tunnel
+const isLoopback = (req) => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+// who is asking, for the PIN's lockouts and the action log
+const clientIp = (req) => req.socket.remoteAddress;
+// a POST from this office's own page (not another site's): http on this computer and the LAN
 function sameOriginOf(req) {
   const o = req.headers.origin;
-  return !o || o === `http://${req.headers.host}` || (req.viaTunnel && !!tunnel.url && o === tunnel.url);
+  return !o || o === `http://${req.headers.host}`;
 }
 // Only answer to our own host names: stops DNS-rebinding pages from reaching this server.
 function hostAllowed(req) {
   const h = String(req.headers.host || '').replace(/:\d+$/, '').replace(/^\[|\]$/g, '').toLowerCase();
-  if (req.viaTunnel) return h === tunnel.host || h === '127.0.0.1';   // (the tunnel's own name, or its listener as cloudflared calls it)
   if (['localhost', '127.0.0.1', '::1', `${os.hostname().toLowerCase()}`, `${os.hostname().toLowerCase().replace(/\.local$/, '')}.local`].includes(h)) return true;
   return Object.values(os.networkInterfaces()).flat().some((n) => n && n.address === h);
 }
@@ -1211,7 +1209,7 @@ const sign = (exp, kind = '') => crypto.createHmac('sha256', TOKEN).update(`pin:
 const sameBytes = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 function pinCookie(req, keep = true) {
   const kind = keep ? 'k' : 's', exp = Date.now() + (keep ? KEEP_DAYS * 86400e3 : VISIT_MS);
-  return `${COOKIE}=${exp}.${kind}.${sign(exp, kind)};${keep ? ` Max-Age=${KEEP_DAYS * 86400};` : ''} Path=/; HttpOnly; SameSite=Lax${req?.viaTunnel ? '; Secure' : ''}`;
+  return `${COOKIE}=${exp}.${kind}.${sign(exp, kind)};${keep ? ` Max-Age=${KEEP_DAYS * 86400};` : ''} Path=/; HttpOnly; SameSite=Lax`;
 }
 /** The phone's cookie when it's good: { exp, keep } (one from before "Remember this device" counts as kept). */
 function pinCookieOf(req) {
@@ -1219,7 +1217,7 @@ function pinCookieOf(req) {
   return m && Number(m[1]) > Date.now() && sameBytes(m[3], sign(m[1], m[2] || '')) ? { exp: Number(m[1]), keep: m[2] !== 's' } : null;
 }
 const cookieOk = (req) => !!pinCookieOf(req);
-function authorized(req, url) { return isLoopback(req) || (!req.viaTunnel && sameBytes(url.searchParams.get('k') || '', TOKEN)) || cookieOk(req); }
+function authorized(req, url) { return isLoopback(req) || sameBytes(url.searchParams.get('k') || '', TOKEN) || cookieOk(req); }
 
 // 6 digits (at least) is a million guesses: 5 wrong tries lock that address for 15 minutes, and 20 wrong tries from anywhere
 // lock the PIN page for everyone for 15 minutes, so guessing it would take years.
@@ -2096,6 +2094,9 @@ async function openFolder(dir) {
 }
 
 const server = http.createServer((req, res) => {
+  res.setHeader('X-Frame-Options', 'DENY');   // (no other site may frame the office and trick a click)
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   const url = new URL(req.url, 'http://x');
   // vanphong3d: hooks must carry the key in data/token (hooks/send.mjs adds it), so another local process or a rogue
   // client cannot inject events or answer approvals on the user's behalf.
@@ -2112,7 +2113,7 @@ const server = http.createServer((req, res) => {
     return;
   }
   // Claude Code's OpenTelemetry export (OTLP/HTTP, JSON only): from this computer's own Claude Code, never a page (no
-  // Origin), never the tunnel or the LAN (isLoopback); 4 MB a request at most, gzip allowed (OTEL_EXPORTER_OTLP_COMPRESSION)
+  // Origin), never the LAN (isLoopback); 4 MB a request at most, gzip allowed (OTEL_EXPORTER_OTLP_COMPRESSION)
   if (req.method === 'POST' && (url.pathname === '/v1/metrics' || url.pathname === '/v1/logs')) {
     if (!isLoopback(req) || req.headers.origin) { res.writeHead(403).end(); return; }
     if (!/^application\/json\b/i.test(String(req.headers['content-type'] || ''))) { req.resume(); res.writeHead(415, { 'Content-Type': 'application/json' }).end('{"error":"OTLP/HTTP JSON only: set OTEL_EXPORTER_OTLP_PROTOCOL=http/json"}'); return; }
@@ -2171,10 +2172,6 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (!hostAllowed(req)) { res.writeHead(421).end(); return; }
-  // through the tunnel (the internet), only what a phone may send: the PIN (and a new one, with the one it has now), its
-  // answers to approvals (when the Mac allows them), the page's presence, the chat and work (when the Mac allows it; the
-  // prompt helper's rewrite too). Everything else that changes something stays on the Mac and the home network.
-  if (req.viaTunnel && req.method !== 'GET' && req.method !== 'HEAD' && !['/pin', '/api/pin', '/api/perm', '/api/presence', '/api/chat', '/api/tasks', '/api/tasks/stop', '/api/tasks/steer', '/api/prompt/rewrite', '/api/push', '/api/quick', '/api/loop'].includes(url.pathname)) { json(res, 403, { ok: false, message: tr('server.api.approveOnMac') }); return; }
   if (url.pathname === '/pin' && (req.method === 'GET' || req.method === 'POST')) {
     const ip = clientIp(req);
     if (isLoopback(req) || cookieOk(req)) { res.writeHead(303, { Location: '/' }).end(); return; }
@@ -2246,7 +2243,7 @@ const server = http.createServer((req, res) => {
       fs.writeFileSync(PIN_FILE, own, { mode: 0o600 });
       fsp.appendFile(ACTION_LOG, `${new Date().toISOString()} phone pin set ${ip}\n`).catch(() => {});
       // this phone stays in (a new cookie, signed with the new PIN); every other one is cut off once the answer has gone
-      res.on('finish', () => { for (const srv of [...lanServers.values(), tunnel.srv]) srv?.closeAllConnections?.(); });
+      res.on('finish', () => { for (const srv of lanServers.values()) srv.closeAllConnections?.(); });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Set-Cookie': pinCookie(req) }).end(JSON.stringify({ ok: true }));
     });
     return;
@@ -2259,7 +2256,7 @@ const server = http.createServer((req, res) => {
         const own = b?.pin == null ? '' : String(b.pin).replace(/\s/g, '');
         if (own && pinWeak(own)) { json(res, 200, { ok: false, message: tr('server.pin.weak') }); return; }   // (turned down, not an error: the page shows why)
         fs.writeFileSync(PIN_FILE, own || String(crypto.randomInt(0, 1e6)).padStart(6, '0'), { mode: 0o600 });
-        for (const srv of [...lanServers.values(), tunnel.srv]) srv?.closeAllConnections?.();
+        for (const srv of lanServers.values()) srv.closeAllConnections?.();
         fsp.appendFile(ACTION_LOG, `${new Date().toISOString()} phone pin ${own ? 'set' : 'new'}\n`).catch(() => {});
         json(res, 200, { ok: true, pin: currentPin() });
         return;
@@ -2366,14 +2363,9 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
-  if (url.pathname === '/api/tunnel' && (req.method === 'POST' || req.method === 'GET')) {   // the office from anywhere: { on } (this computer only)
-    const sameOrigin = sameOriginOf(req);
-    if (!isLoopback(req) || !sameOrigin || (req.method === 'POST' && !String(req.headers['content-type'] || '').startsWith('application/json'))) { json(res, 403, { ok: false, message: tr('server.api.approveOnMac') }); return; }
-    if (req.method === 'GET') { Promise.race([bgRun.probe(findClaude()).catch(() => null), new Promise((r) => setTimeout(r, 4000))]).then(() => json(res, 200, tunnelOut())); return; }   // (whether this Claude Code has background sessions: looked at once)
-    readJson(req).then((b) => {
-      if (b?.on) { json(res, 403, { ...tunnelOut(), ok: false, message: 'Internet tunnel is removed in vanphong3d (security).' }); return; }
-      json(res, 200, tunnelOut());
-    });
+  if (url.pathname === '/api/phone/status' && req.method === 'GET') {   // what the phone window shows (this computer only)
+    if (!isLoopback(req) || !sameOriginOf(req)) { json(res, 403, { ok: false, message: tr('server.api.approveOnMac') }); return; }
+    Promise.race([bgRun.probe(findClaude()).catch(() => null), new Promise((r) => setTimeout(r, 4000))]).then(() => json(res, 200, phoneOut()));   // (whether this Claude Code has background sessions: looked at once)
     return;
   }
   if (req.method === 'POST' && url.pathname === '/api/phone') {   // approving from a phone: { approve } (this computer only)
@@ -2389,7 +2381,7 @@ const server = http.createServer((req, res) => {
   }
   if (req.method === 'POST' && url.pathname === '/api/sys/auto') {   // close idle sessions on a timer: { hours: 0 | 2 | 4 | 8 }
     const sameOrigin = sameOriginOf(req);
-    if (!authorized(req, url) || !sameOrigin || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false, message: tr('server.forbidden') }); return; }
+    if (!isLoopback(req) || !sameOrigin || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false, message: tr('server.forbidden') }); return; }
     readJson(req).then((b) => {
       if (!b || !prefs.setAutoClose(Number(b.hours))) { json(res, 400, { ok: false, message: tr('server.badRequest') }); return; }
       fsp.appendFile(ACTION_LOG, `${new Date().toISOString()} ${req.socket.remoteAddress} auto-close ${prefs.autoClose()}h\n`).catch(() => {});
@@ -2400,7 +2392,7 @@ const server = http.createServer((req, res) => {
   }
   if (req.method === 'POST' && url.pathname === '/api/sys/action') {
     const sameOrigin = sameOriginOf(req);
-    if (!authorized(req, url) || !sameOrigin || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false, message: tr('server.forbidden') }); return; }
+    if (!isLoopback(req) || !sameOrigin || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false, message: tr('server.forbidden') }); return; }
     readJson(req).then(async (body) => {
       if (!body) { json(res, 400, { ok: false, message: tr('server.badRequest') }); return; }
       if (body.action === 'closeIdle' && Array.isArray(body.items)) closingOnPurpose(body.items.map((i) => Number(i?.target)).filter((n) => n > 0));   // (closed from the Mac panel: no red line in the editor)
@@ -2680,17 +2672,8 @@ function syncLan() {
 function lanIsOn() { return lanFixed || lanServers.size > 0; }
 setInterval(syncLan, 30_000).unref();
 
-/* ---------- the office from anywhere (mobile data, another Wi-Fi): a Cloudflare quick tunnel, switched on in the phone
-   window ----------
-   cloudflared (the one installed, else downloaded once from Cloudflare's GitHub releases into data/bin) connects out to
-   Cloudflare and gets an https address, *.trycloudflare.com: no account and no domain, a new address each time it
-   starts. It leads to a listener of its own on 127.0.0.1, and everything that comes that way is from the internet
-   whatever its address looks like (req.viaTunnel): it needs the PIN (no token links), its cookie is https-only, and all
-   that only the Mac may do (hooks, stopping processes, accounts, these switches) refuses it, as it refuses a phone.
-   Off: cloudflared stops and the listener closes, cutting off whoever was in. OFFICE_TUNNEL_CMD: a stand-in (tests). */
-const tunnel = { state: 'off', url: '', host: '', error: '', pid: 0, srv: null, port: 0, tries: 0, gen: 0, watch: null };
-const tunnelOut = () => ({ ok: true, on: !!prefs.get('tunnel'), state: tunnel.state, url: tunnel.url, error: tunnel.error, port: tunnel.port, pin: currentPin(),
-  awake: null, rc: rcAtStartup(), tasks: !!prefs.get('phoneTasks'), bg: bgOut() });
+/* ---------- phone window state: the PIN, and what phones may do ---------- */
+const phoneOut = () => ({ ok: true, pin: currentPin(), rc: rcAtStartup(), tasks: !!prefs.get('phoneTasks'), bg: bgOut() });
 // Giving Claude work from a phone is Claude Code's own Remote Control: with remoteControlAtStartup in its settings every
 // new session opens its bridge by itself (the other accounts share these settings by a link), and the office shows each
 // session's link. Switched in the phone window, by you, on the Mac; the rest of the file is left as it is.
@@ -2702,13 +2685,12 @@ function setRcAtStartup(on) {
   if (on) cfg.remoteControlAtStartup = true; else delete cfg.remoteControlAtStartup;
   try { fs.mkdirSync(path.dirname(real), { recursive: true }); fs.writeFileSync(`${real}.office-tmp`, `${JSON.stringify(cfg, null, 2)}\n`); fs.renameSync(`${real}.office-tmp`, real); return true; } catch { return false; }
 }
-// (the office stopping: staying awake ends with it, caffeinate -w)
 process.on('exit', () => { otel.saveSync(); });
 for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, () => process.exit(0));
 
 server.listen(PORT, HOST, () => {
   syncLan();
-  prefs.set('tunnel', undefined);   // vanphong3d: no internet tunnel, ever
+  prefs.set('tunnel', undefined);   // (a setting an older version may have left)
   scanSessions();
   scanCleanups().catch(() => {});   // macOS paths; elsewhere there may be nothing to scan
   trackOwners();

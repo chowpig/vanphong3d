@@ -23,7 +23,7 @@ const STEPS = [
 let tour = null;      // { steps, i, card, anchor, outlined }
 let pending = 0;      // a first visit: when to start (performance.now(), once the office has settled), 0 if not
 let asked = false;    // ?tips: show it wherever this is
-// By itself only on the Mac (and in the demo): a phone is you again, and its address may change (the tunnel's), which
+// By itself only on the Mac (and in the demo): a phone is you again, and its address may change (the network's), which
 // would make every visit look like the first.
 const seen = () => { try { return localStorage.getItem(KEY) === 'seen'; } catch { return true; } };
 const remember = () => { try { localStorage.setItem(KEY, 'seen'); } catch { /* storage blocked */ } };

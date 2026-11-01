@@ -263,7 +263,7 @@ test('the group chat in the office: one conversation for every page, kept by the
   expect(errors).toEqual([]);
 });
 
-test('the phone window: a switch to open the office to phones (off), how to use it when out, and Remote Control', async ({ page }) => {
+test('the phone window: a switch to open the office to phones (off), how to use it when out, and Remote Control', async ({ page, request }) => {
   const errors = watchErrors(page);
   await page.goto('/');   // (the real office on this computer: the switch is only offered here)
   await page.click('#btn-phone-top');
@@ -273,7 +273,12 @@ test('the phone window: a switch to open the office to phones (off), how to use 
   await expect(lan.locator('input')).not.toBeChecked();   // (off by default; nothing listens beyond 127.0.0.1)
   await expect(body.locator('.pm-note').first()).toContainText('PIN');
   await expect(body).not.toContainText('install');         // (no terminal command to type)
-  await expect(body.locator('.pm-tab')).toHaveCount(2);    // (the two ways in: home, and when you're out)
+  await expect(body.locator('.pm-tab')).toHaveCount(1);    // (the one way in: the home network; no internet tunnel)
+  expect((await request.get('/api/tunnel')).status()).toBeGreaterThanOrEqual(400);
+  expect((await request.post('/api/tunnel', { data: { on: true } })).status()).toBeGreaterThanOrEqual(400);
+  const st = await request.get('/api/phone/status');
+  expect(st.status()).toBe(200);
+  expect(Object.keys(await st.json()).sort()).toEqual(['bg', 'ok', 'pin', 'rc', 'tasks']);
   await expect(body.locator('.pm-list .pm-toggle')).toHaveCount(3);   // (what phones may do: approve, give work, Remote Control)
   await expect(body).toContainText('/rc');
   // Remote Control in every new session: written into Claude Code's settings (this test's own home folder), and back out
@@ -282,6 +287,21 @@ test('the phone window: a switch to open the office to phones (off), how to use 
   await expect.poll(() => { try { return JSON.parse(fs.readFileSync(cc, 'utf8')).remoteControlAtStartup; } catch { return null; } }).toBe(true);
   await body.locator('.pm-approve', { hasText: 'Remote Control' }).locator('input').click();
   await expect.poll(() => { try { return JSON.parse(fs.readFileSync(cc, 'utf8')).remoteControlAtStartup ?? false; } catch { return null; } }).toBe(false);
+  // a phone signed in with the PIN may watch and chat, but never stop processes or change the Mac's own settings
+  const lanOn = await (await request.post('/api/lan', { data: { on: true } })).json();
+  if (lanOn.lanBase) {
+    const base = String(lanOn.lanBase).replace(/\/$/, ''), origin = new URL(base).origin;
+    const login = await request.post(`${base}/pin`, { headers: { Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' }, data: `pin=${lanOn.pin}`, maxRedirects: 0 });
+    const cookie = String(login.headers()['set-cookie'] || '').split(';')[0];
+    const phone = { Origin: origin, Cookie: cookie };
+    expect((await request.get(`${base}/api/chat`, { headers: phone })).status()).toBe(200);
+    for (const p of ['/api/sys/action', '/api/sys/auto', '/api/lan', '/api/rc', '/api/tunnel']) expect((await request.post(`${base}${p}`, { headers: phone, data: {} })).status()).toBeGreaterThanOrEqual(403);
+    expect((await request.get(`${base}/api/phone/status`, { headers: phone })).status()).toBe(403);
+    expect((await request.post(`${base}/event`, { headers: { 'Content-Type': 'application/json' }, data: {} })).status()).toBe(403);
+    expect((await request.get(`${base}/`, { headers: { ...phone, Host: 'evil.example' }, maxRedirects: 0 })).status()).toBe(421);
+    expect((await request.get(`${base}/`, { headers: phone })).headers()['x-frame-options']).toBe('DENY');
+    await request.post('/api/lan', { data: { on: false } });
+  }
   expect(errors).toEqual([]);
 });
 

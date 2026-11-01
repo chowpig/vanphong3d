@@ -353,7 +353,7 @@ Then open <http://localhost:4310>.
 - Graphics: Auto, Low, Medium or High. Auto steps down by itself when frames come late, and remembers it per device.
 - Streamer mode blurs commands, paths and chat for recording.
 - List mode turns the 3D off and shows sessions as cards. It saves battery and works without WebGL.
-- Open on your phone: same Wi-Fi, or anywhere through the Cloudflare tunnel (below), 6-digit PIN. Watching, plus
+- Open on your phone: same Wi-Fi only (no internet tunnel in vanphong3d), 8-digit PIN. Watching, plus
   approving if you turn on "Approve from a phone" on the Mac. Claude Code's own Remote Control (`/rc`) works too: the
   session's QR code in its drawer opens that conversation in the Claude app.
 - **To**, over the chat's input: pick a conversation and write (or speak): that very conversation carries on. Resting in
@@ -419,7 +419,7 @@ Then open <http://localhost:4310>.
   | Rewriting a message for Claude, through Claude Code (your plan) | only when you tap “✨ Rewrite it clearly” in the chat | Settings → More → Group chat |
 
 - **Usage numbers** ("What eats your plan") go from Claude Code to `127.0.0.1` only: the receiver refuses anything
-  from a web page, the Wi-Fi or the tunnel, reads JSON only (4 MB a request at most), and keeps daily sums of cost and
+  from a web page or the Wi-Fi, reads JSON only (4 MB a request at most), and keeps daily sums of cost and
   tokens; e-mail addresses, prompts and commands are never stored.
 - **Stop buttons** re-check the process ID **and its start time** just before acting. A new process that reused an
   old ID is never stopped by mistake. Every stop, cleanup and approval is written to `data/actions.log`.
@@ -427,23 +427,15 @@ Then open <http://localhost:4310>.
   - The server listens on `127.0.0.1` only, until you turn on "Open on phones" in the phone window (or install with
     `--lan`). Then it also listens on the Mac's own network addresses (Wi-Fi, Ethernet, Tailscale), never on all of
     them, and turning it off closes them and cuts the phones off. "New PIN" there signs every phone out.
-  - Phones need the PIN (a random 6 digits, or your own of 6 to 10 set in the phone window; not an easy one like
+  - Phones need the PIN (a random 8 digits, or your own of 8 to 10 set in the phone window; not an easy one like
     000000 or 123456); five wrong tries lock that address for 15 minutes. "Remember this device" (ticked at first) keeps
-    the phone signed in for a year, renewed as it's used; untick it on a borrowed phone and it lasts until the browser
+    the phone signed in for 30 days, renewed as it's used; untick it on a borrowed phone and it lasts until the browser
     closes. A new PIN signs every phone out; a phone can change it too (⚙ → More → 📱), with the one it has now.
   - Phones watch. They approve only once you turn on "Approve from a phone" on the Mac (off by default; only the Mac
     can switch it): allow once or deny, answer a question or a plan; never "always", and a risky (red) command can
     only be denied from a phone. Each answer from a phone is logged with its address. Hooks come from the Mac alone.
-  - Away from home (mobile data, another Wi-Fi): "Use it when you're out" in the phone window starts a Cloudflare quick
-    tunnel (cloudflared, downloaded once; no account, no domain) and shows its https address and QR code. The address
-    stays while it's on, across restarts of the office. Quick tunnels hold a stream's data back until it ends, so a page
-    opened through one asks instead (`/api/live`, answered as soon as there is something new). What comes through it is from the internet whatever its
-    address: the PIN only (no token links), an https-only cookie, and nothing but the PIN, chat messages, presence,
-    approvals and work (these two only if allowed on the Mac) may be sent; hooks, stopping processes, accounts and the
-    switches are refused. Off: cloudflared stops and the phones are cut off. A Tailscale network works too (the window
-    shows its address).
-  - While the tunnel is on and the Mac is on its charger, the office runs macOS's `caffeinate` so the Mac doesn't
-    sleep (the display still turns off). On battery, or with the tunnel off, it sleeps as usual.
+  - There is no way in from the internet: the Cloudflare tunnel of the original is removed. A Tailscale network works
+    too (the phone window shows its address).
   - The page is plain HTTP, so only use `--lan` on a network you trust.
 
 ## Settings from the environment

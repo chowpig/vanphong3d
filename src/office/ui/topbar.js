@@ -21,7 +21,7 @@ export function notifyWait(s, e) {
   try { const n = new Notification(tr('topbar.waitTitle', { name: dn(s) }), { body: e.label || tr('topbar.waitBody'), tag: 'wait-' + s.id }); n.onclick = () => { window.focus(); openSession(s.id); n.close(); }; } catch { /* unsupported */ }
 }
 
-/* ---------- the phone window: the two ways in (the home network; the internet tunnel was removed in vanphong3d), each
+/* ---------- the phone window: the two ways in (the home network only; no internet tunnel in vanphong3d), each
    with its switch, its QR code and address; the PIN; and what phones may do (approve, give Claude work, Remote Control),
    each a switch with a line on what it means. Everything is switched here, on the Mac: nothing to type in a terminal. ---------- */
 const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json()).catch(() => null);
@@ -36,11 +36,9 @@ function phoneSwitch(text, on, disabled, fn, desc = '') {
 }
 // 123 456, 1234 5678, 123 4567, 123 456 7890
 const pinFmt = (p) => (p.length % 4 === 0 && p.length % 3 ? p.match(/\d{4}/g).join(' ') : p.replace(/\d{3}(?=\d{2})/g, '$& '));
-let tun = null, tunPoll = 0;   // the tunnel's state (GET /api/tunnel), asked again while it starts
-async function loadTunnel() {
-  tun = await fetch('/api/tunnel').then((r) => r.json()).catch(() => null);
-  clearTimeout(tunPoll);
-  if (tun && ['download', 'starting'].includes(tun.state) && !$('phone-modal').hidden) tunPoll = setTimeout(() => loadTunnel().then(renderPhone), 1500);
+let phoneInfo = null;   // what the Mac says about phone work (GET /api/phone/status): the PIN, tasks, background sessions, Remote Control
+async function loadPhoneInfo() {
+  phoneInfo = await fetch('/api/phone/status').then((r) => r.json()).catch(() => null);
 }
 // an address to open: as text you can select, and a button that copies it
 function urlRow(url) {
@@ -55,7 +53,7 @@ export function renderPhone() {
   const qr = (text) => { const box = el('div', 'qr'); try { new window.QRCode(box, { text, width: 132, height: 132 }); } catch { return el('span'); } return box; };
   // the code beside the address and what to do with it
   const where = (code, shown, lead, foot) => { const row = el('div', 'pm-where'), info = el('div', 'pm-info'); info.append(el('p', 'muted', lead), urlRow(shown)); if (foot) info.append(el('p', 'muted pm-note', foot)); row.append(qr(code), info); return row; };
-  const lanOn = !!state.lanUrl, tunOn = false, tab = 'home';   // vanphong3d: no internet tunnel
+  const lanOn = !!state.lanUrl, tab = 'home';
   // 1. the two ways in, as tabs (a dot: on)
   const tabs = el('div', 'pm-tabs'); tabs.setAttribute('role', 'tablist');
   for (const [k, on] of [['home', lanOn]]) {
@@ -80,12 +78,12 @@ export function renderPhone() {
     }
   }
   // 2. the PIN, for either way in; a new one signs every phone out
-  const pinNow = tun?.pin || state.phonePin;
-  if ((lanOn || tunOn) && pinNow) {
+  const pinNow = phoneInfo?.pin || state.phonePin;
+  if (lanOn && pinNow) {
     const box = el('div', 'pm-pinbox'), pin = el('div', 'pm-pin'), again = el('button', 'btn btn--sm pm-newpin', tr('topbar.phone.newPin')); again.type = 'button'; again.title = tr('topbar.phone.newPinTitle');
     again.addEventListener('click', async () => {
       if (again.dataset.armed !== '1') { again.dataset.armed = '1'; again.textContent = tr('topbar.phone.newPinSure'); setTimeout(() => { if (again.isConnected) { again.dataset.armed = ''; again.textContent = tr('topbar.phone.newPin'); } }, 4000); return; }
-      const r = await post('/api/pin', {}); if (r?.ok) { state.phonePin = r.pin; if (tun) tun.pin = r.pin; renderPhone(); }
+      const r = await post('/api/pin', {}); if (r?.ok) { state.phonePin = r.pin; if (phoneInfo) phoneInfo.pin = r.pin; renderPhone(); }
     });
     // your own (6–10 digits; the server turns down one like 000000 or 123456)
     const own = el('button', 'btn btn--sm', tr('topbar.phone.setPin')); own.type = 'button';
@@ -99,7 +97,7 @@ export function renderPhone() {
       form.addEventListener('submit', async (e) => {
         e.preventDefault(); save.disabled = true;
         const r = await post('/api/pin', { pin: field.value }); save.disabled = false;
-        if (r?.ok) { state.phonePin = r.pin; if (tun) tun.pin = r.pin; renderPhone(); toast(tr('topbar.phone.pinSaved')); return; }
+        if (r?.ok) { state.phonePin = r.pin; if (phoneInfo) phoneInfo.pin = r.pin; renderPhone(); toast(tr('topbar.phone.pinSaved')); return; }
         err.textContent = r?.message || tr('drawer.unreachable'); err.hidden = false; field.focus();
       });
       form.append(field, save, cancel); pin.replaceWith(form); form.after(err); field.focus();
@@ -113,15 +111,15 @@ export function renderPhone() {
   const list = el('div', 'pm-list');
   list.append(phoneSwitch(tr('topbar.phone.approve'), !!state.phoneApprove, false, async (want) => { const r = await post('/api/phone', { approve: want }); if (!r?.ok) return false; state.phoneApprove = r.approve; renderPhone(); return true; }, tr('topbar.phone.approveShort')));
   // "Giao việc" from the group chat on a phone: a new Claude Code run on this Mac (server/tasks.mjs)
-  if (tun) list.append(phoneSwitch(tr('topbar.phone.tasksSwitch'), !!tun.tasks, false, async (want) => { const r = await post('/api/tasks/allow', { on: want }); if (!r?.ok) return false; tun.tasks = r.allowed; renderPhone(); return true; }, tr('topbar.phone.tasksShort')));
+  if (phoneInfo) list.append(phoneSwitch(tr('topbar.phone.tasksSwitch'), !!phoneInfo.tasks, false, async (want) => { const r = await post('/api/tasks/allow', { on: want }); if (!r?.ok) return false; phoneInfo.tasks = r.allowed; renderPhone(); return true; }, tr('topbar.phone.tasksShort')));
   // that work as Claude Code background sessions (server/bg-sessions.mjs), when this Claude Code has them: offered with
   // the switch above on (or this one on, to turn it off)
-  if (tun && (tun.tasks || tun.bg?.on)) {
-    const b = tun.bg || {}, why = b.ok === false ? tr('topbar.phone.bgNo') : b.ok == null ? tr('topbar.phone.bgChecking') : tr('topbar.phone.bgShort');
-    list.append(phoneSwitch(tr('topbar.phone.bgSwitch'), !!b.on && b.ok !== false, b.ok === false, async (want) => { const r = await post('/api/tasks/bg', { on: want }); if (!r?.ok) return false; tun.bg = r.bg; renderPhone(); return true; }, why));
+  if (phoneInfo && (phoneInfo.tasks || phoneInfo.bg?.on)) {
+    const b = phoneInfo.bg || {}, why = b.ok === false ? tr('topbar.phone.bgNo') : b.ok == null ? tr('topbar.phone.bgChecking') : tr('topbar.phone.bgShort');
+    list.append(phoneSwitch(tr('topbar.phone.bgSwitch'), !!b.on && b.ok !== false, b.ok === false, async (want) => { const r = await post('/api/tasks/bg', { on: want }); if (!r?.ok) return false; phoneInfo.bg = r.bg; renderPhone(); return true; }, why));
   }
   // Claude Code's own Remote Control, on by itself in every new session if you like
-  if (tun) list.append(phoneSwitch(tr('topbar.phone.rcSwitch'), !!tun.rc, false, async (want) => { const r = await post('/api/rc', { on: want }); if (!r?.ok) return false; tun.rc = r.rc; renderPhone(); return true; }, tr(tun.rc ? 'topbar.phone.rcShortOn' : 'topbar.phone.rcShort')));
+  if (phoneInfo) list.append(phoneSwitch(tr('topbar.phone.rcSwitch'), !!phoneInfo.rc, false, async (want) => { const r = await post('/api/rc', { on: want }); if (!r?.ok) return false; phoneInfo.rc = r.rc; renderPhone(); return true; }, tr(phoneInfo.rc ? 'topbar.phone.rcShortOn' : 'topbar.phone.rcShort')));
   body.append(el('h4', 'pm-h', tr('topbar.phone.mayTitle')), list);
   // the phones that get notifications (switched on on each phone), and one to all of them
   const pushRow = el('div', 'pm-pushrow'); body.append(pushRow);
@@ -200,7 +198,7 @@ function phoneSide(body) {
 export function setup() {
   /* ---------- phone modal, bell, night, closing ---------- */
   state.lanUrl = null; state.lanBase = null; state.phonePin = null;
-  for (const id of ['btn-phone', 'btn-phone-top']) $(id)?.addEventListener('click', () => { $('phone-modal').hidden = false; renderPhone(); if (state.isLocal) loadTunnel().then(renderPhone); });
+  for (const id of ['btn-phone', 'btn-phone-top']) $(id)?.addEventListener('click', () => { $('phone-modal').hidden = false; renderPhone(); if (state.isLocal) loadPhoneInfo().then(renderPhone); });
   try { bellOn = localStorage.getItem('office-bell') === '1' && Notification.permission === 'granted'; } catch { /* storage blocked */ }
   $('btn-bell').addEventListener('click', async () => {
     if (!bellOn && Notification.permission !== 'granted') { const p = await Notification.requestPermission(); if (p !== 'granted') { toast(tr('topbar.bellBlocked')); return; } }

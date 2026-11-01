@@ -1,7 +1,7 @@
 // Notifications on this phone (Web Push: server/push.mjs sends them, public/sw.js shows them): Claude's answers in the
 // group chat and an approval waiting, even with the office closed and the phone locked. Switched on in the phone window
 // (topbar.js). An iPhone gets them only in the office added to its home screen (iOS 16.4 and later), and only over
-// https (the Cloudflare address, not the home network's plain http). A tap on one opens the office, at the chat.
+// https (not the home network's plain http). A tap on one opens the office, at the chat.
 import { STATIC } from '../core/env.js';
 import { TOKEN } from '../net/live.js';
 
