@@ -961,8 +961,9 @@ async function onHook(p, src = '') {
     broadcast({ k: 'sess', s: pub(s) });
   }
   const now = Date.now();
-  if (src === 'cowork') s.src = 'cowork';   // (the Cowork plugin's hook says so: hooks/send.mjs --source cowork)
-  if (s.src === 'cowork' && typeof p.cowork_project === 'string') s.coworkProject = p.cowork_project.slice(0, 80);
+  if (src === 'cowork' || src === 'chat') s.src = src;   // (the Cowork plugin's hook, or the chat tool of mcp/office-mcp.mjs, says so)
+  if (s.src && typeof (p.office_project ?? p.cowork_project) === 'string') s.coworkProject = String(p.office_project ?? p.cowork_project).slice(0, 80);   // (the project it says it belongs to: matched against My projects)
+  if (s.src === 'chat' && typeof p.office_title === 'string' && p.office_title.trim()) s.title = clip(oneLine(p.office_title), 80);
   s.lastEventAt = now;
   { const day = new Date(now).toLocaleDateString('sv'); if (ev !== 'SessionEnd' && s.dayFirst?.day !== day) s.dayFirst = { day, at: now }; }   // (its first sign of life each day: the lobby's attendance terminal)
   if (p.transcript_path) s.transcript = p.transcript_path;
@@ -2116,7 +2117,7 @@ const server = http.createServer((req, res) => {
     req.on('data', (c) => { size += c.length; if (size <= 8_000_000) chunks.push(c); });
     req.on('end', () => {
       res.writeHead(200, { 'Content-Type': 'application/json' }).end('{}');
-      try { onHook(JSON.parse(Buffer.concat(chunks).toString('utf8')), req.headers['x-office-source'] === 'cowork' ? 'cowork' : '').catch((err) => console.error('hook', err)); }
+      try { onHook(JSON.parse(Buffer.concat(chunks).toString('utf8')), ['cowork', 'chat'].includes(req.headers['x-office-source']) ? req.headers['x-office-source'] : '').catch((err) => console.error('hook', err)); }
       catch { /* not JSON: ignore */ }
     });
     return;

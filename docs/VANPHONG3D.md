@@ -45,6 +45,14 @@ Nguồn: [khanh020905/my-office](https://github.com/khanh020905/my-office) (MIT,
 - Cowork: `cowork-plugin/` gửi sự kiện (đánh dấu `X-Office-Source: cowork`) tới văn phòng; nhân vật hiện tên "Cowork · …". **Chưa kiểm chứng:** Cowork chạy trong máy ảo, chưa xác nhận máy ảo gọi được `127.0.0.1:4310`. Bạn tự cài plugin và chép `data/token` (xem `cowork-plugin/README.md`).
 - Chưa làm: tự lấy danh sách project/phiên cũ từ tài khoản (cần xuất dữ liệu hoặc API có đăng nhập).
 
+## Chat (claude.ai trong app) vào văn phòng
+
+Chat chạy trên đám mây nên không có hook. `mcp/office-mcp.mjs` là một MCP server chạy trên máy này, cho Chat một công cụ `office_report`; Chat gọi nó thì cuộc trò chuyện hiện thành nhân vật "Chat · tên", ngồi ở khu của dự án nếu `project` khớp "Dự án của tôi". Chỉ gửi tiêu đề, tên dự án và một ghi chú ngắn, không gửi nội dung chat.
+- Thêm vào `%APPDATA%\Claude\claude_desktop_config.json` (mục `mcpServers`), rồi thoát hẳn và mở lại app Claude:
+  `"my-office": { "command": "node", "args": ["D:\Vanphong3d-test\mcp\office-mcp.mjs"] }`
+- Để Chat tự gọi, dán vào Cài đặt → Sở thích (hoặc hướng dẫn của project): "Khi bắt đầu một yêu cầu, gọi office_report với status working; khi trả lời xong gọi với status done. Dùng cùng một conversation (tên cuộc trò chuyện) mỗi lần, project là tên project nếu có. Không đưa nội dung riêng tư vào title hoặc note."
+- Giới hạn: phụ thuộc Chat chịu gọi công cụ, và chỉ thấy cuộc trò chuyện từ lúc gọi. Không tự lấy các chat cũ.
+
 ## Việc còn lại
 1. Test e2e "điện thoại giao việc phải được Mac cho phép" đã viết lại cho LAN (`tests/e2e/office.spec.ts`), chạy trên macOS/Linux; logic cổng đã kiểm tay trên Windows.
 2. Đã gỡ hẳn mã tunnel/`viaTunnel` khỏi `server/index.mjs`, `topbar.js`, `demo.js`. `/api/tunnel` không còn (404); trạng thái cửa sổ điện thoại nay ở `GET /api/phone/status` (chỉ loopback). `/api/live` vẫn còn nhưng không còn nơi nào gọi.

@@ -3,6 +3,7 @@
 export default {
   director: 'Director',
   coworkTag: 'Cowork',
+  chatTag: 'Chat',
   subagent: 'subagent',
   // the small badge on a boss's name tag
   team: { one: '{n} subagent', other: '{n} subagents' },

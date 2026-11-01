@@ -120,7 +120,7 @@ export function upsertSession(s, walkIn = true) {
   let w = workers.get(s.id);
   if (!w && !leavingIds.has(s.id)) w = addWorker(s, walkIn && had === false && state.connectedOnce);
   if (w) {
-    w.setName(short(s.src === 'cowork' ? `${tr('people.coworkTag')} · ${dn(s)}` : dn(s), 26));
+    w.setName(short(s.src === 'cowork' || s.src === 'chat' ? `${tr(s.src === 'chat' ? 'people.chatTag' : 'people.coworkTag')} · ${dn(s)}` : dn(s), 26));
     const live = new Set((s.subs || []).map((x) => x.id));
     for (const [aid, sw] of subs) if (sw.parent === w && !live.has(aid)) dropSub(aid);
     for (const x of s.subs || []) { if (!subs.has(x.id)) spawnSub(w, x.id, x.type); const sw = subs.get(x.id); if (sw && x.desc) sw.desc = x.desc; }
