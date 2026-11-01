@@ -103,7 +103,7 @@ export default {
     submit: 'Enter the office',
     keep: 'Remember this device',
     keepHint: 'Next time it goes straight in. Untick it on a borrowed phone.',
-    weak: 'Use 6 to 10 digits, and not an easy run like 000000 or 123456.',
+    weak: 'Use 8 to 10 digits, and not an easy run like 000000 or 123456.',
     locked: { one: 'Too many wrong tries. Try again in {n} minute.', other: 'Too many wrong tries. Try again in {n} minutes.' },
     wrong: { one: 'Wrong PIN. {n} try left.', other: 'Wrong PIN. {n} tries left.' },
     needed: 'PIN required.',

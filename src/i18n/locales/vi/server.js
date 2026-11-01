@@ -98,7 +98,7 @@ export default {
     submit: 'Vào văn phòng',
     keep: 'Ghi nhớ thiết bị này',
     keepHint: 'Lần sau vào thẳng, không hỏi mã. Máy mượn thì bỏ tick.',
-    weak: 'Mã phải gồm 6 đến 10 chữ số, và đừng dùng dãy dễ đoán như 000000 hay 123456.',
+    weak: 'Mã phải gồm 8 đến 10 chữ số, và đừng dùng dãy dễ đoán như 000000 hay 123456.',
     locked: 'Nhập sai quá nhiều lần. Thử lại sau {n} phút.',
     wrong: 'Sai mã. Còn {n} lần thử.',
     needed: 'Cần mã PIN.',

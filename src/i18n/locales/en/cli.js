@@ -59,7 +59,7 @@ export default {
     changed: 'PIN changed. Every phone that is signed in has to enter the new one.',
     show: 'PIN: {pin}',
   },
-  usage: 'Usage: my-office [start [--lan] | install [--service] [--lan] [--no-approve] [--no-status] [--no-otel] [--no-otel-names] | uninstall | doctor | pin [--new]] [--settings <path>]',
+  usage: 'Usage: my-office [start [--lan] | install [--service] [--lan] [--approve] [--no-status] [--no-otel] [--no-otel-names] | uninstall | doctor | pin [--new]] [--settings <path>]',
   // the status line Claude Code shows under the prompt (hooks/status-line.mjs)
   status: { context: 'context {pct}', fiveHour: '5h {pct}', week: '7d {pct}' },
   error: 'Error: {message}',

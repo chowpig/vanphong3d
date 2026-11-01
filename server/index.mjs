@@ -69,15 +69,15 @@ const TOKEN = fs.existsSync(TOKEN_FILE)
 // for a year, renewed as it's used, on a phone where you tick "Remember this device"; for this visit only otherwise.
 // The PIN is read from disk on each use, so a new one takes effect at once and signs out every phone (the cookie
 // signature covers the PIN).
-const PIN_FILE = path.join(DATA_DIR, 'pin'), PIN_RE = /^\d{6,10}$/;
+const PIN_FILE = path.join(DATA_DIR, 'pin'), PIN_RE = /^\d{8,10}$/;
 function currentPin() {
   try { const p = fs.readFileSync(PIN_FILE, 'utf8').trim(); if (PIN_RE.test(p)) return p; } catch { /* first run */ }
-  const p = String(crypto.randomInt(0, 1e6)).padStart(6, '0');
+  const p = String(crypto.randomInt(0, 1e8)).padStart(8, '0');
   fs.writeFileSync(PIN_FILE, p, { mode: 0o600 });
   return p;
 }
 currentPin();
-/** A PIN of your own that a stranger would try first: all one digit, or a run like 123456 or 987654 (or not 6–10 digits). */
+/** A PIN of your own that a stranger would try first: all one digit, or a run like 123456 or 987654 (or not 8–10 digits). */
 function pinWeak(p) {
   if (!PIN_RE.test(p)) return true;
   const d = [...p].map(Number), steps = new Set(d.slice(1).map((x, i) => x - d[i]));
@@ -130,7 +130,7 @@ function bashLabel(i) {
 // When the office speaks Vietnamese, English descriptions (written by Claude) become Vietnamese via Google's free
 // translate endpoint, cached on disk. OFFICE_TRANSLATE=0 keeps everything local.
 const VI_CHARS = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
-const TRANSLATE = process.env.OFFICE_TRANSLATE !== '0';
+const TRANSLATE = process.env.OFFICE_TRANSLATE === '1';   // vanphong3d: off unless you opt in (it sends tool descriptions to Google)
 const VI_FILE = path.join(DATA_DIR, 'vi-cache.json');
 let viCache = {};
 try { viCache = JSON.parse(fs.readFileSync(VI_FILE, 'utf8')); } catch { /* first run */ }
@@ -1206,7 +1206,7 @@ function lanUrl(withToken = true) {
 // SameSite=Lax, not Strict: opening the address from another app (the camera's QR code, a link in a chat) is a visit from
 // elsewhere, and Strict would leave the cookie behind and ask for the PIN again. A POST from another site still goes
 // without it, and every POST checks its Origin as well.
-const COOKIE = 'office_pin', KEEP_DAYS = 365, VISIT_MS = 12 * 3600e3;
+const COOKIE = 'office_pin', KEEP_DAYS = 30, VISIT_MS = 12 * 3600e3;
 const sign = (exp, kind = '') => crypto.createHmac('sha256', TOKEN).update(`pin:${exp}:${kind ? `${kind}:` : ''}${currentPin()}`).digest('base64url');
 const sameBytes = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 function pinCookie(req, keep = true) {
@@ -1266,7 +1266,7 @@ function pinPage(res, code, msg = '', locked = false) {
 <html lang="${prefs.lang()}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Office</title><style>${PIN_CSS}</style></head>
 <body><form class="card" method="post" action="/pin" autocomplete="off"><div class="ico">🏢</div><h1>${esc(tr('server.pin.title'))}</h1>
 <p>${esc(tr('server.pin.help'))}</p>
-<input name="pin" inputmode="numeric" pattern="\\d{6,10}" maxlength="10" autocomplete="one-time-code" required autofocus aria-label="${esc(tr('server.pin.label'))}" ${locked ? 'disabled' : ''}>
+<input name="pin" inputmode="numeric" pattern="\\d{8,10}" maxlength="10" autocomplete="one-time-code" required autofocus aria-label="${esc(tr('server.pin.label'))}" ${locked ? 'disabled' : ''}>
 <label class="keep"><input type="checkbox" name="keep" value="1" checked ${locked ? 'disabled' : ''}><span>${esc(tr('server.pin.keep'))}<small>${esc(tr('server.pin.keepHint'))}</small></span></label>
 <button type="submit" ${locked ? 'disabled' : ''}>${esc(tr('server.pin.submit'))}</button>${msg ? `<p class="err" role="alert">${esc(msg)}</p>` : ''}</form></body></html>`);
 }
