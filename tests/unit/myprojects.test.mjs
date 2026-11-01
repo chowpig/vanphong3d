@@ -40,11 +40,12 @@ test('the list is kept in the data folder and comes back', () => {
   assert.deepEqual(createMyProjects(d).list(), [], 'a broken file starts empty');
 });
 
-test('the Cowork plugin carries the same hook script as Claude Code, and marks its events', () => {
+test('the Cowork plugin sends every event through its own finder script', () => {
   const root = path.resolve(import.meta.dirname, '../..');
-  assert.equal(fs.readFileSync(path.join(root, 'cowork-plugin/hooks/send.mjs'), 'utf8'), fs.readFileSync(path.join(root, 'hooks/send.mjs'), 'utf8'));
+  assert.ok(fs.existsSync(path.join(root, 'cowork-plugin/hooks/cowork-send.mjs')));
   const h = JSON.parse(fs.readFileSync(path.join(root, 'cowork-plugin/hooks/hooks.json'), 'utf8')).hooks;
   const cmds = Object.values(h).flatMap((g) => g.flatMap((x) => x.hooks.map((y) => y.command)));
   assert.ok(cmds.length > 5);
-  for (const c of cmds) assert.match(c, /--source cowork/);
+  for (const c of cmds) assert.match(c, /cowork-send\.mjs/);
+  assert.ok(h.SessionStart[0].hooks[0].command.includes('--probe'), 'a session starts by saying whether the office was found');
 });

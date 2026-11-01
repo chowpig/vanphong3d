@@ -38,6 +38,7 @@ import { createTenure, FAREWELL_DAYS, FAREWELL_DEFAULT } from './tenure.mjs';
 import { cacheClock, cacheFromResume, cacheFromStatus, cacheGuess } from '../src/shared/cache-clock.js';
 import { createOtel } from './otel.mjs';
 import { createMyProjects } from './myprojects.mjs';
+import { vmAddresses, vmHandler } from './vmlink.mjs';
 import { managedEnvs, otelOwner } from './otel-setup.mjs';
 import { pickLang, createT } from '../src/i18n/index.js';
 
@@ -2679,7 +2680,8 @@ catch (err) {
 const lanFixed = HOST !== '127.0.0.1' && HOST !== 'localhost';
 const lanServers = new Map();   // address -> its http.Server
 function syncLan() {
-  const want = new Set(!lanFixed && prefs.get('lan') ? Object.values(os.networkInterfaces()).flat().filter((n) => n && n.family === 'IPv4' && !n.internal).map((n) => n.address) : []);
+  const vmAddr = new Set(vmAddresses().map((p) => p.address));
+  const want = new Set(!lanFixed && prefs.get('lan') ? Object.values(os.networkInterfaces()).flat().filter((n) => n && n.family === 'IPv4' && !n.internal && !vmAddr.has(n.address)).map((n) => n.address) : []);   // (not the VM adapter's: server/vmlink.mjs listens there, for Cowork's events only)
   for (const [addr, srv] of lanServers) if (!want.has(addr)) { srv.close(); srv.closeAllConnections?.(); lanServers.delete(addr); }
   for (const addr of want) {
     if (lanServers.has(addr)) continue;
@@ -2688,6 +2690,20 @@ function syncLan() {
     srv.listen(PORT, addr); lanServers.set(addr, srv);
   }
 }
+/* Cowork's virtual machine (Windows): a listener of its own on each Hyper-V virtual adapter's address, for the Cowork
+   plugin's events only (server/vmlink.mjs). Looked at again every 30 seconds, like the phones' addresses. */
+const vmServers = new Map();   // address -> its http.Server
+function syncVm() {
+  const peers = new Map(vmAddresses().map((p) => [p.address, p]));
+  for (const [addr, srv] of vmServers) if (!peers.has(addr)) { srv.close(); srv.closeAllConnections?.(); vmServers.delete(addr); }
+  for (const [addr, peer] of peers) {
+    if (vmServers.has(addr)) continue;
+    const srv = http.createServer(vmHandler({ peer, keyOk: (k) => sameBytes(k, TOKEN), onEvent: (p) => { onHook(p, 'cowork').catch((err) => console.error('hook', err)); } }));
+    srv.on('error', () => { if (vmServers.get(addr) === srv) vmServers.delete(addr); });
+    srv.listen(PORT, addr); vmServers.set(addr, srv);
+  }
+}
+setInterval(syncVm, 30_000).unref();
 function lanIsOn() { return lanFixed || lanServers.size > 0; }
 setInterval(syncLan, 30_000).unref();
 
@@ -2709,6 +2725,7 @@ for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, () => process.exit(0));
 
 server.listen(PORT, HOST, () => {
   syncLan();
+  syncVm();
   prefs.set('tunnel', undefined);   // (a setting an older version may have left)
   scanSessions();
   scanCleanups().catch(() => {});   // macOS paths; elsewhere there may be nothing to scan

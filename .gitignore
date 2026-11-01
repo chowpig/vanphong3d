@@ -20,3 +20,6 @@ playwright-report/
 /.demo-build/
 /demo-site/
 /out/
+
+# the Cowork plugin package carries the office key: never commit it
+*.plugin

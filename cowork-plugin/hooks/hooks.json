@@ -5,7 +5,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --probe",
+            "timeout": 8
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
@@ -17,7 +22,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
@@ -29,7 +34,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
@@ -41,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
@@ -53,7 +58,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
@@ -65,7 +70,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
@@ -77,7 +82,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
@@ -89,7 +94,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
@@ -101,7 +106,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
@@ -113,7 +118,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
@@ -125,7 +130,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
@@ -137,7 +142,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
@@ -149,7 +154,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/send.mjs\" http://127.0.0.1:4310/event --async --source cowork",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/cowork-send.mjs\" http://127.0.0.1:4310/event --async",
             "timeout": 5,
             "async": true
           }
