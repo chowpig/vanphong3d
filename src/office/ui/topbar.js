@@ -37,7 +37,6 @@ function phoneSwitch(text, on, disabled, fn, desc = '') {
 // 123 456, 1234 5678, 123 4567, 123 456 7890
 const pinFmt = (p) => (p.length % 4 === 0 && p.length % 3 ? p.match(/\d{4}/g).join(' ') : p.replace(/\d{3}(?=\d{2})/g, '$& '));
 let tun = null, tunPoll = 0;   // the tunnel's state (GET /api/tunnel), asked again while it starts
-let pmTab = null;              // the way in shown: 'home' | 'away' (null: the tunnel's if it is on)
 async function loadTunnel() {
   tun = await fetch('/api/tunnel').then((r) => r.json()).catch(() => null);
   clearTimeout(tunPoll);
@@ -62,7 +61,7 @@ export function renderPhone() {
   for (const [k, on] of [['home', lanOn]]) {
     const b = el('button', `pm-tab${k === tab ? ' is-sel' : ''}`); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(k === tab));
     b.append(el('span', null, tr(k === 'home' ? 'topbar.phone.tabHome' : 'topbar.phone.tabAway')), el('i', `pm-dot${on ? ' is-on' : ''}`, tr(on ? 'topbar.phone.isOn' : 'topbar.phone.isOff')));
-    b.addEventListener('click', () => { pmTab = k; renderPhone(); });
+    b.addEventListener('click', () => renderPhone());
     tabs.append(b);
   }
   const conn = el('div', 'pm-conn');

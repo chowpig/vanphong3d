@@ -24,6 +24,6 @@ Nguồn: [khanh020905/my-office](https://github.com/khanh020905/my-office) (MIT,
 
 ## Chưa làm
 1. Playwright e2e chưa chạy (sandbox không GPU); phần kiểm tra "điện thoại giao việc phải được Mac cho phép" cần viết lại cho LAN.
-2. Chuỗi i18n về tunnel và hàm `keepAwake`/`pmTab` thừa chưa dọn (chỉ gây warning lint).
+2. Chuỗi i18n về tunnel chưa dọn (không ảnh hưởng chạy).
 3. Quét lịch sử git của repo gốc (bản clone nông chỉ có 1 commit) và bật Dependabot.
 4. `npm audit`: `minimatch` mức moderate ở devDependency của eslint (không vào bản chạy).

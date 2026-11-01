@@ -2690,7 +2690,7 @@ setInterval(syncLan, 30_000).unref();
    Off: cloudflared stops and the listener closes, cutting off whoever was in. OFFICE_TUNNEL_CMD: a stand-in (tests). */
 const tunnel = { state: 'off', url: '', host: '', error: '', pid: 0, srv: null, port: 0, tries: 0, gen: 0, watch: null };
 const tunnelOut = () => ({ ok: true, on: !!prefs.get('tunnel'), state: tunnel.state, url: tunnel.url, error: tunnel.error, port: tunnel.port, pin: currentPin(),
-  awake: process.platform === 'darwin' ? { held: !!awakeProc, ac: powerAC } : null, rc: rcAtStartup(), tasks: !!prefs.get('phoneTasks'), bg: bgOut() });
+  awake: null, rc: rcAtStartup(), tasks: !!prefs.get('phoneTasks'), bg: bgOut() });
 // Giving Claude work from a phone is Claude Code's own Remote Control: with remoteControlAtStartup in its settings every
 // new session opens its bridge by itself (the other accounts share these settings by a link), and the office shows each
 // session's link. Switched in the phone window, by you, on the Mac; the rest of the file is left as it is.
@@ -2702,24 +2702,8 @@ function setRcAtStartup(on) {
   if (on) cfg.remoteControlAtStartup = true; else delete cfg.remoteControlAtStartup;
   try { fs.mkdirSync(path.dirname(real), { recursive: true }); fs.writeFileSync(`${real}.office-tmp`, `${JSON.stringify(cfg, null, 2)}\n`); fs.renameSync(`${real}.office-tmp`, real); return true; } catch { return false; }
 }
-// While the tunnel is on, the Mac stays awake so it can be reached (macOS): `caffeinate -s` holds off system sleep on the
-// power adapter only (on battery it sleeps as usual), and the display still turns off; `-w` ends it with this server,
-// however that ends. Turning the tunnel off lets it go. Nothing is changed in the system settings.
-let awakeProc = null, powerAC = null, powerT = null;
-function readPower() { execFile('pmset', ['-g', 'batt'], { timeout: 4000 }, (err, out) => { powerAC = err ? null : /AC Power/.test(String(out)); }); }
-function keepAwake(on) {
-  if (process.platform !== 'darwin') return;
-  if (on && !awakeProc) {
-    const p = awakeProc = spawn('caffeinate', ['-s', '-w', String(process.pid)], { stdio: 'ignore' });
-    p.on('error', () => { if (awakeProc === p) awakeProc = null; }); p.on('exit', () => { if (awakeProc === p) awakeProc = null; });
-    readPower(); clearInterval(powerT); powerT = setInterval(readPower, 60_000); powerT.unref();
-  } else if (!on) {
-    if (awakeProc) { try { awakeProc.kill(); } catch { /* gone */ } awakeProc = null; }
-    clearInterval(powerT); powerT = null;
-  }
-}
 // (the office stopping: staying awake ends with it, caffeinate -w)
-process.on('exit', () => { try { awakeProc?.kill(); } catch { /* gone */ } otel.saveSync(); });
+process.on('exit', () => { otel.saveSync(); });
 for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, () => process.exit(0));
 
 server.listen(PORT, HOST, () => {
