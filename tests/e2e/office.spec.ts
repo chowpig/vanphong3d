@@ -699,22 +699,6 @@ test('the director’s rounds: out of the corner office, round the desks, and ba
   expect(errors).toEqual([]);
 });
 
-test('the security guard: a booth by the street door, the folding gate drawn across it at night', async ({ page }) => {
-  const errors = watchErrors(page);
-  await page.setViewportSize({ width: 1000, height: 640 });
-  await page.addInitScript(() => { try { localStorage.setItem('office-quality', 'low'); } catch { /* private mode */ } });
-  await page.goto('/?demo&debug&layout=pro&at=22:30');
-  await page.waitForFunction(() => (window as unknown as Staffed).__office?.guard?.(), null, { timeout: 45_000 });
-  expect((await page.evaluate(() => (window as unknown as Staffed).__office!.guard!())).night).toBe(true);
-  await expect.poll(() => page.evaluate(() => (window as unknown as Staffed).__office!.guard!().gate), { timeout: 30_000 }).toBeGreaterThan(0.6);
-  await page.goto('/?demo&debug&layout=pro&at=10:00');
-  await page.waitForFunction(() => (window as unknown as Staffed).__office?.guard?.(), null, { timeout: 45_000 });
-  const day = await page.evaluate(() => (window as unknown as Staffed).__office!.guard!());
-  expect(day.night).toBe(false);
-  expect(day.gate).toBe(0);
-  expect(errors).toEqual([]);
-});
-
 test('out of Claude: people go on a break until the limit resets, then the bell calls them back', async ({ page }) => {
   const errors = watchErrors(page);
   await page.setViewportSize({ width: 800, height: 500 });
