@@ -532,7 +532,8 @@ let chat = null, chatSaveT = null;
 const STAFF_NAME = { __reception: 'people.staff.receptionist', __hr: 'people.staff.hr', __cleaner: 'people.staff.cleaner', __accountant: 'people.accountant.name', __guard: 'people.guard.name', __director: 'people.director', __courier: 'people.staff.shipper', __claude: 'chat.claudeTag' };   // (__claude: a new conversation's answers, before it has a person)
 chat = createChatEngine({
   tr, now: () => Date.now(),
-  members: () => [...sessions.values()].map((s) => ({ id: s.id, name: s.title || s.name || 'claude', status: s.status, task: s.lastPrompt ? clip(oneLine(unwrapPaste(s.lastPrompt)), 80) : '', last: s.last, project: path.basename(s.cwd || '') })),
+  // (only the conversations the office draws: Chat and Cowork, and Claude Code's sessions when Settings shows them)
+  members: () => [...sessions.values()].filter((s) => s.src || showCode()).map((s) => ({ id: s.id, name: s.title || s.name || 'claude', status: s.status, task: s.lastPrompt ? clip(oneLine(unwrapPaste(s.lastPrompt)), 80) : '', last: s.last, counts: s.counts, project: myProjects.match([s.coworkProject, s.title, gitRepoName(s), path.basename(s.cwd || '')], { loose: !!s.src }) || (s.src && s.coworkProject) || path.basename(s.cwd || '') })),
   staffName: (key) => (STAFF_NAME[key] ? tr(STAFF_NAME[key]) : null),
   store: {
     load: () => { try { return JSON.parse(fs.readFileSync(CHAT_FILE, 'utf8')); } catch { return null; } },

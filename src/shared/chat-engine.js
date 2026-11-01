@@ -18,11 +18,31 @@ const KINDS = new Set(['text', 'sticker', 'photo', 'poll', 'remind', 'sys', 'wor
 const short = (s, n = 60) => { s = String(s ?? ''); return s.length > n ? `${s.slice(0, n - 1)}…` : s; };
 const rand = (a, b) => a + Math.random() * (b - a);
 const pickOne = (list) => list[Math.floor(Math.random() * list.length)];
+/** how many steps a session did since a snapshot of its counts: { edit, cmd, read, web } */
+const since = (now, then) => Object.fromEntries(['edit', 'cmd', 'read', 'web'].map((k) => [k, Math.max(0, (Number(now?.[k]) || 0) - (Number(then?.[k]) || 0))]));
 
 export function createChatEngine(ctx) {
   const { tr } = ctx, timer = ctx.timer || ((fn, ms) => setTimeout(fn, ms));
   const st = { msgs: [], pinned: null, days: {}, keys: [], typing: [] };
   const queue = [], cool = new Map(), busy = new Map();   // (busy: who is working on what you sent them, key -> name)
+  const recent = new Map(), started = new Map();   // (recent: the lines lately said from a list; started: a session's counts and time when its task began)
+  /** A line from the list chat.<group>.<key>: not one of the last few said from it, and only one whose {words} are all known
+   *  (a line about the files changed is skipped when none were), with the words filled in. */
+  function line(group, key, vars = {}) {
+    const all = tr(`chat.${group}.${key}`, null, 'list').map(String);
+    const known = (l) => [...l.matchAll(/\{(\w+)\}/g)].every(([, k]) => vars[k] !== undefined && vars[k] !== null && vars[k] !== '');
+    let pool = all.filter(known); if (!pool.length) pool = all.filter((l) => !l.includes('{')); if (!pool.length) return '';
+    const mem = `${group}.${key}`, seen = recent.get(mem) || [], fresh = pool.filter((l) => !seen.includes(l)), l = pickOne(fresh.length ? fresh : pool);
+    recent.set(mem, [...seen, l].slice(-Math.max(1, Math.min(4, pool.length - 1))));
+    return l.replace(/\{(\w+)\}/g, (_, k) => vars[k]);
+  }
+  /** "3 phút", "45 giây", "1 giờ 5 phút" */
+  function took(ms) {
+    const sec = Math.max(1, Math.round(ms / 1000));
+    if (sec < 60) return tr('chat.dur.s', { n: sec });
+    const min = Math.round(sec / 60);
+    return min < 60 ? tr('chat.dur.m', { n: min }) : tr('chat.dur.h', { h: Math.floor(min / 60), m: min % 60 });
+  }
   let seq = 0, tickT = null;
   const nid = () => `${ctx.now().toString(36)}${(seq++).toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
@@ -111,7 +131,7 @@ export function createChatEngine(ctx) {
   function answer(m, key, chance = 1, vars) {
     if (Math.random() > chance) return;
     const id = anyone([m.from]);
-    if (id) say(id, tr(`chat.reply.${key}`, vars), { delay: rand(1500, 6000) });
+    if (id) say(id, line('reply', key, vars), { delay: rand(1500, 6000) });
   }
   /** A vote in a poll (an option's index; the same again takes it back). */
   function vote(id, by, i) {
@@ -146,30 +166,43 @@ export function createChatEngine(ctx) {
 
   /* ---------- what the sessions say about their work (the hooks' events) ---------- */
   const ok = (key, ms) => { const now = ctx.now(); if ((cool.get(key) || 0) > now) return false; cool.set(key, now + ms); return true; };
-  const work = (id, key, vars, opts) => say(id, tr(`chat.work.${key}`, vars), opts);
+  const work = (id, key, vars, opts) => say(id, line('work', key, vars), opts);
   const q = (t) => (t ? `“${short(t, 60)}”` : '');
   function onEvent(e) {
     const s = members().find((x) => x.id === e.sess); if (!s) return;
-    const id = s.id;
-    if (e.agent) { if (e.type === 'substart' && ok(`${id}:helper`, 30 * 60e3)) work(id, 'helper'); return; }
+    const id = s.id, project = short(s.project || s.name, 40), task = short(s.task || e.label, 60), v = { project, task, taskq: q(task) };
+    if (e.agent) { if (e.type === 'substart' && ok(`${id}:helper`, 30 * 60e3)) work(id, 'helper', v); return; }
     switch (e.type) {
-      case 'start': if (ok(`${id}:hello`, 8 * 3600e3)) { system(tr('chat.sys.added', { by: ctx.staffName('__hr') || tr('chat.boss'), name: s.name })); work(id, 'hello', { project: s.project || s.name }, { answer: [{ key: 'hello', chance: 0.5 }] }); } break;
-      case 'prompt': if (e.label && ok(`${id}:prompt`, 60e3)) { say('me', `@${s.name} ${e.full || q(e.label)}`, { now: true, long: !!e.full }); work(id, 'ack', null, { delay: 900 }); } break;   // (the whole prompt, as you wrote it)
-      case 'stop': if (ok(`${id}:done`, 4 * 60e3)) work(id, 'done', { task: short(s.task || e.label, 60) }, { react: ['👍', '❤️'], reacts: 2, answer: [{ key: 'done', chance: 0.25 }] }); break;
-      case 'wait': case 'ask': if (ok(`${id}:wait`, 3 * 60e3)) work(id, e.type, null, { now: true }); break;
+      case 'start': if (ok(`${id}:hello`, 8 * 3600e3)) { system(tr('chat.sys.added', { by: ctx.staffName('__hr') || tr('chat.boss'), name: s.name })); work(id, 'hello', v, { answer: [{ key: 'hello', chance: 0.5, vars: v }] }); } break;
+      case 'prompt':
+        if (e.label && ok(`${id}:prompt`, 60e3)) {
+          started.set(id, { at: ctx.now(), counts: { ...(s.counts || {}) } });
+          say('me', `@${s.name} ${e.full || q(e.label)}`, { now: true, long: !!e.full });   // (the whole prompt, as you wrote it)
+          work(id, 'ack', { ...v, task: short(e.label, 60), taskq: q(e.label) }, { delay: 900 });
+        }
+        break;
+      case 'stop':
+        if (ok(`${id}:done`, 4 * 60e3)) {
+          const t0 = started.get(id), d = since(s.counts, t0?.counts), ms = t0 ? ctx.now() - t0.at : 0, reads = d.read + d.web;
+          const info = { ...v, took: ms >= 1000 ? took(ms) : '', edits: d.edit || '', cmds: d.cmd || '', reads: reads || '' };
+          started.delete(id);
+          work(id, d.edit ? 'doneEdit' : d.cmd ? 'doneRun' : reads ? 'doneRead' : 'done', info, { react: ['👍', '❤️'], reacts: 2, answer: [{ key: 'done', chance: 0.4, vars: v }] });
+        }
+        break;
+      case 'wait': case 'ask': if (ok(`${id}:wait`, 3 * 60e3)) work(id, e.type, v, { now: true }); break;
       case 'fail':
-        if (e.limit) { if (ok(`${id}:limit`, 30 * 60e3)) work(id, 'limit', null, { react: ['😭', '😆'], reacts: 2, answer: [{ key: 'limit', chance: 0.5 }] }); break; }
-        if (ok(`${id}:fail`, 3 * 60e3)) work(id, (cool.get(`${id}:failed`) || 0) > ctx.now() ? 'failAgain' : 'fail', null, { react: ['😭'], reacts: 1, answer: [{ key: 'fail', chance: 0.4 }] });
+        if (e.limit) { if (ok(`${id}:limit`, 30 * 60e3)) work(id, 'limit', v, { react: ['😭'], reacts: 1, answer: [{ key: 'limit', chance: 0.5, vars: v }] }); break; }
+        if (ok(`${id}:fail`, 3 * 60e3)) work(id, (cool.get(`${id}:failed`) || 0) > ctx.now() ? 'failAgain' : 'fail', v, { react: ['😭'], reacts: 1, answer: [{ key: 'fail', chance: 0.5, vars: v }] });
         cool.set(`${id}:failed`, ctx.now() + 10 * 60e3);
         break;
-      case 'compact': if (ok(`${id}:compact`, 20 * 60e3)) work(id, 'compact'); break;
-      case 'commit': if (ok(`${id}:commit`, 5 * 60e3)) work(id, 'commit', { msg: short(e.label, 64) }, { react: ['👍'], reacts: 1 }); break;
-      case 'push': if (ok(`${id}:push`, 5 * 60e3)) work(id, 'push', { branch: e.branch || e.label || 'main' }, { react: ['❤️', '👍'], reacts: 3 }); break;
-      case 'deploy': if (ok(`${id}:deploy`, 5 * 60e3)) work(id, 'deploy', null, { react: ['❤️', '👍', '😮'], reacts: 4, answer: [{ key: 'deploy' }, { key: 'deploy', chance: 0.5 }] }); break;
-      case 'cired': if (ok(`${e.repo}:ci`, 10 * 60e3)) work(id, 'ciRed', null, { react: ['😮', '😭'], reacts: 2, answer: [{ key: 'ciRed', chance: 0.6 }] }); break;
-      case 'cigreen': if (ok(`${e.repo}:ci`, 10 * 60e3)) work(id, 'ciGreen', null, { react: ['❤️'], reacts: 2 }); break;
-      case 'testok': if (ok(`${id}:test`, 10 * 60e3)) work(id, 'testOk', null, { react: ['👍'], reacts: 1 }); break;
-      case 'testfail': if (ok(`${id}:test`, 10 * 60e3)) work(id, 'testFail'); break;
+      case 'compact': if (ok(`${id}:compact`, 20 * 60e3)) work(id, 'compact', v); break;
+      case 'commit': if (ok(`${id}:commit`, 5 * 60e3)) work(id, 'commit', { ...v, msg: short(e.label, 64) }, { react: ['👍'], reacts: 1 }); break;
+      case 'push': if (ok(`${id}:push`, 5 * 60e3)) work(id, 'push', { ...v, branch: e.branch || e.label || 'main' }, { react: ['👍'], reacts: 2 }); break;
+      case 'deploy': if (ok(`${id}:deploy`, 5 * 60e3)) work(id, 'deploy', v, { react: ['❤️', '👍'], reacts: 3, answer: [{ key: 'deploy', vars: v }] }); break;
+      case 'cired': if (ok(`${e.repo}:ci`, 10 * 60e3)) work(id, 'ciRed', v, { react: ['😮'], reacts: 2, answer: [{ key: 'ciRed', chance: 0.7, vars: v }] }); break;
+      case 'cigreen': if (ok(`${e.repo}:ci`, 10 * 60e3)) work(id, 'ciGreen', v, { react: ['❤️'], reacts: 2 }); break;
+      case 'testok': if (ok(`${id}:test`, 10 * 60e3)) work(id, 'testOk', v, { react: ['👍'], reacts: 1 }); break;
+      case 'testfail': if (ok(`${id}:test`, 10 * 60e3)) work(id, 'testFail', v); break;
     }
   }
   const onLeft = (name) => system(tr('chat.sys.left', { name }));
@@ -194,27 +227,26 @@ export function createChatEngine(ctx) {
     const low = text.toLowerCase(), named = members().filter((m) => text.includes(`@${m.name}`));
     for (const m of named) say(m.id, statusOf(m), { delay: rand(800, 3000), reply: quote });
     // a reply to one of theirs: that person answers it
-    if (r && r.from !== 'me' && !named.some((m) => m.id === r.from) && who(r.from) && !r.from.startsWith('__')) say(r.from, tr('chat.reply.any'), { delay: rand(1200, 3500), reply: quote });
-    const reply2 = (key, n = 1) => some(n).forEach((id, i) => say(id, tr(`chat.reply.${key}`), { delay: rand(1500, 4000) + i * 2500 }));
+    if (r && r.from !== 'me' && !named.some((m) => m.id === r.from) && who(r.from) && !r.from.startsWith('__')) say(r.from, line('reply', 'any', {}), { delay: rand(1200, 3500), reply: quote });
+    const reply2 = (key, n = 1) => some(n).forEach((id, i) => say(id, line('reply', key, {}), { delay: rand(1500, 4000) + i * 2500 }));
     if (/họp|meeting|stand-?up/.test(low)) { ctx.act?.('meeting'); say('hr', tr('chat.life.meeting'), { delay: 700 }); reply2('meeting', 2); }
-    else if (/trà sữa|tra sua|milk ?tea|bubble tea/.test(low)) { ctx.act?.('tea'); reply2('milkTea', 3); }
     else if (/về (nhà|đây|trước)|go(ing)? home|bye/.test(low)) reply2('goHome', 2);
     else if (/giỏi|tốt lắm|cảm ơn|cám ơn|good job|well done|thank/.test(low)) reply2('praise', 2);
-    else if (/ăn gì|ăn trưa|lunch/.test(low)) poll('me', tr('chat.life.lunchPoll'), tr('chat.life.lunchOpts', null, 'list'));
     else if (!named.length && !r && ok('me:any', 45e3)) reply2('any');   // (a plain line: one answer now and then, not one to every message)
     if (mine && Math.random() < 0.6) autoReact(mine, ['❤️', '👍'], Math.random() < 0.5 ? 1 : 2);
   }
   function photo(dataUrl) { say('me', '', { now: true, photo: dataUrl }); const m = st.msgs.at(-1); if (m?.from === 'me') autoReact(m, ['❤️', '😆', '😮'], 3); }
 
-  /* ---------- by the clock: the morning hello, the lunch poll, reminders for the stand-up and the Friday tea ---------- */
+  /* ---------- by the clock: the morning briefing and the Monday stand-up reminder ---------- */
   const hm = (d) => d.getHours() * 100 + d.getMinutes();
   function at(d, h, m) { const x = new Date(d); x.setHours(h, m, 0, 0); return x.getTime(); }
   function clock() {
     const d = new Date(ctx.now()), day = d.toDateString(), wd = d.getDay(), once = (k) => { if (st.days[k] === day) return false; st.days[k] = day; save(); return true; };
-    if (wd % 6 && hm(d) >= 750 && hm(d) < 830 && once('morning')) say('reception', tr('chat.life.morning'), { react: ['❤️', '👍'], reacts: 3, answer: [{ key: 'hello', chance: 0.7 }] });
+    if (wd % 6 && hm(d) >= 750 && hm(d) < 830) {
+      const projects = [...new Set(members().map((m) => m.project || m.name).filter(Boolean))];
+      if (projects.length && once('morning')) say('reception', line('life', 'morning', { n: projects.length, projects: short(projects.slice(0, 4).join(', '), 90) }), { react: ['👍'], reacts: 2, answer: [{ key: 'hello', chance: 0.6, vars: { project: projects[0] } }] });
+    }
     if (wd === 1 && hm(d) >= 820 && hm(d) < 855 && once('standupRemind')) remind('hr', tr('chat.life.standupTitle'), at(d, 9, 0), 'week');
-    if (wd % 6 && hm(d) >= 1045 && hm(d) < 1130 && once('lunch')) poll(anyone() || 'reception', tr('chat.life.lunchPoll'), tr('chat.life.lunchOpts', null, 'list'));
-    if (wd === 5 && hm(d) >= 1530 && hm(d) < 1555 && once('teaRemind')) remind('hr', tr('chat.life.teaTitle'), at(d, 16, 0), 'week');
     // a reminder that has come round: the app's own line for it
     for (const m of st.msgs) if (m.kind === 'remind' && !m.remind.done && m.remind.at <= ctx.now()) { m.remind.done = true; update(m); system(tr('chat.sys.remindNow', { title: m.remind.title })); }
   }

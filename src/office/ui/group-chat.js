@@ -99,10 +99,12 @@ export function chatMoved(names, to) { if (!engine) return; for (const s of sess
 /* ---------- life in the office (called from the modules where it happens) ---------- */
 const life = (key, vars) => tr(`chat.life.${key}`, vars);
 const lastLife = new Map();
+const WORK_TALK = new Set(['standup', 'trophy', 'bye']);
 /** kind: standup, lunchOrder, nap, wake, parcel, tea, birthday, store, the chains' (highlands, tgdd, mixue, phuclong,
  *  katinat, longchau), altar, trophy, bye (v: id, name, shop, names, photo, why, every). The morning hello, the lunch
  *  poll and the reminders come by the clock, from the engine. */
 export function chatLife(kind, v = {}) {
+  if (!WORK_TALK.has(kind)) return;   // (the office's other small talk is not told in the chat: it is about the work)
   const every = v.every ?? 20 * 60e3, now = Date.now(), lk = `${kind}:${v.id || ''}`;
   if (replay.on || (lastLife.get(lk) || 0) > now) return;
   lastLife.set(lk, now + every);
@@ -182,7 +184,7 @@ export function setup() {
   if (STATIC || new URLSearchParams(location.search).has('demo')) {   // the demo (demo.js sets DEMO later in the setups): the engine runs here, kept in this browser
     engine = createChatEngine({
       tr, now: () => officeNow().getTime(),
-      members: () => people().map((id) => { const s = sessions.get(id); return { id, name: dn(s), status: s.status, task: s.lastPrompt || '', last: s.last, project: (s.dir || '').split('/').pop() }; }),
+      members: () => people().map((id) => { const s = sessions.get(id); return { id, name: dn(s), status: s.status, task: s.lastPrompt || '', last: s.last, counts: s.counts, project: (s.proj || (s.dir || '').split(/[\\/]/).pop()) }; }),
       staffName: (key) => npcs.find((x) => x.id === key)?.cfg.name || null,
       store: { load: () => { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { return null; } }, save: (d) => { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch { /* full or blocked */ } } },
       emit: (op, x) => { chat.pinned = engine?.state.pinned ?? chat.pinned; if (op === 'add') applyAdd(x); else if (op === 'update') applyUpdate(x); else if (op === 'typing') { chat.typing = x; emit('typing'); } else emit('all'); },
