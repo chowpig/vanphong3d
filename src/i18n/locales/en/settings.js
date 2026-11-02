@@ -1,0 +1,71 @@
+export default {
+  language: 'Language',
+  switchingLang: 'Switching language…',
+  toAuto: 'The office will grow with your projects…',
+  toPro: 'Building the company office…',
+  toHq: 'Building headquarters…',
+  toCozy: 'Heading back to the cozy office…',
+  seasonOn: 'Turning on seasonal decorations…',
+  seasonOff: 'Turning off seasonal decorations…',
+  graphics: 'Graphics',
+  q: { auto: 'Auto', low: 'Low', medium: 'Medium', high: 'High' },
+  qNow: 'In use: {level}. Lower it if the office feels slow or the fans spin up.',
+  qDropped: 'The office was slow, so graphics went down to {level}. Change it in Settings → Graphics.',
+  tabs: { office: 'Office', people: 'Characters', display: 'Display', more: 'More' },
+  layouts: {
+    cozy: { name: 'Cozy', sub: 'One open room · 9 desks' },
+    pro: { name: 'Company', sub: 'A whole floor · 12 desks' },
+    auto: { name: 'Auto', sub: 'Grows with your projects' },
+    hq: { name: 'Headquarters', sub: 'Departments · up to 18 projects' },
+  },
+  showCode: {
+    label: 'Also show Claude Code sessions',
+    note: 'By default the office only draws Chat (and Cowork) conversations. Turn this on to draw Claude Code sessions too (terminal, VS Code, the Code tab). The page reloads after a change.',
+  },
+  myProjects: {
+    title: 'My projects',
+    placeholder: 'One project a line, for example:\nMarketing\nAccounting\nSales\nWarehouse',
+    save: 'Save list',
+    saved: '{n} projects saved',
+    note: 'A session whose repository, folder, title or Cowork project matches a name in the list sits in the area of that project, and the office always has room for the whole list. Names are kept on this computer only; nothing is read from your account. Sessions already open move after the page reloads.',
+  },
+  layoutNote: 'Changing the floor plan rebuilds the office: the page reloads and your sessions come straight back.',
+  times: {
+    auto: { name: 'Auto', sub: 'Follows the clock' },
+    day: { name: 'Day', sub: 'Always daylight' },
+    night: { name: 'Night', sub: 'Lamps and city lights' },
+  },
+  looks: {
+    toy: { sub: 'Round and glossy, like a vinyl figure' },
+    pixar: { sub: 'Big eyes and layered hair, like an animated film' },
+  },
+  lookNote: 'Every person in the office changes at once, including you in Walk in mode.',
+  qSub: { auto: 'Steps down if slow', low: 'Light, saves battery', medium: 'Balanced', high: 'Sharpest, soft shadows' },
+  weatherOff: 'Off',
+  notify: 'Phone and alerts',
+  behaviour: 'Behaviour',
+  // Settings → More: the stuck-loop breaker (server/loops.mjs)
+  loop: {
+    title: 'Stuck loops',
+    on: 'Break stuck loops',
+    note: 'When a session runs the same thing and gets the same error again and again, its next try is blocked and Claude is told to change course; a card in the chat lets you stop it or send a hint. It also points out compaction after compaction, and spending with no file edited.',
+    after: 'Block after', tries: { one: '{n} failure', other: '{n} failures' },
+    costAfter: 'Spending with no file edited for', mins: '{n} min',
+    install: 'Run `node bin/cli.mjs install` once more so Claude Code checks with the office before each step.',
+  },
+  // Settings → More: the farewell for a project quiet for a long while (people/farewell.js, server/tenure.mjs)
+  farewell: {
+    title: 'Farewells',
+    on: 'Say goodbye to projects gone quiet',
+    note: 'A project that really was at work (two days or more) and has had no session for a long while gets a last afternoon: its person packs the desk into a box, everyone signs a card, a small cake, a group photo, the badge handed back to HR. It is only a scene in the office: nothing about the project is touched. Open the project again and its person comes back to the old company.',
+    after: 'After no work for', days: { one: '{n} day', other: '{n} days' },
+  },
+  // Settings → More: the prompt cache's clock (the cups on the desks)
+  cache: {
+    title: 'Prompt cache',
+    note: 'A cup of coffee on each resting desk: its steam fades as the session\'s prompt cache cools, gone once it is cold. Writing to the session while it is warm is cheap; once cold, the next message reads the whole conversation again.',
+    nudge: 'Tell my phone when a session waiting for my answer is 5 minutes from going cold',
+  },
+  chat: 'Group chat',
+  coachNote: 'When you write to a conversation (“To”), the helper points out over the input what Claude could misread. It works on this device and sends nothing; only “✨ Rewrite it clearly” asks Claude.',
+};
