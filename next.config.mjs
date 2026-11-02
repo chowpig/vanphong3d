@@ -3,12 +3,19 @@
 //
 // OFFICE_STATIC=1 builds the online demo instead (scripts/build-demo.mjs): a static export of the office in demo mode,
 // in one language (OFFICE_STATIC_LANG), under OFFICE_BASE_PATH, into OFFICE_DIST_DIR.
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 const STATIC = process.env.OFFICE_STATIC === '1';
+const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   devIndicators: false,   // the office fills the screen; compile and runtime errors still show
   poweredByHeader: false,
+  // Resolve from this folder, whatever sits above it: a stray package-lock.json in a parent folder (a home folder, say) makes
+  // Turbopack take that as the root, and the build then fails with "Cannot read properties of null (reading 'useContext')"
+  turbopack: { root: process.env.OFFICE_TURBO_ROOT || HERE },
   // OFFICE_DIST_DIR also for the office itself: a build for tests (e.g. .next-e2e, with the same variable for
   // `playwright test`) leaves the .next the running office serves alone; replacing that under it breaks its pages
   ...(!STATIC && process.env.OFFICE_DIST_DIR && { distDir: process.env.OFFICE_DIST_DIR }),
@@ -17,8 +24,7 @@ const nextConfig = {
     basePath: process.env.OFFICE_BASE_PATH || '',
     distDir: process.env.OFFICE_DIST_DIR || 'out',
     trailingSlash: true,
-    // scripts/build-demo.mjs builds from a copy inside the repo (so the live .next is left alone): resolve from the repo
-    ...(process.env.OFFICE_TURBO_ROOT && { turbopack: { root: process.env.OFFICE_TURBO_ROOT } }),
+    // (scripts/build-demo.mjs builds from a copy inside the repo, so the live .next is left alone: OFFICE_TURBO_ROOT, above)
   }),
   env: {
     NEXT_PUBLIC_OFFICE_STATIC: STATIC ? '1' : '',
