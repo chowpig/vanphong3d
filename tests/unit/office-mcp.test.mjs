@@ -52,7 +52,7 @@ test('the server over stdio posts to the office with its key and the chat marker
   const p = spawn(process.execPath, [path.resolve(import.meta.dirname, '../../mcp/office-mcp.mjs')], { env: { ...process.env, OFFICE_URL: `http://127.0.0.1:${srv.address().port}`, OFFICE_DATA_DIR: dir } });
   let out = ''; p.stdout.on('data', (d) => { out += d; });
   p.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} })}\n`);
-  p.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'office_report', arguments: { conversation: 'chat A', status: 'working', project: 'HỒNG PHÚC' } } })}\n`);
+  p.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'office_report', arguments: { conversation: 'chat A', status: 'working', project: 'KẾ TOÁN' } } })}\n`);
   p.stdin.end();
   await new Promise((r) => p.on('close', r));
   srv.close();
@@ -61,5 +61,5 @@ test('the server over stdio posts to the office with its key and the chat marker
   assert.equal(lines[1].result.content[0].text, 'ok');
   assert.deepEqual(got.map((g) => g.body.hook_event_name), ['SessionStart', 'UserPromptSubmit']);
   assert.ok(got.every((g) => g.url === '/event' && g.key === 'k3y' && g.src === 'chat'));
-  assert.equal(got[1].body.office_project, 'HỒNG PHÚC');
+  assert.equal(got[1].body.office_project, 'KẾ TOÁN');
 });

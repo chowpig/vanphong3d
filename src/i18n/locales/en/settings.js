@@ -24,7 +24,7 @@ export default {
   },
   myProjects: {
     title: 'My projects',
-    placeholder: 'One project a line, for example:\nINFO\nHONG PHUC\nSPARE PARTS\nWOOD HOUSE',
+    placeholder: 'One project a line, for example:\nMarketing\nAccounting\nSales\nWarehouse',
     save: 'Save list',
     saved: '{n} projects saved',
     note: 'A session whose repository, folder, title or Cowork project matches a name in the list sits in the area of that project, and the office always has room for the whole list. Names are kept on this computer only; nothing is read from your account. Sessions already open move after the page reloads.',

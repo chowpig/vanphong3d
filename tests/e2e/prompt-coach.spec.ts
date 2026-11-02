@@ -45,6 +45,7 @@ const rewriteLog = () => { try { return fs.readFileSync(path.join(HOME_DIR, '.fa
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
   test('the prompt helper fits a phone: one hint, chips in a row, rewrite and undo', async ({ page, request }) => {
+    test.skip(process.platform === 'win32', 'needs the bash stand-in for Claude Code (tests/e2e/fake-claude.sh), which Windows cannot start');
     test.setTimeout(300_000);
     const errors = watchErrors(page);
     const zc = await chatToClaude(page, request, () => page.locator('.ph-tabs .ph-tab').nth(4).click());
@@ -88,6 +89,8 @@ test.describe('on a phone', () => {
 });
 
 test('the prompt helper: a hint as you write to Claude, chips that fix the draft, a closed hint stays closed, rewrite and undo', async ({ page, request }) => {
+
+  test.skip(process.platform === 'win32', 'needs the bash stand-in for Claude Code (tests/e2e/fake-claude.sh), which Windows cannot start');
   test.setTimeout(300_000);
   const errors = watchErrors(page);
   const zc = await chatToClaude(page, request, () => page.click('#btn-chat'));

@@ -32,6 +32,8 @@ async function openChat(page: Page) {
 }
 
 test('phone work as a background session: its steps, an approval that waits past the usual window, the answer, attach, carry on, stop, and the old way when it can\'t', async ({ page, request }) => {
+
+  test.skip(process.platform === 'win32', 'needs the bash stand-in for Claude Code (tests/e2e/fake-claude.sh), which Windows cannot start');
   test.setTimeout(240_000);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));

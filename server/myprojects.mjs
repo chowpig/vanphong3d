@@ -7,7 +7,7 @@ import path from 'node:path';
 
 export const MAX_PROJECTS = 24, MAX_NAME = 40;
 
-/** "Hồng Phúc", "hong-phuc" and "HONG_PHUC" are the same: lower case, no accents, letters and digits only */
+/** "Kế Toán", "ke-toan" and "KE_TOAN" are the same: lower case, no accents, letters and digits only */
 export const norm = (x) => String(x ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
 /** a list from the page or the file: strings, trimmed, no empty ones or repeats, short, at most MAX_PROJECTS */
@@ -39,7 +39,7 @@ export function createMyProjects(dataDir) {
       const keys = new Map(list.map((n) => [norm(n), n]));
       for (const c of clues) { const hit = keys.get(norm(c)); if (hit) return hit; }
       // loose (a Chat or Cowork conversation, which cannot say its project): a listed name as whole words in a clue,
-      // e.g. the title "Tìm TV Hồng Phúc 1" belongs to HỒNG PHÚC; the longest name wins
+      // e.g. the title "Báo cáo Kế toán quý 3" belongs to KẾ TOÁN; the longest name wins
       if (loose) {
         const found = [...keys].filter(([k]) => k && clues.some((c) => ` ${norm(c)} `.includes(` ${k} `))).sort((x, y) => y[0].length - x[0].length)[0];
         if (found) return found[1];

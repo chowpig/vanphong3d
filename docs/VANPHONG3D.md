@@ -40,7 +40,7 @@ Nguồn: [khanh020905/my-office](https://github.com/khanh020905/my-office) (MIT,
 
 ## Dự án của tôi và Cowork
 
-- Cài đặt → Văn phòng → "Dự án của tôi": mỗi dòng một tên dự án (ví dụ INFO, HỒNG PHÚC, PHỤ TÙNG SỈ, NHÀ GỖ). Lưu ở `data/myprojects.json` trên máy này; không đọc gì từ tài khoản claude.ai.
+- Cài đặt → Văn phòng → "Dự án của tôi": mỗi dòng một tên dự án (ví dụ Marketing, Kế toán, Bán hàng, Kho). Lưu ở `data/myprojects.json` trên máy này; không đọc gì từ tài khoản claude.ai.
 - Phiên có tên kho mã, thư mục, tiêu đề hoặc dự án Cowork trùng một tên (không phân biệt dấu, hoa thường, gạch nối) sẽ ngồi ở khu của dự án đó; văn phòng tự mở rộng đủ chỗ cho cả danh sách.
 - Cowork: `cowork-plugin/` gửi sự kiện (đánh dấu `X-Office-Source: cowork`) tới văn phòng; nhân vật hiện tên "Cowork · …". **Chưa kiểm chứng:** Cowork chạy trong máy ảo, chưa xác nhận máy ảo gọi được `127.0.0.1:4310`. Bạn tự cài plugin và chép `data/token` (xem `cowork-plugin/README.md`).
 - Chưa làm: tự lấy danh sách project/phiên cũ từ tài khoản (cần xuất dữ liệu hoặc API có đăng nhập).

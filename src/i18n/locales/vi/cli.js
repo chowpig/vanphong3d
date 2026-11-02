@@ -58,7 +58,7 @@ export default {
     changed: 'Đã đổi mã PIN. Mọi điện thoại đang vào phải nhập mã mới.',
     show: 'Mã PIN: {pin}',
   },
-  usage: 'Dùng: my-office [start [--lan] | install [--service] [--lan] [--approve] [--no-status] [--no-otel] [--no-otel-names] | uninstall | doctor | pin [--new]] [--settings <đường dẫn>]',
+  usage: 'Dùng: my-office [start [--lan] | install [--service] [--lan] [--approve] [--no-status] [--no-otel] [--no-otel-names] | uninstall | doctor | pin [--new] | chat-setup [--write] | cowork-plugin [--out <file>]] [--settings <đường dẫn>]',
   status: { context: 'ngữ cảnh {pct}', fiveHour: '5 giờ {pct}', week: '7 ngày {pct}' },
   error: 'Lỗi: {message}',
 };

@@ -9,6 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createPrefs } from '../server/prefs.mjs';
 import { serviceFor } from './service.mjs';
+import { configCandidates, makeZip, mcpEntry, pluginFiles, withMcp } from './chat-setup.mjs';
 import { addOtel, collectorSnippet, managedEnvs, otelOwner, removeOtel } from '../server/otel-setup.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -17,7 +18,8 @@ const PORT = Number(process.env.OFFICE_PORT || 4310);
 // Words in the office's language (data/prefs.json, picked in Settings; OFFICE_LANG until then), same folder as the server's.
 // the server's data folder (OFFICE_DATA_DIR for a second copy; the launchd service and the hooks always use data/)
 const DATA_DIR = process.env.OFFICE_DATA_DIR ? path.resolve(process.env.OFFICE_DATA_DIR) : path.join(ROOT, 'data');
-const { tr } = createPrefs(DATA_DIR);
+const prefsCli = createPrefs(DATA_DIR), { tr } = prefsCli, VI = prefsCli.lang() === 'vi';
+const say = (vi, en) => (VI ? vi : en);
 const minutesAgo = (ms) => tr('time.ago', { time: tr('time.min', { n: Math.max(0, Math.round((Date.now() - ms) / 60000)) }) });
 const args = process.argv.slice(2), cmd = args[0] && !args[0].startsWith('-') ? args[0] : 'start';
 const opt = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] || true : null; };
@@ -187,6 +189,45 @@ function start() {
   process.env.NODE_ENV ||= 'production';
   return import(pathToFileURL(SERVER).href);
 }
-const run = { start, install, uninstall, doctor, pin }[cmd];
+/* `chat-setup`: lets Claude's Chat tell the office about its conversations (an MCP tool, mcp/office-mcp.mjs). Prints what to
+   add to the Claude desktop app's config; with --write it adds it itself (a backup first). */
+async function chatSetup() {
+  const found = configCandidates({ home: HOME }).filter((f) => fs.existsSync(f)).sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+  const entry = mcpEntry(process.execPath, ROOT), snippet = JSON.stringify({ mcpServers: { 'my-office': entry } }, null, 2);
+  console.log(say('Chat → văn phòng: công cụ office_report', 'Chat → office: the office_report tool'));
+  if (!found.length) {
+    bad(say('Không thấy file claude_desktop_config.json của app Claude. Cài và mở app Claude một lần, rồi chạy lại. Hoặc tự thêm đoạn dưới vào file cấu hình của app:', 'Could not find the Claude desktop app\'s claude_desktop_config.json. Install and open the Claude app once, then run this again. Or add this to its config file yourself:'));
+    console.log(snippet);
+    process.exitCode = 1; return;
+  }
+  const file = found[0];
+  ok(say(`File cấu hình: ${file}`, `Config file: ${file}`));
+  if (found.length > 1) warn(say(`Có ${found.length} file; dùng file mới nhất. Các file khác: ${found.slice(1).join(', ')}`, `${found.length} files found; using the newest. Others: ${found.slice(1).join(', ')}`));
+  let cfg; try { cfg = JSON.parse(await fsp.readFile(file, 'utf8')); } catch (e) { bad(say(`Không đọc được file (không phải JSON hợp lệ?): ${e.message}. Không sửa gì.`, `Could not read the file (not valid JSON?): ${e.message}. Nothing changed.`)); process.exitCode = 1; return; }
+  const has = cfg?.mcpServers?.['my-office'];
+  if (!args.includes('--write')) {
+    console.log(say(has ? '  (đã có mục my-office trong file)' : '  Thêm đoạn này vào mục mcpServers của file đó, hoặc chạy lại với --write để tự thêm (có sao lưu):', has ? '  (the my-office entry is already in the file)' : '  Add this to the file\'s mcpServers, or run again with --write to add it for you (a backup is made first):'));
+    console.log(snippet);
+    return;
+  }
+  let next; try { next = withMcp(cfg, entry); } catch (e) { bad(say(`Cấu hình lạ: ${e.message}. Không sửa gì.`, `Unusual config: ${e.message}. Nothing changed.`)); process.exitCode = 1; return; }
+  const bak = `${file}.bak-office-${new Date().toISOString().replace(/[:.]/g, '-')}`;
+  await fsp.copyFile(file, bak); ok(say(`Đã sao lưu: ${bak}`, `Backed up: ${bak}`));
+  const tmp = `${file}.tmp-${process.pid}`; await fsp.writeFile(tmp, JSON.stringify(next, null, 2) + '\n'); await fsp.rename(tmp, file);
+  ok(say('Đã thêm my-office. Thoát hẳn app Claude (cả khay hệ thống) rồi mở lại.', 'Added my-office. Quit the Claude app completely (also from the tray) and open it again.'));
+}
+
+/* `cowork-plugin`: packs cowork-plugin/ with the office's key into cowork-plugin.plugin, to upload in Claude (Customize → Plugins). */
+async function coworkPlugin() {
+  let token = ''; try { token = fs.readFileSync(path.join(DATA_DIR, 'token'), 'utf8').trim(); } catch { /* the office never ran */ }
+  if (!token) { bad(say('Chưa có khóa (data/token): chạy văn phòng một lần (npm start) rồi chạy lại.', 'No key yet (data/token): run the office once (npm start), then run this again.')); process.exitCode = 1; return; }
+  const out = path.resolve(String(opt('--out') || path.join(ROOT, 'cowork-plugin.plugin')));
+  await fsp.writeFile(out, makeZip(pluginFiles(ROOT, token)));
+  ok(say(`Đã tạo: ${out}`, `Created: ${out}`));
+  warn(say('File này chứa khóa của văn phòng của bạn: đừng gửi cho ai, đừng đưa lên git.', 'This file holds your office\'s key: do not share it or put it on git.'));
+  console.log(say('Tải lên: trong app Claude → Customize → Plugins → tải plugin lên → chọn file này, rồi bật nó.', 'Upload: in the Claude app → Customize → Plugins → upload a plugin → pick this file, then turn it on.'));
+}
+
+const run = { start, install, uninstall, doctor, pin, 'chat-setup': chatSetup, 'cowork-plugin': coworkPlugin }[cmd];
 if (!run) { console.log(tr('cli.usage')); process.exit(1); }
 Promise.resolve(run()).catch((e) => { console.error(tr('cli.error', { message: e.message })); process.exit(1); });

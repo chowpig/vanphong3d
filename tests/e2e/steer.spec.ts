@@ -58,6 +58,8 @@ async function writeTo(page: Page, sid: string, text: string) {
 }
 
 test('cutting in on a conversation at work: from "To", from a run\'s card, and kept for later where it can\'t get in', async ({ page, request }) => {
+
+  test.skip(process.platform === 'win32', 'needs the bash stand-in for Claude Code (tests/e2e/fake-claude.sh), which Windows cannot start');
   test.setTimeout(240_000);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));

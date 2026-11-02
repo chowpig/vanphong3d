@@ -8,15 +8,15 @@ import { MAX_NAME, MAX_PROJECTS, clean, createMyProjects, norm } from '../../ser
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'myproj-'));
 
 test('names compare without accents, case or punctuation', () => {
-  assert.equal(norm('HỒNG PHÚC'), 'hong phuc');
-  assert.equal(norm('hong-phuc'), 'hong phuc');
+  assert.equal(norm('KẾ TOÁN'), 'ke toan');
+  assert.equal(norm('ke-toan'), 'ke toan');
   assert.equal(norm('Phụ_tùng  SỈ'), 'phu tung si');
   assert.equal(norm('Đà Lạt'), 'da lat');
   assert.equal(norm(null), '');
 });
 
 test('the list is trimmed, deduplicated, bounded and free of control characters', () => {
-  assert.deepEqual(clean(['  INFO ', 'info', 'Hồng Phúc', 'HONG PHUC', '', '   ', 5, null]), ['INFO', 'Hồng Phúc', '5']);
+  assert.deepEqual(clean(['  INFO ', 'info', 'Kế toán', 'KE TOAN', '', '   ', 5, null]), ['INFO', 'Kế toán', '5']);
   assert.deepEqual(clean('not a list'), []);
   assert.equal(clean(['x'.repeat(500)])[0].length, MAX_NAME);
   assert.equal(clean(Array.from({ length: 100 }, (_, i) => `p${i}`)).length, MAX_PROJECTS);
@@ -25,20 +25,20 @@ test('the list is trimmed, deduplicated, bounded and free of control characters'
 
 test('a session is matched to a listed project by its first clue that names one', () => {
   const d = tmp(), mp = createMyProjects(d);
-  assert.equal(mp.match(['hong-phuc']), '', 'nothing listed, nothing matched');
-  mp.set(['INFO', 'HỒNG PHÚC', 'PHỤ TÙNG SỈ', 'NHÀ GỖ']);
-  assert.equal(mp.match([undefined, '', 'hong-phuc-site']), '');
-  assert.equal(mp.match([undefined, 'hong_phuc']), 'HỒNG PHÚC');
-  assert.equal(mp.match(['unrelated', 'Nha Go', 'info']), 'NHÀ GỖ', 'the earlier clue wins');
+  assert.equal(mp.match(['ke-toan']), '', 'nothing listed, nothing matched');
+  mp.set(['INFO', 'KẾ TOÁN', 'BÁN HÀNG', 'KHO']);
+  assert.equal(mp.match([undefined, '', 'ke-toan-site']), '');
+  assert.equal(mp.match([undefined, 'ke_toan']), 'KẾ TOÁN');
+  assert.equal(mp.match(['unrelated', 'Kho', 'info']), 'KHO', 'the earlier clue wins');
   assert.equal(mp.match([]), '');
 });
 
 test('a Chat conversation that cannot say its project is matched by a listed name inside its title', () => {
   const mp = createMyProjects(tmp());
-  mp.set(['INFO', 'HỒNG PHÚC', 'PHỤ TÙNG', 'PHỤ TÙNG SỈ']);
-  assert.equal(mp.match(['Tìm TV Hồng Phúc 1'], { loose: true }), 'HỒNG PHÚC');
-  assert.equal(mp.match(['Tìm TV Hồng Phúc 1']), '', 'a session with a folder of its own is only matched exactly');
-  assert.equal(mp.match(['báo giá phụ tùng sỉ tháng 11'], { loose: true }), 'PHỤ TÙNG SỈ', 'the longest name wins');
+  mp.set(['INFO', 'KẾ TOÁN', 'BÁN', 'BÁN HÀNG']);
+  assert.equal(mp.match(['Tìm TV Kế toán 1'], { loose: true }), 'KẾ TOÁN');
+  assert.equal(mp.match(['Tìm TV Kế toán 1']), '', 'a session with a folder of its own is only matched exactly');
+  assert.equal(mp.match(['báo giá bán hàng tháng 11'], { loose: true }), 'BÁN HÀNG', 'the longest name wins');
   assert.equal(mp.match(['Gọi office_report cho Test AI'], { loose: true }), '');
   assert.equal(mp.match(['informatics'], { loose: true }), '', 'whole words only');
   assert.equal(mp.match([undefined, '', 'INFO: kế hoạch'], { loose: true }), 'INFO');

@@ -12,13 +12,15 @@ export const DATA_DIR = path.resolve(OUT, 'office-data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 const TOKEN_FILE = path.join(DATA_DIR, 'token');
 if (!fs.existsSync(TOKEN_FILE)) fs.writeFileSync(TOKEN_FILE, 'e2e-office-key-0123456789', { mode: 0o600 });
+// Windows has no GPU in the test browser: the 3D office is drawn in software, several times slower
+const SLOW = process.platform === 'win32' ? 2 : 1;
 export default defineConfig({
   testDir: 'tests/e2e',
   outputDir: OUT,
-  timeout: 90_000,
+  timeout: 90_000 * SLOW,
   retries: process.env.CI ? 1 : 0,
   workers: 2,                       // each test builds a whole 3D office: two at a time is plenty
-  expect: { timeout: 30_000 },      // the office takes a few seconds to build on a busy machine or a CI runner
+  expect: { timeout: 30_000 * SLOW },      // the office takes a few seconds to build on a busy machine or a CI runner
   use: { baseURL: `http://127.0.0.1:${PORT}`, extraHTTPHeaders: { 'X-Office-Key': fs.readFileSync(TOKEN_FILE, 'utf8').trim() }, viewport: { width: 1440, height: 900 } },
   webServer: {
     command: 'node server/index.mjs',

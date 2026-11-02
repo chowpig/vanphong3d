@@ -898,6 +898,7 @@ async function recallTask(s) {
   broadcast({ k: 'sess', s: pub(s) });
 }
 function dropSession(key, s) {
+  if (s.src) saveChatSessions();
   if (s.fromFile && !taskSids.has(s.sid) && !s.viaOffice) chat.onLeft(s.title || s.name);
   sessions.delete(key);
   if (s.sid && sidToKey.get(s.sid) === key) sidToKey.delete(s.sid);
@@ -911,8 +912,9 @@ setInterval(() => {
     // Claude went quiet without a Stop event (e.g. interrupted): let the chibi rest. A long tool run (a build, a test
     // suite) is not quiet; a tool still open after 10 minutes probably lost its PostToolUse.
     if (s.status === 'work' && !s.busy && (!s.inTool || now - s.lastEventAt > 600_000) && now - s.lastEventAt > 20_000) { s.status = 'rest'; broadcast({ k: 'sess', s: pub(s) }); }
-    // Sessions seen only through hooks (no session file) leave after 10 quiet minutes.
-    if (!s.fromFile && now - s.lastEventAt > 600_000) dropSession(key, s);
+    // Sessions seen only through hooks (no session file) leave after 10 quiet minutes; a Chat or Cowork conversation, which
+    // has no process to watch, stays until it says it is closed or has been quiet for 6 hours.
+    if (!s.fromFile && now - s.lastEventAt > (s.src ? CHAT_IDLE_MS : 600_000)) dropSession(key, s);
     // A subagent that went quiet is finished: 90 s once its session rests, 5 min while the session still works.
     for (const [id, sub] of Object.entries(s.subs)) if (now - sub.seenAt > (s.status === 'rest' ? 90_000 : 300_000)) { finishSub(s, id, now); broadcast({ k: 'sess', s: pub(s) }); }
   }
@@ -946,6 +948,28 @@ function count(s, tool, sub) {
   void sub;
 }
 
+/* Chat and Cowork conversations are remembered across the office's restarts (data/chat-sessions.json): they have no process
+   that shows them again, so without this the office would be empty after every restart until each chat reported again. */
+const CHAT_IDLE_MS = 6 * 3600e3, CHAT_SESS_FILE = path.join(DATA_DIR, 'chat-sessions.json');
+let chatSessT = null;
+function saveChatSessions() {
+  clearTimeout(chatSessT);
+  chatSessT = setTimeout(() => {
+    const list = [...sessions.values()].filter((s) => s.src && s.sid).map((s) => ({ sid: s.sid, cwd: s.cwd, name: s.name, title: s.title || '', src: s.src, coworkProject: s.coworkProject || '', lastPrompt: s.lastPrompt || '', lastEventAt: s.lastEventAt, createdAt: s.createdAt }));
+    fsp.writeFile(`${CHAT_SESS_FILE}.tmp`, JSON.stringify(list)).then(() => fsp.rename(`${CHAT_SESS_FILE}.tmp`, CHAT_SESS_FILE)).catch(() => {});
+  }, 800);
+  chatSessT.unref?.();
+}
+(function restoreChatSessions() {
+  let list = []; try { list = JSON.parse(fs.readFileSync(CHAT_SESS_FILE, 'utf8')); } catch { return; }
+  for (const e of Array.isArray(list) ? list : []) {
+    if (typeof e?.sid !== 'string' || !['chat', 'cowork'].includes(e.src) || Date.now() - Number(e.lastEventAt) > CHAT_IDLE_MS) continue;
+    const key = `s${e.sid}`; if (sessions.has(key)) continue;
+    const s = newSession(key);
+    Object.assign(s, { sid: e.sid, cwd: String(e.cwd || ''), name: String(e.name || 'chat').slice(0, 80), title: String(e.title || '').slice(0, 80), src: e.src, coworkProject: String(e.coworkProject || '').slice(0, 80), lastPrompt: String(e.lastPrompt || '').slice(0, 200), lastEventAt: Number(e.lastEventAt) || Date.now(), createdAt: Number(e.createdAt) || Date.now(), status: 'rest' });
+    sessions.set(key, s); sidToKey.set(e.sid, key);
+  }
+})();
 let lastHookAt = 0;
 const startedAt = Date.now();
 async function onHook(p, src = '') {
@@ -967,6 +991,7 @@ async function onHook(p, src = '') {
   if (src === 'cowork' || src === 'chat') s.src = src;   // (the Cowork plugin's hook, or the chat tool of mcp/office-mcp.mjs, says so)
   if (s.src && typeof (p.office_project ?? p.cowork_project) === 'string') s.coworkProject = String(p.office_project ?? p.cowork_project).slice(0, 80);   // (the project it says it belongs to: matched against My projects)
   if (s.src === 'chat' && typeof p.office_title === 'string' && p.office_title.trim()) s.title = clip(oneLine(p.office_title), 80);
+  if (s.src) saveChatSessions();
   s.lastEventAt = now;
   { const day = new Date(now).toLocaleDateString('sv'); if (ev !== 'SessionEnd' && s.dayFirst?.day !== day) s.dayFirst = { day, at: now }; }   // (its first sign of life each day: the lobby's attendance terminal)
   if (p.transcript_path) s.transcript = p.transcript_path;

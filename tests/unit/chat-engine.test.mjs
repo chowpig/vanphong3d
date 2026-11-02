@@ -15,7 +15,7 @@ function office(members) {
   const said = () => eng.state.msgs.filter((m) => m.kind === 'text' && m.from !== 'me').map((m) => m.text);
   return { eng, advance, said, jump: (ms) => { t += ms; } };
 }
-const S = (extra = {}) => ({ id: 'a', name: 'Chat · Tìm TV', status: 'work', task: 'so sánh giá tivi 55 inch', project: 'HỒNG PHÚC', counts: { edit: 0, cmd: 0, read: 0, web: 0 }, ...extra });
+const S = (extra = {}) => ({ id: 'a', name: 'Chat · Tìm TV', status: 'work', task: 'so sánh giá laptop 55 inch', project: 'KẾ TOÁN', counts: { edit: 0, cmd: 0, read: 0, web: 0 }, ...extra });
 
 test('a finished piece of work says what was done: the files changed, the commands run or the sources read, and how long it took', () => {
   const run = (counts, ms) => {

@@ -306,6 +306,8 @@ test('the phone window: a switch to open the office to phones (off), how to use 
 });
 
 test('giving Claude work from the chat: a folder or a tagged conversation, the result in the group; from a phone only when the Mac allows it', async ({ page, request }) => {
+
+  test.skip(process.platform === 'win32', 'needs the bash stand-in for Claude Code (tests/e2e/fake-claude.sh), which Windows cannot start');
   test.setTimeout(240_000);
   const errors = watchErrors(page);
   await page.addInitScript(() => { try { localStorage.setItem('office-lite', 'on'); } catch { /* private mode */ } });
@@ -1044,6 +1046,8 @@ test('karaoke: someone resting goes into the box and sings, and in first person 
 });
 
 test('adding a Claude account: a folder of its own, connected to the office, signed in from the card', async ({ page }) => {
+
+  test.skip(process.platform === 'win32', 'needs the bash stand-in for Claude Code (tests/e2e/fake-claude.sh), which Windows cannot start');
   test.setTimeout(420_000);   // (signing in, renaming, picking, then the page once more: ~5 min on a busy machine)
   const errors = watchErrors(page), dir = path.join(HOME_DIR, '.claude-cong-ty');
   fs.rmSync(dir, { recursive: true, force: true });
@@ -1092,6 +1096,8 @@ test('adding a Claude account: a folder of its own, connected to the office, sig
 });
 
 test('an open conversation moves to another account: stopped while it rests, started on that account when resumed', async ({ page, request }) => {
+
+  test.skip(process.platform === 'win32', 'needs the bash stand-in for Claude Code (tests/e2e/fake-claude.sh), which Windows cannot start');
   test.setTimeout(240_000);
   const errors = watchErrors(page), data = DATA_DIR, sessDir = path.join(HOME_DIR, '.claude', 'sessions');
   const acctDir = path.join(HOME_DIR, '.claude-phu-e2e'), sid = crypto.randomUUID(), pin = path.join(data, 'resume-on', sid);
@@ -1264,8 +1270,8 @@ test('my projects: a list in Settings makes room for every name, and a Cowork se
   const errors = watchErrors(page);
   type Floor = { plan: string; projects: number; people: { id: string; project: string }[] };
   const floor = () => page.evaluate(() => (window as unknown as { __office: { floor: () => unknown } }).__office.floor()) as Promise<Floor>;
-  const names = ['INFO', 'HỒNG PHÚC', 'PHỤ TÙNG SỈ', 'NHÀ GỖ', 'KHO HÀNG', 'KẾ TOÁN', 'BÁN LẺ', 'GIAO NHẬN'];
-  const id = `e2e-cowork-${Date.now()}`, cwd = path.join(HOME_DIR, 'hong-phuc'); fs.mkdirSync(cwd, { recursive: true });
+  const names = ['INFO', 'KẾ TOÁN', 'BÁN HÀNG', 'KHO', 'KHO HÀNG', 'KẾ TOÁN', 'BÁN LẺ', 'GIAO NHẬN'];
+  const id = `e2e-cowork-${Date.now()}`, cwd = path.join(HOME_DIR, 'ke-toan'); fs.mkdirSync(cwd, { recursive: true });
   try {
     // the server keeps the list (accents and case do not matter when matching) and refuses what is not a list
     expect((await request.post('/api/my-projects', { data: { projects: 'INFO' } })).status()).toBe(400);
@@ -1279,7 +1285,7 @@ test('my projects: a list in Settings makes room for every name, and a Cowork se
     await expect(page.locator('html')).toHaveAttribute('data-plan', /^hq/, { timeout: 90_000 });
     await expect(page.locator('#stage canvas')).toBeVisible();
     await expect.poll(async () => (await floor()).projects, { timeout: 60_000 }).toBeGreaterThanOrEqual(8);
-    await expect.poll(async () => (await floor()).people.map((p) => p.project).includes('HỒNG PHÚC'), { timeout: 30_000 }).toBe(true);
+    await expect.poll(async () => (await floor()).people.map((p) => p.project).includes('KẾ TOÁN'), { timeout: 30_000 }).toBe(true);
     // the settings list shows the names, and the Cowork session's name tag says Cowork
     await page.locator('#btn-look').click();
     await expect(page.locator('#mp-list')).toHaveValue(names.join('\n'));

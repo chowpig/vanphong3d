@@ -23,3 +23,5 @@ playwright-report/
 
 # the Cowork plugin package carries the office key: never commit it
 *.plugin
+# made by PowerShell when a test overrides the home folder
+/Microsoft/
