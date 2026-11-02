@@ -39,7 +39,7 @@ jobs:
         env:
           REPO: ${{ github.event.repository.name }}
           OWNER: ${{ github.repository_owner }}
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: demo-site
 
