@@ -70,7 +70,7 @@ jobs:
       # the smoke tests only: a runner has no GPU, and the whole 3D office in software rendering is too slow for the
       # rest (every test passes on a machine with a GPU: npm run test:e2e)
       - run: npm run test:e2e:smoke
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
