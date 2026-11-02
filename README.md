@@ -2,6 +2,19 @@
 
 English · [Tiếng Việt](README.vi.md)
 
+> **This is Vanphong3d, a fork of My Office** (MIT). It draws your Claude **Chat** and **Cowork** conversations as characters in a
+> self-growing 3D office, with a department room for each project, and a group chat that reports the real work. Claude Code
+> sessions are hidden unless you turn them on. **Install and use: [docs/GUIDE.md](docs/GUIDE.md)** (Vietnamese:
+> [docs/HUONG-DAN.md](docs/HUONG-DAN.md)). What changed: [CHANGELOG.md](CHANGELOG.md). Security: [SECURITY.md](SECURITY.md).
+> The rest of this page is the original My Office's documentation; where it differs, the guide above wins.
+
+```bash
+git clone https://github.com/chowpig/vanphong3d.git && cd vanphong3d
+npm ci --ignore-scripts && npm run build
+node bin/cli.mjs start                # then open http://localhost:4310
+node bin/cli.mjs chat-setup --write   # let Claude Chat report its conversations (see the guide)
+```
+
 A 3D office where your Claude Code sessions come to work. Each session is a character at a desk:
 
 - it walks to the library to read files;

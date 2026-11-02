@@ -2,6 +2,18 @@
 
 [English](README.md) · Tiếng Việt
 
+> **Đây là Vanphong3d, bản phát triển từ My Office** (MIT). Nó vẽ các cuộc trò chuyện **Chat** và **Cowork** của Claude thành nhân vật
+> trong một văn phòng 3D tự mở rộng, mỗi dự án có một phòng ban riêng, kèm nhóm chat báo công việc thật. Các phiên Claude Code mặc định
+> bị ẩn (bật trong Cài đặt). **Cài đặt và sử dụng: [docs/HUONG-DAN.md](docs/HUONG-DAN.md)**. Thay đổi: [CHANGELOG.md](CHANGELOG.md).
+> Bảo mật: [SECURITY.md](SECURITY.md). Phần còn lại của trang này là tài liệu của My Office gốc; chỗ nào khác thì theo hướng dẫn ở trên.
+
+```bash
+git clone https://github.com/chowpig/vanphong3d.git && cd vanphong3d
+npm ci --ignore-scripts && npm run build
+node bin/cli.mjs start                # rồi mở http://localhost:4310
+node bin/cli.mjs chat-setup --write   # cho Chat của Claude báo các cuộc trò chuyện (xem hướng dẫn)
+```
+
 ![My Office: tầng công ty với các phiên đang làm việc](docs/media/demo.gif)
 
 Văn phòng chibi 3D cho thấy các session Claude Code đang làm gì, kèm bảng "Máy Mac" để xem RAM, CPU, ổ đĩa và giải phóng.

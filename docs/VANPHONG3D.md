@@ -38,20 +38,17 @@ Nguồn: [khanh020905/my-office](https://github.com/khanh020905/my-office) (MIT,
 - Đã chạy trên Windows 10 (Node 24, PowerShell 5.1): test (95 pass, 3 skip theo thiết kế trên win32), typecheck, lint, build, smoke và `test:e2e:smoke` (5/5) đều pass. Đã sửa `npm start` và `my-office start` (trước đó hỏng trên Windows).
 - E2E Playwright đầy đủ dùng `fake-claude.sh` (sh/curl/od/pkill): server không spawn được file `.sh` trực tiếp trên Windows, nên các test giao việc/phiên nền chỉ chạy được trên macOS/Linux. Bộ `@smoke` thì chạy được.
 
-## Dự án của tôi và Cowork
+## Chat, Cowork, dự án và phòng ban (bản 0.3.0)
 
-- Cài đặt → Văn phòng → "Dự án của tôi": mỗi dòng một tên dự án (ví dụ Marketing, Kế toán, Bán hàng, Kho). Lưu ở `data/myprojects.json` trên máy này; không đọc gì từ tài khoản claude.ai.
-- Phiên có tên kho mã, thư mục, tiêu đề hoặc dự án Cowork trùng một tên (không phân biệt dấu, hoa thường, gạch nối) sẽ ngồi ở khu của dự án đó; văn phòng tự mở rộng đủ chỗ cho cả danh sách.
-- Cowork: `cowork-plugin/` gửi sự kiện (đánh dấu `X-Office-Source: cowork`) tới văn phòng; nhân vật hiện tên "Cowork · …". **Chưa kiểm chứng:** Cowork chạy trong máy ảo, chưa xác nhận máy ảo gọi được `127.0.0.1:4310`. Bạn tự cài plugin và chép `data/token` (xem `cowork-plugin/README.md`).
-- Chưa làm: tự lấy danh sách project/phiên cũ từ tài khoản (cần xuất dữ liệu hoặc API có đăng nhập).
+Hướng dẫn đầy đủ cho người dùng: [HUONG-DAN.md](HUONG-DAN.md) (tiếng Anh: [GUIDE.md](GUIDE.md)). Tóm tắt kỹ thuật:
 
-## Chat (claude.ai trong app) vào văn phòng
-
-Chat chạy trên đám mây nên không có hook. `mcp/office-mcp.mjs` là một MCP server chạy trên máy này, cho Chat một công cụ `office_report`; Chat gọi nó thì cuộc trò chuyện hiện thành nhân vật "Chat · tên", ngồi ở khu của dự án nếu `project` khớp "Dự án của tôi". Chỉ gửi tiêu đề, tên dự án và một ghi chú ngắn, không gửi nội dung chat.
-- Thêm vào `%APPDATA%\Claude\claude_desktop_config.json` (mục `mcpServers`), rồi thoát hẳn và mở lại app Claude:
-  `"my-office": { "command": "node", "args": ["D:\Vanphong3d-test\mcp\office-mcp.mjs"] }`
-- Để Chat tự gọi, dán vào Cài đặt → Sở thích (hoặc hướng dẫn của project): "Khi bắt đầu một yêu cầu, gọi office_report với status working; khi trả lời xong gọi với status done. Dùng cùng một conversation (tên cuộc trò chuyện) mỗi lần, project là tên project nếu có. Không đưa nội dung riêng tư vào title hoặc note."
-- Giới hạn: phụ thuộc Chat chịu gọi công cụ, và chỉ thấy cuộc trò chuyện từ lúc gọi. Không tự lấy các chat cũ.
+- **Chat**: `mcp/office-mcp.mjs` (MCP qua stdio, không phụ thuộc thư viện) cho Chat công cụ `office_report`; nó gửi sự kiện hook giả (`X-Office-Source: chat`) tới `/event`. `bin/chat-setup.mjs` + `node bin/cli.mjs chat-setup [--write]` tìm `claude_desktop_config.json` (kể cả bản Store ở `%LOCALAPPDATA%\Claude-Data\*`) và thêm mục `my-office` (có sao lưu).
+- **Cowork**: `cowork-plugin/` (hook `cowork-send.mjs`, tự dò máy chủ từ trong máy ảo; im lặng trên máy chính) đóng gói bằng `node bin/cli.mjs cowork-plugin`. `server/vmlink.mjs`: cổng nghe riêng trên card Hyper-V `vEthernet`, chỉ `GET /health` và `POST /event` có khóa, chỉ từ cùng mạng con; `OFFICE_VM_BIND=off` tắt.
+- **Dự án của tôi**: `server/myprojects.mjs` (`data/myprojects.json`); khớp theo tên đầy đủ hoặc (Chat/Cowork) theo từ nguyên vẹn trong tiêu đề. Có dự án đặt tên thì `planFor(n, rooms)` chọn ít nhất `hq` để có phòng ban; chat ưu tiên phòng ban còn trống.
+- **Chỉ vẽ Chat/Cowork**: `showCode()` ở server (`OFFICE_SHOW_CODE=1` hoặc Cài đặt, `POST /api/show-code`); client lọc bằng `shown()` trong `src/office/net/live.js`; nhóm chat chỉ nói về các phiên được vẽ.
+- **Bộ máy chat** (`src/shared/chat-engine.js`): lời thoại theo việc thật (số file sửa/lệnh/nguồn, thời gian), nhiều biến thể, không lặp câu vừa nói; chuyện phiếm tắt (`WORK_TALK` trong `group-chat.js`).
+- **Nhớ qua khởi động lại**: `data/chat-sessions.json`, giữ 6 giờ (trước đây 10 phút).
+- **Máy ảo/Windows**: `findClaude()` tìm `claude.exe` sau shim `claude.cmd` của npm.
 
 ## Việc còn lại
 1. Test e2e "điện thoại giao việc phải được Mac cho phép" đã viết lại cho LAN (`tests/e2e/office.spec.ts`), chạy trên macOS/Linux; logic cổng đã kiểm tay trên Windows.
