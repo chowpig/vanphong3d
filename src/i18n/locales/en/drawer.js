@@ -9,7 +9,7 @@ export default {
   demoNoWindow: 'Demo: there is no real window to open.',
   opened: 'Opened {app}.',
   openFailed: "Couldn't open it.",
-  unreachable: "Couldn't reach My Office.",
+  unreachable: "Couldn't reach Nhà Gỗ Office.",
   openWindow: 'Open window',
   openWindowTerminal: 'Open terminal window',
   openWindowIde: 'Open IDE window',
@@ -86,6 +86,6 @@ export default {
   subDoneMeta: '{steps} · started {time}',
   groupWorking: 'Working ({n})',
   groupDone: 'Just finished',
-  noActivity: 'No activity in this session since My Office started.',
+  noActivity: 'No activity in this session since Nhà Gỗ Office started.',
   latest: 'Latest',
 };

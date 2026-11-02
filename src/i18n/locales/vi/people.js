@@ -69,7 +69,7 @@ export default {
     called: 'Có việc rồi, hát tiếp sau nha!',
     chatGo: ['Vào hát karaoke chút nha mọi người 🎤', 'Ai vào hát với em không? 🎤🎶', 'Phòng karaoke trống nè, em vào hát một bài'],
     chatScore: 'Vừa hát “{song}” được {n} điểm 🎤 Ai hát hơn không?',
-    credit: 'Lời và nhạc: My Office',
+    credit: 'Lời và nhạc: Nhà Gỗ Office',
     points: 'ĐIỂM CỦA BẠN',
     verdict: { top: 'Tuyệt vời! Ca sĩ đây rồi 🎤', good: 'Hay quá! Hát thêm bài nữa đi', ok: 'Cũng được, luyện thêm nhé 😄' },
   },

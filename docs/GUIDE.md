@@ -71,7 +71,7 @@ Cowork runs in a virtual machine that cannot see your `localhost`. On Windows th
 node bin/cli.mjs cowork-plugin
 ```
 
-creates `cowork-plugin.plugin`. In the Claude app: Customize → Plugins → upload a plugin → choose it → turn it on. **The file contains your office key: do not share or commit it.** A new Cowork task starts with a line "My Office: connected via …" or "office not found (tried …)". The server side is tested with simulated events; a real Cowork session in the VM has not been verified on every setup. If it cannot connect, check that the office is running and that the firewall allows Node.js on private networks.
+creates `cowork-plugin.plugin`. In the Claude app: Customize → Plugins → upload a plugin → choose it → turn it on. **The file contains your office key: do not share or commit it.** A new Cowork task starts with a line "Nhà Gỗ Office: connected via …" or "office not found (tried …)". The server side is tested with simulated events; a real Cowork session in the VM has not been verified on every setup. If it cannot connect, check that the office is running and that the firewall allows Node.js on private networks.
 
 ## Using the office
 
@@ -96,7 +96,7 @@ Environment: `OFFICE_PORT`, `OFFICE_HOST`, `OFFICE_LANG` (`vi`/`en`), `OFFICE_DA
 
 ## Tests and known limits
 
-`npm test`, `npm run typecheck && npm run lint`, `npm run build && npm run smoke`, `npm run test:e2e` (about 1.5 hours on Windows, where the 3D page is drawn in software; tests that need the bash stand-in for Claude Code skip themselves there). Dead outdoor-scene code remains but is inert. The product name in the UI is still "My Office". See [SECURITY.md](../SECURITY.md) for the security model.
+`npm test`, `npm run typecheck && npm run lint`, `npm run build && npm run smoke`, `npm run test:e2e` (about 1.5 hours on Windows, where the 3D page is drawn in software; tests that need the bash stand-in for Claude Code skip themselves there). Dead outdoor-scene code remains but is inert. The product name in the UI is "Nhà Gỗ Office". See [SECURITY.md](../SECURITY.md) for the security model.
 
 ## Licence and credits
 

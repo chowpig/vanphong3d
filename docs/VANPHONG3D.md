@@ -23,7 +23,7 @@ Nguồn: [khanh020905/my-office](https://github.com/khanh020905/my-office) (MIT,
 - Giới hạn đã biết: mỗi hàng thêm 2 đèn điểm cho mỗi 2 hàng (tối đa +4 đèn); bóng đổ dùng bản đồ 4096 khi tòa nhà dài; tòa nhà lớn nhất (hq+4) nặng hơn trên máy yếu.
 
 ## Ngôn ngữ
-- Tiếng Việt là mặc định (`INITIAL_LANG` trong `src/i18n/index.js`); đổi trong Cài đặt hoặc `OFFICE_LANG=en`. Bản dịch vi đủ 2.599/2.599 khóa. Tên sản phẩm "My Office" chưa đổi.
+- Tiếng Việt là mặc định (`INITIAL_LANG` trong `src/i18n/index.js`); đổi trong Cài đặt hoặc `OFFICE_LANG=en`. Bản dịch vi đủ 2.599/2.599 khóa. Tên sản phẩm trong giao diện là "Nhà Gỗ Office".
 
 ## Kiểm tra bảo mật (hộp đen, từ địa chỉ LAN)
 - Chưa đăng nhập: mọi route 401/403, `/` chuyển sang `/pin`. Hook/`/event`/`/v1/*` từ LAN: 403 dù có khóa. Host lạ: 421. Đổi PIN từ điện thoại cần PIN hiện tại và có khóa thử sai.

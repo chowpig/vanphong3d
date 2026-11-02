@@ -2,6 +2,11 @@
 
 Vanphong3d, a fork of [My Office](https://github.com/khanh020905/my-office). The first entry lists what this fork changed.
 
+## 0.3.1
+
+### Changed
+- The product is now named **Nhà Gỗ Office** in the interface, the messages, the page title, the manifest and the docs. The `my-office` names of the MCP entry, the CLI command and the data keys are unchanged so existing setups keep working.
+
 ## 0.3.0
 
 ### Added

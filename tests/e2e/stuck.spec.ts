@@ -79,7 +79,7 @@ test('a command failing the same way three times: the fourth is denied, a card i
   await expect(card.locator('.zc-loop-stop')).toHaveText('Tap again to stop');
   await card.locator('.zc-loop-stop').click();
   await expect(card.locator('.zc-loop-note')).toHaveText('Stops at its next step', { timeout: 20_000 });
-  expect(await s.check()).toEqual({ continue: false, stopReason: 'Stopped from My Office by the user.' });
+  expect(await s.check()).toEqual({ continue: false, stopReason: 'Stopped from Nhà Gỗ Office by the user.' });
   await expect(card.locator('.zc-loop-note')).toHaveText('Stopped', { timeout: 20_000 });
   // its turn over: no longer stuck, and the next prompt is yours to drive (nothing denied)
   await request.post('/event', { data: { ...s.base, hook_event_name: 'Stop', last_assistant_message: 'Stopped.' } });

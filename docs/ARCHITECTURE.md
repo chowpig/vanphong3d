@@ -1,6 +1,6 @@
 # Architecture
 
-My Office is two programs in one repository:
+Nhà Gỗ Office is two programs in one repository:
 
 1. **A local server** (`server/`, plain Node.js ESM, no build step). Claude Code hooks POST every event to it; it keeps one
    record per open session, measures the Mac, and streams compact events to the page over Server-Sent Events. It also

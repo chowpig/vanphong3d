@@ -55,13 +55,13 @@ export function serviceFor({ root, server, log, host, port }) {
 
   if (process.platform === 'win32') {
     const startup = path.join(process.env.APPDATA || path.join(home, 'AppData', 'Roaming'), 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup');
-    const file = path.join(startup, 'My Office.vbs'), old = path.join(startup, 'Claude Office.vbs'), q = (s) => s.replace(/"/g, '""');   // (old: the name until 28/10/2026)
+    const file = path.join(startup, 'Nhà Gỗ Office.vbs'), old = path.join(startup, 'Claude Office.vbs'), q = (s) => s.replace(/"/g, '""');   // (old: the name until 28/10/2026)
     return {
       file, restart: `wscript "${file}"`,
       async install() {
         await fsp.mkdir(startup, { recursive: true }); await fsp.rm(old, { force: true });
         await fsp.writeFile(file, [
-          "' My Office: starts the office server at sign-in, without a window. Remove this file to stop that.",
+          "' Nhà Gỗ Office: starts the office server at sign-in, without a window. Remove this file to stop that.",
           'Set sh = CreateObject("WScript.Shell")',
           'Set env = sh.Environment("Process")',
           ...Object.entries({ ...env, OFFICE_LOG: log }).map(([k, v]) => `env("${k}") = "${q(v)}"`),
@@ -88,7 +88,7 @@ export function serviceFor({ root, server, log, host, port }) {
       if (fs.existsSync(path.join(dir, OLD))) { sysd('disable', '--now', OLD); await fsp.rm(path.join(dir, OLD), { force: true }); }
       await fsp.mkdir(path.dirname(file), { recursive: true });
       await fsp.writeFile(file, [
-        '[Unit]', 'Description=My Office (a 3D office for Claude Code sessions)', 'After=network.target', '',
+        '[Unit]', 'Description=Nhà Gỗ Office (a 3D office for Claude Code sessions)', 'After=network.target', '',
         '[Service]', `ExecStart="${node}" "${server}"`, `WorkingDirectory=${root}`,
         ...Object.entries(env).map(([k, v]) => `Environment=${k}=${v}`),
         'Restart=on-failure', 'RestartSec=3', `StandardOutput=append:${log}`, `StandardError=append:${log}`, '',

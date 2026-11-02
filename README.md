@@ -1,4 +1,4 @@
-# My Office
+# Nhà Gỗ Office
 
 English · [Tiếng Việt](README.vi.md)
 
@@ -24,7 +24,7 @@ A 3D office where your Claude Code sessions come to work. Each session is a char
 
 The office also looks after your Mac: RAM per session, forgotten dev servers, one-click cleanup.
 
-![My Office: the company floor with sessions at work](docs/media/demo.gif)
+![Nhà Gỗ Office: the company floor with sessions at work](docs/media/demo.gif)
 
 **Try it before you install anything.** The demo has made-up projects and needs no Claude Code: run `npm run dev` and
 open <http://localhost:4310/?demo>. Or try it online, nothing to install: <https://khanh020905.github.io/my-office/>
@@ -33,7 +33,7 @@ open <http://localhost:4310/?demo>. Or try it online, nothing to install: <https
 **Questions or ideas?** Ask in [Discussions → Q&A](https://github.com/khanh020905/my-office/discussions/categories/q-a), suggest something in
 [Ideas](https://github.com/khanh020905/my-office/discussions/categories/ideas), or show your office in [Show and tell](https://github.com/khanh020905/my-office/discussions/categories/show-and-tell).
 
-> My Office is a community project. It is not made by, endorsed by or affiliated with Anthropic.
+> Nhà Gỗ Office is a community project. It is not made by, endorsed by or affiliated with Anthropic.
 
 ## Quick start
 
@@ -49,14 +49,14 @@ node bin/cli.mjs doctor              # checks Node, the server, every hook and t
 
 Then open <http://localhost:4310>.
 
-- `install` backs up `settings.json` before changing it and only adds My Office's own hooks. Running it again adds
+- `install` backs up `settings.json` before changing it and only adds Nhà Gỗ Office's own hooks. Running it again adds
   nothing twice.
 - To remove everything: `node bin/cli.mjs uninstall`.
 
 | Command | What it does |
 | --- | --- |
 | `install [--service] [--lan] [--approve] [--no-status] [--no-otel] [--no-otel-names]` | Adds three kinds of hooks: event hooks, approval hooks, and a status line that reports your plan's usage. Your own status line keeps running inside it. It also turns on Claude Code's own usage numbers (OpenTelemetry) for "What eats your plan", unless you already send them somewhere: see below. `--service` runs the office in the background from login: launchd on macOS, a systemd user service on Linux, the Startup folder on Windows (no admin needed). `--lan` lets a phone on the same Wi-Fi watch. `--no-approve` leaves out the approval hooks. `--no-status` leaves your status line alone. `--no-otel` leaves telemetry off; `--no-otel-names` keeps the names of your own MCP servers, skills and agents hidden ("custom"). |
-| `uninstall` | Removes every My Office hook, the telemetry settings install added, and the background service, and keeps the rest of `settings.json`. |
+| `uninstall` | Removes every Nhà Gỗ Office hook, the telemetry settings install added, and the background service, and keeps the rest of `settings.json`. |
 | `doctor` | Checks each step and says what is missing and how to fix it. |
 | `start [--lan]` | Runs the server in this terminal (no launchd). |
 | `pin [--new]` | Shows the phone PIN; `--new` changes it and signs every phone out. |
@@ -384,7 +384,7 @@ Then open <http://localhost:4310>.
   text only, 20 an hour; it uses a little of your plan), with Undo. Off in Settings → More → Group chat.
 - **Notifications on your phone** (Web Push, from `server/push.mjs` with nothing but `node:crypto`; shown by
   `public/sw.js`): Claude's answers, and an approval a phone's work needs while no office page is open, even with the
-  phone locked. Turned on on each phone (⚙ → More → 📱) over the https address; on an iPhone, add My Office to the home
+  phone locked. Turned on on each phone (⚙ → More → 📱) over the https address; on an iPhone, add Nhà Gỗ Office to the home
   screen first (Share → Add to Home Screen: it becomes an app, full screen, with its icon). The Mac's phone window counts
   the phones and sends a test. Subscriptions are posted only to the browsers' own push services.
 - **Give work** (📋 in the team chat, or @ a conversation and tap "Give work"): pick a conversation, carried on with
@@ -510,4 +510,4 @@ request.
 
 ## Licence
 
-[MIT](LICENSE). The brand names and logos above stay their owners' trademarks; My Office is not affiliated with any of them.
+[MIT](LICENSE). The brand names and logos above stay their owners' trademarks; Nhà Gỗ Office is not affiliated with any of them.

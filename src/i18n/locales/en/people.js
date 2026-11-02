@@ -76,7 +76,7 @@ export default {
     called: 'Work’s in, I’ll finish the song later!',
     chatGo: ['Off to sing some karaoke, everyone 🎤', 'Anyone want to sing with me? 🎤🎶', 'The karaoke box is free, I’m going in for a song'],
     chatScore: 'Just sang “{song}” and got {n} points 🎤 Anyone beat that?',
-    credit: 'Words and music: My Office',
+    credit: 'Words and music: Nhà Gỗ Office',
     points: 'YOUR SCORE',
     verdict: { top: 'Amazing! A star is born 🎤', good: 'Lovely! Sing another one', ok: 'Not bad, keep practising 😄' },
   },

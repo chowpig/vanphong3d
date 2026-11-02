@@ -1,7 +1,7 @@
 // The company's group chat (ui/group-chat.js): the window, and what people write in it. An array is several ways to
 // say the same thing, one picked at random.
 export default {
-  group: 'My Office team',
+  group: 'Nhà Gỗ Office team',
   open: 'Team chat',
   openTitle: 'The company group chat: people post about what they are doing (on this computer only, never sent to Claude)',
   members: '{n} members',
@@ -15,7 +15,7 @@ export default {
   yesterday: 'Yesterday',
   claudeTag: 'Claude',
   notifyBar: '🔔 Turn on notifications to know as soon as Claude answers, even with the phone locked.',
-  notifyBarInstall: '🔔 Want to know when Claude answers? Add My Office to your home screen first.',
+  notifyBarInstall: '🔔 Want to know when Claude answers? Add Nhà Gỗ Office to your home screen first.',
   notifyBarBtn: 'Turn on',
   conv: { open: 'See the whole conversation', back: 'Back to the group', gone: 'This conversation isn’t open on the Mac any more.', summary: '📄 A summary of what came before (tap to read)' },
   quick: {
@@ -116,7 +116,7 @@ export default {
     subNew: '📁 {folder} · a new conversation, Claude for real',
     subMine: '📁 {folder} · carrying on your new conversation',
     nudgeOn: '🔔 Want your phone to tell you when Claude answers? Turn notifications on in ⚙ → More → 📱.',
-    nudgeInstall: '🔔 Want to know when Claude answers? Add My Office to your home screen (Share → Add to Home Screen), then turn notifications on in ⚙ → More → 📱.',
+    nudgeInstall: '🔔 Want to know when Claude answers? Add Nhà Gỗ Office to your home screen (Share → Add to Home Screen), then turn notifications on in ⚙ → More → 📱.',
     label: 'To',
     group: 'The whole group',
     groupSub: 'Chatting in the group, not sent to Claude',

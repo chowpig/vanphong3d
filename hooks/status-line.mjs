@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Claude Code statusLine → My Office. Claude Code runs this on every status refresh with JSON on stdin (fields
+// Claude Code statusLine → Nhà Gỗ Office. Claude Code runs this on every status refresh with JSON on stdin (fields
 // documented at code.claude.com/docs/en/statusline). We forward the plan's 5-hour / 7-day usage, the exact context
 // window, the session cost and its prompt cache's clock to the office, then print a status line. If you had a status line before installing,
 // that command still runs with the same input and its output is what you see. Idea from W17ant/Claude-Office (MIT).

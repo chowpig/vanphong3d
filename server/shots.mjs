@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-export const SHOT_ASK = 'You are being written to from My Office (the user is on a phone). If your work changed a web page running on this computer (a dev server already running), end your answer with one line per page worth seeing, at most 3, exactly like: SCREENSHOT: http://localhost:3000/the/page . The office photographs them for the phone. Do not start a server for this.';
+export const SHOT_ASK = 'You are being written to from Nhà Gỗ Office (the user is on a phone). If your work changed a web page running on this computer (a dev server already running), end your answer with one line per page worth seeing, at most 3, exactly like: SCREENSHOT: http://localhost:3000/the/page . The office photographs them for the phone. Do not start a server for this.';
 const LINE = /^\s*SCREENSHOT:\s*(\S+)\s*$/gim;
 const local = (u) => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) && ['localhost', '127.0.0.1', '[::1]'].includes(x.hostname) ? x.href : null; } catch { return null; } };
 /** The answer without its SCREENSHOT lines, and the pages they name (this computer's only, at most 3). */

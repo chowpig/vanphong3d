@@ -1,4 +1,4 @@
-# Contributing to My Office
+# Contributing to Nhà Gỗ Office
 
 Thanks for helping! This guide gets you from a fresh clone to a pull request.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// My Office — local server.
+// Nhà Gỗ Office — local server.
 // Claude Code hooks POST every event to /event (loopback only). The server keeps one record per
 // open session (names come from ~/.claude/sessions/<pid>.json), strips anything that looks like a
 // secret, and streams compact events to the office page over Server-Sent Events.
@@ -1297,7 +1297,7 @@ button:disabled{opacity:.5;cursor:default}.err{color:#c0392b;margin:12px 0 0;fon
 function pinPage(res, code, msg = '', locked = false) {
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'same-origin' }).end(`<!doctype html>
-<html lang="${prefs.lang()}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Office</title><style>${PIN_CSS}</style></head>
+<html lang="${prefs.lang()}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nhà Gỗ Office</title><style>${PIN_CSS}</style></head>
 <body><form class="card" method="post" action="/pin" autocomplete="off"><div class="ico">🏢</div><h1>${esc(tr('server.pin.title'))}</h1>
 <p>${esc(tr('server.pin.help'))}</p>
 <input name="pin" inputmode="numeric" pattern="\\d{8,10}" maxlength="10" autocomplete="one-time-code" required autofocus aria-label="${esc(tr('server.pin.label'))}" ${locked ? 'disabled' : ''}>
@@ -1921,7 +1921,7 @@ function switchScript() {
   fs.mkdirSync(DATA_DIR, { recursive: true });
   fs.writeFileSync(SWITCH_FILE, [
     '#!/bin/sh',
-    '# My Office: Claude Code started on the account the office picked (the plan card). The editor passes the claude',
+    '# Nhà Gỗ Office: Claude Code started on the account the office picked (the plan card). The editor passes the claude',
     '# program first (claudeCode.claudeProcessWrapper). A CLAUDE_CONFIG_DIR set already is kept. A conversation the office',
     '# moved to another account (its id in data/resume-on) starts on that one when the editor resumes it.',
     'if [ -z "$CLAUDE_CONFIG_DIR" ]; then',

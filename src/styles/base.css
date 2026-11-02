@@ -8,7 +8,7 @@
   --ink: #E8ECF4; --muted: #8D97AA; --faint: #5E687B;
   --green: #3DDC84; --green-ink: #8FEDB8; --green-soft: rgba(61, 220, 132, .11);
   --amber: #F2B544; --amber-soft: rgba(242, 181, 68, .12);   /* status only: waiting for approval, warnings */
-  /* the interface's own accent (selection, focus, the main action): the coral of the My Office mark, so amber keeps meaning
+  /* the interface's own accent (selection, focus, the main action): the coral of the Nhà Gỗ Office mark, so amber keeps meaning
      "someone is waiting for you" */
   --accent: #EF8A5F; --accent-hi: #F5A07A; --accent-soft: rgba(239, 138, 95, .13); --accent-line: rgba(239, 138, 95, .6); --on-accent: #2A1307;
   --red: #FF5F5F; --red-soft: rgba(255, 95, 95, .12);

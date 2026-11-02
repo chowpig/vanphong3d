@@ -7,7 +7,7 @@ export default {
   demoNoWindow: 'Bản demo: không mở cửa sổ thật.',
   opened: 'Đã mở {app}.',
   openFailed: 'Không mở được.',
-  unreachable: 'Không gửi được tới My Office.',
+  unreachable: 'Không gửi được tới Nhà Gỗ Office.',
   openWindow: 'Mở cửa sổ',
   openWindowTerminal: 'Mở cửa sổ terminal',
   openWindowIde: 'Mở cửa sổ IDE',
@@ -80,6 +80,6 @@ export default {
   subDoneMeta: '{steps} · bắt đầu {time}',
   groupWorking: 'Đang làm ({n})',
   groupDone: 'Vừa xong',
-  noActivity: 'Phiên này chưa có hoạt động nào từ khi My Office chạy.',
+  noActivity: 'Phiên này chưa có hoạt động nào từ khi Nhà Gỗ Office chạy.',
   latest: 'Mới nhất',
 };

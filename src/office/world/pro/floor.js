@@ -190,17 +190,17 @@ function buildProFloor() {
   put(scene, cyl(0.08, 0.08, 0.5, mat('#D62828', { roughness: 0.4 }), 14), -3.88, 0.25, 0.3);
   put(scene, cyl(0.03, 0.03, 0.08, '#2B2F36'), -3.88, 0.54, 0.3);
 
-  /* lobby: the My Office sign over the entrance, a reception counter, two waiting chairs */
+  /* lobby: the Nhà Gỗ Office sign over the entrance, a reception counter, two waiting chairs */
   { const logo = canvasTex(1024, 220, (g, w, h) => {
       g.fillStyle = '#1C2620'; g.fillRect(0, 0, w, h);
       g.save(); g.translate(150, h / 2); g.scale(6.2, 6.2); g.translate(-12, -12); g.fillStyle = '#E8865F'; g.fill(new Path2D(OFFICE_MARK), 'evenodd'); g.restore();
-      g.fillStyle = '#F6EFE4'; g.font = '800 92px "Be Vietnam Pro", system-ui, sans-serif'; g.textBaseline = 'middle'; g.fillText('My Office', 260, h / 2 + 4);
+      g.fillStyle = '#F6EFE4'; g.font = '800 92px "Be Vietnam Pro", system-ui, sans-serif'; g.textBaseline = 'middle'; g.fillText('Nhà Gỗ Office', 260, h / 2 + 4);
     });
     const lm = new THREE.MeshBasicMaterial({ map: logo }); PRO_FX.logoM = lm;
     put(scene, rbox(0.06, 0.62, 2.7, '#1C2620', 0.02), -7.96, 3.6, DZ);
     put(scene, new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.56), lm), -7.92, 3.6, DZ).rotation.y = Math.PI / 2;
     nightHooks.push((on) => lm.color.setScalar(on ? 1.7 : 1)); }
-  /* the reception: a U of walnut with a stone ledge for visitors (the My Office plaque on its front), a lower desk
+  /* the reception: a U of walnut with a stone ledge for visitors (the Nhà Gỗ Office plaque on its front), a lower desk
      behind it where the receptionist sits (people/staff.js) with her screen, keyboard and phone, a low cabinet against
      the glass behind her. Across the lobby from the lift, which keeps an open space in front of it. Visitors stand at
      the ledge; she gets in round the open west end. */
@@ -321,7 +321,7 @@ function buildProFloor() {
       g.fillStyle = '#F6EFE4'; g.fillRect(0, 0, w, h); g.fillStyle = '#D97757'; g.fillRect(0, 0, w, 10);
       g.fillStyle = '#1E232B'; g.font = '800 30px "Be Vietnam Pro", system-ui, sans-serif'; g.textAlign = 'center';
       ['SHIP', 'SMALL,', 'SHIP', 'OFTEN'].forEach((t, i) => g.fillText(t, w / 2, 90 + i * 52));
-      g.fillStyle = '#7A8494'; g.font = '600 15px "Be Vietnam Pro", system-ui, sans-serif'; g.fillText('My Office', w / 2, h - 22);
+      g.fillStyle = '#7A8494'; g.font = '600 15px "Be Vietnam Pro", system-ui, sans-serif'; g.fillText('Nhà Gỗ Office', w / 2, h - 22);
     });
     poster(9.6, 2.98, -7.96, 0, 0.8, 0.58, (g, w, h) => {
       const sky = g.createLinearGradient(0, 0, 0, h); sky.addColorStop(0, '#9CC9E8'); sky.addColorStop(1, '#F3E3C2'); g.fillStyle = sky; g.fillRect(0, 0, w, h);

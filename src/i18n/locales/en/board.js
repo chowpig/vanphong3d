@@ -30,7 +30,7 @@ export default {
   addLabel: 'Add a to-do',
   add: 'Add',
   saveFailed: "Couldn't save.",
-  saveOffline: "Couldn't save: lost the connection to My Office.",
+  saveOffline: "Couldn't save: lost the connection to Nhà Gỗ Office.",
   // the to-dos the demo starts with
   demo: {
     d1: 'Answer the client email about pricing',

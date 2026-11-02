@@ -167,7 +167,7 @@ test('the group chat: people post, a poll, @ someone and they answer, a reply, r
   await page.click('#btn-chat');
   const zc = page.locator('#zchat');
   await expect(zc).toBeVisible();
-  await expect(zc.locator('.zc-title b')).toHaveText('My Office team');
+  await expect(zc.locator('.zc-title b')).toHaveText('Nhà Gỗ Office team');
   await expect(zc.locator('.zc-sub')).toContainText('members');
   // a poll (pinned): you vote
   await page.evaluate(() => (window as unknown as { __office: Chat }).__office.chatEngine().poll('reception', 'Lunch?', ['Phở', 'Bún bò', 'Cơm tấm']));

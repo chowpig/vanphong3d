@@ -72,7 +72,7 @@ test('cutting in on a conversation at work: from "To", from a run\'s card, and k
   await expect(ask).toContainText('e2e-busy is in the middle of something', { timeout: 20_000 });
   await ask.locator('.zc-ask-yes').click();
   await expect.poll(notes, { timeout: 20_000 }).toContainEqual(expect.stringContaining('fix the tests too'));
-  expect(notes()[0]).toMatch(/^\[The user, cutting in through My Office/);
+  expect(notes()[0]).toMatch(/^\[The user, cutting in through Nhà Gỗ Office/);
   await expect(zc.locator('.zc-sys', { hasText: 'Your note is in: e2e-busy' })).toBeVisible({ timeout: 20_000 });
   // "Later": nothing sent, the words back in the input
   await writeTo(page, 'e2e-steer-1', 'and the docs');

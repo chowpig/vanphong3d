@@ -72,9 +72,9 @@ export default {
   },
   // a session going round in circles (server/loops.mjs): what Claude reads, and the notification's title
   loop: {
-    deny: 'My Office blocked this call: it has already run {n} times and failed with the same error each time, so running it again unchanged will fail the same way. Try a different approach, or stop and ask the user.',
-    stopReason: 'Stopped from My Office by the user.',
-    hintFor: 'A hint from the user, sent from My Office: {hint}',
+    deny: 'Nhà Gỗ Office blocked this call: it has already run {n} times and failed with the same error each time, so running it again unchanged will fail the same way. Try a different approach, or stop and ask the user.',
+    stopReason: 'Stopped from Nhà Gỗ Office by the user.',
+    hintFor: 'A hint from the user, sent from Nhà Gỗ Office: {hint}',
     pushTitle: '⛔ {name} looks stuck',
     resting: '{name} is already resting: nothing to stop.',
     gone: 'This session has closed.',
@@ -84,14 +84,14 @@ export default {
     nudgeTitle: { one: '☕ {name} goes cold in {n} minute', other: '☕ {name} goes cold in {n} minutes' },
     nudgeBody: 'It is waiting for your answer. Reply now and it carries on cheaply; once cold, the next message re-reads ~{tokens}k tokens.',
   },
-  steer: { note: '[The user, cutting in through My Office (from their phone) while you work]\n{text}' },
+  steer: { note: '[The user, cutting in through Nhà Gỗ Office (from their phone) while you work]\n{text}' },
   push: {
     permTitle: '⚠️ {name} needs your approval (within 45 s)',
-    testTitle: '🔔 My Office',
+    testTitle: '🔔 Nhà Gỗ Office',
     testBody: 'Notifications work: your phone tells you when Claude answers or needs approving.',
   },
   pin: {
-    title: 'Enter My Office',
+    title: 'Enter Nhà Gỗ Office',
     help: 'Type the PIN. It is on the {mac}: click 📱 in the office.',
     label: 'PIN',
     submit: 'Enter the office',
@@ -104,7 +104,7 @@ export default {
   },
   // replies that go back to Claude through its hooks
   perm: {
-    denied: 'The user denied this in My Office.',
+    denied: 'The user denied this in Nhà Gỗ Office.',
     planRevise: 'The user has not approved the plan and wants it revised.',
     planReviseWhy: 'The user has not approved the plan and wants it revised: {why}',
   },
@@ -196,7 +196,7 @@ export default {
     },
     result: {
       notOffered: "This process isn't on the list of things that may be stopped.",
-      protected: "Can't stop the process running My Office.",
+      protected: "Can't stop the process running Nhà Gỗ Office.",
       gone: 'This process already stopped on its own.',
       restarted: 'This process restarted, or its PID now belongs to another process. Click "{refresh}" and try again.',
       stubborn: 'The process hasn\'t stopped yet. Click "{force}" to stop it now.',

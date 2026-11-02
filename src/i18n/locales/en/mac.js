@@ -101,7 +101,7 @@ export default {
     demo: 'Demo: nothing happens on a real {mac}.',
     done: 'Done.',
     failed: "Couldn't do that.",
-    unreachable: "Couldn't reach My Office.",
+    unreachable: "Couldn't reach Nhà Gỗ Office.",
   },
   verb: {
     stop: 'Stop',

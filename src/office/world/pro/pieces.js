@@ -11,7 +11,7 @@ import { partitionGlass } from '../furniture/server-racks.js';
    half-height walls everywhere else, a floor finish per room. Furniture that people use is placed by the shared code
    (desks, shelf, racks, coffee corner, sofa…); this adds the rest. Moving parts are kept in PRO_FX. */
 export const PRO_FX = { stalls: [], plaques: [] };
-// My Office's own mark, a small office block (a 24-unit square; fill it 'evenodd': the windows and the door are holes),
+// Nhà Gỗ Office's own mark, a small office block (a 24-unit square; fill it 'evenodd': the windows and the door are holes),
 // for the header, the lobby sign, photos and the weekly card
 export const OFFICE_MARK = 'M7 2h10a3 3 0 0 1 3 3v17H4V5a3 3 0 0 1 3-3zM7.5 6h3v3h-3zM13.5 6h3v3h-3zM7.5 11h3v3h-3zM13.5 11h3v3h-3zM10.2 17h3.6v5h-3.6z';
 // the Claude mark (Simple Icons, CC0 path data; the trademark is Anthropic's), on the session list for Claude Code sessions

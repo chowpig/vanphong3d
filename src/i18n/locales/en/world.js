@@ -71,7 +71,7 @@ export default {
     paperSoon: 'The record shows here once the officer has written it.',
     clearText: 'No alcohol found: no record written, the rider goes on.',
     foot: 'Per Decree 168/2024/NĐ-CP (in force since 1 January 2025) and Circular 73/2024/TT-BCA. The exact fine is set in the penalty decision, within the range above.',
-    mock: 'A pretend document in My Office: the names, the plate and the record number are made up. Not a real document.',
+    mock: 'A pretend document in Nhà Gỗ Office: the names, the plate and the record number are made up. Not a real document.',
     short: {
       helmet: 'No helmet',
       three: 'Two passengers (three on a bike)',
@@ -148,7 +148,7 @@ export default {
       title: 'RECORD OF AN ADMINISTRATIVE VIOLATION',
       sub: 'Road traffic order and safety',
       when: 'Today, at {h}:{m}, on {d}/{mo}/{y}, at {place}.',
-      place: 'in front of the My Office building',
+      place: 'in front of the Nhà Gỗ Office building',
       by: 'Recorded by: {rank} {name}, traffic police officer.',
       to: 'Against: {title} {name}, born {born}.',
       vehicle: 'Vehicle: motorcycle, plate {plate}.',

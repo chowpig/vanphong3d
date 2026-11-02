@@ -152,7 +152,7 @@ node bin/cli.mjs cowork-plugin
 
 Lệnh tạo file `cowork-plugin.plugin`. Trong app Claude chọn **Customize → Plugins → tải plugin lên**, chọn file này rồi bật. **File này chứa khóa của văn phòng bạn: đừng gửi cho ai và đừng đưa lên git.**
 
-Mở một tác vụ Cowork mới. Đầu phiên có dòng "My Office: đã kết nối qua …" hoặc "không tìm thấy văn phòng (đã thử …)". Nếu không kết nối được, xem mục 10.
+Mở một tác vụ Cowork mới. Đầu phiên có dòng "Nhà Gỗ Office: đã kết nối qua …" hoặc "không tìm thấy văn phòng (đã thử …)". Nếu không kết nối được, xem mục 10.
 
 > Trạng thái: phần máy chủ đã được kiểm tra bằng sự kiện giả lập, nhưng chưa có kiểm tra với một phiên Cowork thật chạy trong máy ảo trên mọi cấu hình. Nếu bạn thử và thấy kết quả, hãy báo lại.
 
@@ -160,7 +160,7 @@ Mở một tác vụ Cowork mới. Đầu phiên có dòng "My Office: đã kế
 
 - **Chuột**: kéo để xoay, cuộn để phóng to/thu nhỏ từng chút (mỗi nấc khoảng 8%).
 - **Bàn phím**: **W A S D** hoặc phím mũi tên di chuyển khung nhìn ngang dọc, giữ **Shift** để đi nhanh. Khi đang gõ trong ô nhập hoặc đang mở một phiên (khung nhìn bám theo nhân vật), các phím này không di chuyển khung nhìn. Ở chế độ **Hoá thân** (góc nhìn thứ nhất) WASD là đi bộ.
-- **Nhóm chat "Công ty My Office"**: các nhân vật báo việc ở đây. Họ nói về công việc thật: nhận việc gì, xong chưa, sửa bao nhiêu file, mất bao lâu. Lời thoại có nhiều biến thể và không lặp lại câu vừa nói.
+- **Nhóm chat "Công ty Nhà Gỗ Office"**: các nhân vật báo việc ở đây. Họ nói về công việc thật: nhận việc gì, xong chưa, sửa bao nhiêu file, mất bao lâu. Lời thoại có nhiều biến thể và không lặp lại câu vừa nói.
 - **Cài đặt** có các tab Văn phòng, Nhân vật, Hiển thị, Khác: cỡ văn phòng, giờ ngày/đêm, thời tiết, kiểu nhân vật, ngôn ngữ, chất lượng đồ họa, dự án của tôi, hiện cả phiên Claude Code.
 
 ### Hiện cả phiên Claude Code
@@ -211,7 +211,7 @@ npm run test:e2e       # đầy đủ, rất lâu trên Windows (khoảng 1,5 gi
 - Trên Windows, trình duyệt kiểm thử vẽ 3D bằng phần mềm nên chậm; vài kiểm thử mô phỏng dài có thể hết thời gian chờ. Các kiểm thử cần giả lập Claude Code bằng script bash (`tests/e2e/fake-claude.sh`) tự bỏ qua trên Windows.
 - Mã của các cảnh ngoài trời cũ (phố, cửa hàng) vẫn còn trong dự án nhưng không chạy; có thể dọn sau.
 - Cowork trong máy ảo thật chưa được kiểm chứng trên mọi cấu hình.
-- Tên sản phẩm trong giao diện vẫn là "My Office".
+- Tên sản phẩm trong giao diện là "Nhà Gỗ Office".
 
 ## 12. Giấy phép và ghi công
 

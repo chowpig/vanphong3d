@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// My Office command line: start the server, add/remove the Claude Code hooks, install the login service, and
+// Nhà Gỗ Office command line: start the server, add/remove the Claude Code hooks, install the login service, and
 // check that everything is wired ("doctor"). Settings are backed up before every change and written atomically.
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';

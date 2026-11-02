@@ -27,7 +27,7 @@ export default {
   addLabel: 'Thêm việc của bạn',
   add: 'Thêm',
   saveFailed: 'Không lưu được.',
-  saveOffline: 'Không lưu được: mất kết nối tới My Office.',
+  saveOffline: 'Không lưu được: mất kết nối tới Nhà Gỗ Office.',
   demo: {
     d1: 'Trả lời email khách về bảng giá',
     d2: 'Review PR giỏ hàng',

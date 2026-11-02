@@ -65,7 +65,7 @@ export default {
     paperSoon: 'Biên bản sẽ hiện ở đây khi cán bộ lập xong.',
     clearText: 'Không phát hiện nồng độ cồn: không lập biên bản, người lái đi tiếp.',
     foot: 'Theo Nghị định 168/2024/NĐ-CP (hiệu lực từ 1/1/2025) và Thông tư 73/2024/TT-BCA. Mức phạt cụ thể nằm trong quyết định xử phạt, trong khung trên.',
-    mock: 'Minh hoạ trong văn phòng My Office: tên người, biển số và số biên bản đều là bịa, đây không phải giấy tờ thật.',
+    mock: 'Minh hoạ trong văn phòng Nhà Gỗ Office: tên người, biển số và số biên bản đều là bịa, đây không phải giấy tờ thật.',
     short: {
       helmet: 'Không đội mũ bảo hiểm',
       three: 'Chở theo 2 người (kẹp 3)',
@@ -142,7 +142,7 @@ export default {
       title: 'BIÊN BẢN VI PHẠM HÀNH CHÍNH',
       sub: 'Về trật tự, an toàn giao thông đường bộ',
       when: 'Hôm nay, hồi {h} giờ {m} phút, ngày {d}/{mo}/{y}, tại {place}.',
-      place: 'trước tòa nhà văn phòng My Office',
+      place: 'trước tòa nhà văn phòng Nhà Gỗ Office',
       by: 'Người có thẩm quyền lập biên bản: {rank} {name}, cán bộ Cảnh sát giao thông.',
       to: 'Đã lập biên bản vi phạm hành chính đối với: {title} {name}, sinh năm {born}.',
       vehicle: 'Điều khiển phương tiện: xe mô tô, biển kiểm soát {plate}.',

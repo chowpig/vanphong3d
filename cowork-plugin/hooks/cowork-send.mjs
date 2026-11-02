@@ -45,6 +45,6 @@ try {
     try { fs.writeFileSync(memo, JSON.stringify({ host, at: Date.now() })); } catch { /* read-only: asked again next time */ }
     if (!probe) await fetch(`http://${host}:${port}/event`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Office-Key': key, 'X-Office-Source': 'cowork' }, body, signal: AbortSignal.timeout(2000) }).catch(() => {});
   }
-  if (probe) process.stdout.write(JSON.stringify({ systemMessage: host ? `My Office: đã kết nối qua ${host}:${port}${key ? '' : ' (thiếu khóa data/token: văn phòng sẽ từ chối)'}` : `My Office: không tìm thấy văn phòng (đã thử ${hosts.join(', ')}:${port})` }));
+  if (probe) process.stdout.write(JSON.stringify({ systemMessage: host ? `Nhà Gỗ Office: đã kết nối qua ${host}:${port}${key ? '' : ' (thiếu khóa data/token: văn phòng sẽ từ chối)'}` : `Nhà Gỗ Office: không tìm thấy văn phòng (đã thử ${hosts.join(', ')}:${port})` }));
 } catch { /* the office is closed: Cowork carries on as usual */ }
 process.exit(0);   // (a name lookup still running must not keep the hook open)

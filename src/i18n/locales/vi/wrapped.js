@@ -20,7 +20,7 @@ export default {
   longest: '⏱️ Lần chạy liền dài nhất: {time}',
   commits: '🖨️ {c} commit',
   pushes: '🚀 {c} lần đẩy code',
-  footer: 'My Office · văn phòng 3D cho Claude Code',
+  footer: 'Nhà Gỗ Office · văn phòng 3D cho Claude Code',
   fileName: 'my-office-tuan-{date}.png',
   fileNow: 'nay',
   copied: 'Đã chép ảnh, dán vào bài đăng là xong.',

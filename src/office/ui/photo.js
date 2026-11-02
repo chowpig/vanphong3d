@@ -1,5 +1,5 @@
 // Photo mode: the office alone over the whole window, the camera free (any angle, closer or further, pan with the right
-// button), then a PNG at the screen's size, Full HD or 4K. Name tags and a small "My Office" mark are painted into
+// button), then a PNG at the screen's size, Full HD or 4K. Name tags and a small "Nhà Gỗ Office" mark are painted into
 // the picture when they are on (on screen the tags are HTML, so the 3D canvas alone would lose them).
 import * as THREE from 'three';
 import { state } from '../core/state.js';
@@ -68,7 +68,7 @@ export function paintNames(g, W, H, s) {
   }
 }
 export function paintMark(g, W, H, s) {
-  const text = 'My Office', pad = 16 * s;
+  const text = 'Nhà Gỗ Office', pad = 16 * s;
   g.font = `700 ${13 * s}px "Be Vietnam Pro", system-ui, sans-serif`;
   const w = g.measureText(text).width + 40 * s, h = 30 * s, x = W - w - pad, y = H - h - pad;
   g.beginPath(); g.roundRect(x, y, w, h, h / 2); g.fillStyle = 'rgba(14, 19, 27, .72)'; g.fill();

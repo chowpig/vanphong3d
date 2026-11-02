@@ -1,4 +1,4 @@
-# My Office
+# Nhà Gỗ Office
 
 [English](README.md) · Tiếng Việt
 
@@ -14,7 +14,7 @@ node bin/cli.mjs start                # rồi mở http://localhost:4310
 node bin/cli.mjs chat-setup --write   # cho Chat của Claude báo các cuộc trò chuyện (xem hướng dẫn)
 ```
 
-![My Office: tầng công ty với các phiên đang làm việc](docs/media/demo.gif)
+![Nhà Gỗ Office: tầng công ty với các phiên đang làm việc](docs/media/demo.gif)
 
 Văn phòng chibi 3D cho thấy các session Claude Code đang làm gì, kèm bảng "Máy Mac" để xem RAM, CPU, ổ đĩa và giải phóng.
 
@@ -24,7 +24,7 @@ Mở: http://localhost:4310 · Xem thử không cần Claude Code: http://localh
 
 Chạy được trên macOS, Linux và Windows (bảng máy đọc từng hệ điều hành theo cách riêng; mở cửa sổ IDE và thoát app chỉ có trên macOS). Giao diện mặc định là tiếng Anh; đổi sang tiếng Việt trong **Cài đặt → Ngôn ngữ** (hoặc đặt `OFFICE_LANG=vi`).
 
-> My Office là dự án cộng đồng, không do Anthropic làm, bảo trợ hay liên kết.
+> Nhà Gỗ Office là dự án cộng đồng, không do Anthropic làm, bảo trợ hay liên kết.
 
 ## Cài
 
@@ -35,12 +35,12 @@ node bin/cli.mjs install --service   # thêm hook vào ~/.claude/settings.json +
 node bin/cli.mjs doctor              # kiểm tra Node, curl, server, đủ hook, dịch vụ nền
 ```
 
-`install` sao lưu `settings.json` trước khi sửa và chỉ thêm hook của My Office (chạy lại không thêm trùng). Gỡ: `node bin/cli.mjs uninstall`.
+`install` sao lưu `settings.json` trước khi sửa và chỉ thêm hook của Nhà Gỗ Office (chạy lại không thêm trùng). Gỡ: `node bin/cli.mjs uninstall`.
 
 | Lệnh | Việc |
 | --- | --- |
 | `install [--service] [--lan] [--no-approve] [--no-status] [--no-otel] [--no-otel-names]` | Thêm 13 hook báo sự kiện, hook duyệt quyền, hook trả lời câu hỏi / duyệt kế hoạch, và status line báo hạn mức gói (status line cũ của bạn vẫn chạy bên trong). Bật luôn số liệu dùng của chính Claude Code (OpenTelemetry) cho "Cái gì đang ăn gói", trừ khi bạn đã gửi nó đi chỗ khác. `--service`: chạy nền bằng launchd. `--lan`: cho điện thoại cùng wifi xem. `--no-approve`: bỏ hai hook duyệt. `--no-status`: không đụng status line. `--no-otel`: không bật số liệu dùng; `--no-otel-names`: giữ ẩn tên MCP, skill, agent bạn tự thêm ("custom") |
-| `uninstall` | Gỡ mọi hook của My Office, phần cài đặt số liệu dùng do install thêm, và dịch vụ nền; giữ nguyên phần còn lại của `settings.json` |
+| `uninstall` | Gỡ mọi hook của Nhà Gỗ Office, phần cài đặt số liệu dùng do install thêm, và dịch vụ nền; giữ nguyên phần còn lại của `settings.json` |
 | `doctor` | Kiểm tra từng bước, nói rõ thiếu gì và lệnh sửa |
 | `start [--lan]` | Chạy server ở cửa sổ hiện tại (không dùng launchd) |
 | `pin [--new]` | Xem mã PIN điện thoại; `--new` đổi mã và đăng xuất mọi điện thoại |
@@ -184,4 +184,4 @@ npm run build && npm run test:e2e
 
 ## Giấy phép
 
-[MIT](LICENSE). Tên và logo thương hiệu nhắc tới trong dự án vẫn thuộc về chủ sở hữu; My Office không liên kết với các thương hiệu đó.
+[MIT](LICENSE). Tên và logo thương hiệu nhắc tới trong dự án vẫn thuộc về chủ sở hữu; Nhà Gỗ Office không liên kết với các thương hiệu đó.

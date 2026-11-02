@@ -59,5 +59,5 @@ export default {
   demoDone: '{done} (bản demo)',
   expired: 'Yêu cầu này đã hết hạn.',
   sent: 'Đã gửi.',
-  unreachable: 'Không gửi được tới My Office.',
+  unreachable: 'Không gửi được tới Nhà Gỗ Office.',
 };

@@ -1,7 +1,7 @@
 // The company's group chat (ui/group-chat.js): the window, and what people write in it. An array is several ways to
 // say the same thing, one picked at random.
 export default {
-  group: 'Công ty My Office',
+  group: 'Công ty Nhà Gỗ Office',
   open: 'Nhóm chat',
   openTitle: 'Nhóm chat của công ty: mọi người nhắn về việc đang làm (chỉ trên máy này, không gửi cho Claude)',
   members: '{n} thành viên',
@@ -15,7 +15,7 @@ export default {
   yesterday: 'Hôm qua',
   claudeTag: 'Claude',
   notifyBar: '🔔 Bật thông báo để biết ngay khi Claude trả lời, kể cả lúc khoá máy.',
-  notifyBarInstall: '🔔 Muốn được báo khi Claude trả lời? Thêm My Office vào màn hình chính trước.',
+  notifyBarInstall: '🔔 Muốn được báo khi Claude trả lời? Thêm Nhà Gỗ Office vào màn hình chính trước.',
   notifyBarBtn: 'Bật',
   conv: { open: 'Xem cả cuộc trò chuyện', back: 'Về nhóm', gone: 'Cuộc trò chuyện này không còn mở trên Mac.', summary: '📄 Tóm tắt phần trước (bấm để xem)' },
   quick: {
@@ -114,7 +114,7 @@ export default {
     subNew: '📁 {folder} · phiên mới, Claude làm thật',
     subMine: '📁 {folder} · đang tiếp phiên mới của bạn',
     nudgeOn: '🔔 Muốn điện thoại báo ngay khi Claude trả lời? Bật thông báo ở ⚙ → Khác → 📱.',
-    nudgeInstall: '🔔 Muốn được báo khi Claude trả lời? Thêm My Office vào màn hình chính (nút Chia sẻ → Thêm vào MH chính), rồi bật thông báo ở ⚙ → Khác → 📱.',
+    nudgeInstall: '🔔 Muốn được báo khi Claude trả lời? Thêm Nhà Gỗ Office vào màn hình chính (nút Chia sẻ → Thêm vào MH chính), rồi bật thông báo ở ⚙ → Khác → 📱.',
     label: 'Gửi tới',
     group: 'Cả nhóm',
     groupSub: 'Trò chuyện vui trong nhóm, không gửi cho Claude',

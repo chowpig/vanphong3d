@@ -68,9 +68,9 @@ export default {
     gone: 'Việc này không còn trên bảng.',
   },
   loop: {
-    deny: 'My Office đã chặn lệnh này: nó đã chạy {n} lần và lần nào cũng lỗi y hệt, chạy lại y như cũ sẽ lại lỗi. Hãy đổi cách khác, hoặc dừng lại hỏi người dùng.',
-    stopReason: 'Người dùng đã bấm Dừng trong My Office.',
-    hintFor: 'Người dùng gửi gợi ý từ My Office: {hint}',
+    deny: 'Nhà Gỗ Office đã chặn lệnh này: nó đã chạy {n} lần và lần nào cũng lỗi y hệt, chạy lại y như cũ sẽ lại lỗi. Hãy đổi cách khác, hoặc dừng lại hỏi người dùng.',
+    stopReason: 'Người dùng đã bấm Dừng trong Nhà Gỗ Office.',
+    hintFor: 'Người dùng gửi gợi ý từ Nhà Gỗ Office: {hint}',
     pushTitle: '⛔ {name} đang bị kẹt',
     resting: '{name} đang nghỉ rồi, không có gì để dừng.',
     gone: 'Phiên này đã đóng.',
@@ -79,14 +79,14 @@ export default {
     nudgeTitle: '☕ {name} còn {n} phút là nguội',
     nudgeBody: 'Phiên đang chờ bạn trả lời. Trả lời ngay thì nhắn tiếp rẻ; để nguội thì lần nhắn sau sẽ đọc lại ~{tokens}k token.',
   },
-  steer: { note: '[Người dùng chen lời qua My Office (từ điện thoại) trong lúc bạn đang làm]\n{text}' },
+  steer: { note: '[Người dùng chen lời qua Nhà Gỗ Office (từ điện thoại) trong lúc bạn đang làm]\n{text}' },
   push: {
     permTitle: '⚠️ {name} cần bạn duyệt (trong 45 giây)',
-    testTitle: '🔔 My Office',
+    testTitle: '🔔 Nhà Gỗ Office',
     testBody: 'Thông báo đã chạy: Claude trả lời hay cần duyệt là điện thoại báo ngay.',
   },
   pin: {
-    title: 'Vào My Office',
+    title: 'Vào Nhà Gỗ Office',
     help: 'Nhập mã PIN. Mã nằm trên {mac}: bấm 📱 trong văn phòng.',
     label: 'Mã PIN',
     submit: 'Vào văn phòng',
@@ -98,7 +98,7 @@ export default {
     needed: 'Cần mã PIN.',
   },
   perm: {
-    denied: 'Người dùng đã từ chối trong My Office.',
+    denied: 'Người dùng đã từ chối trong Nhà Gỗ Office.',
     planRevise: 'Người dùng chưa duyệt kế hoạch, muốn sửa tiếp.',
     planReviseWhy: 'Người dùng chưa duyệt kế hoạch, muốn sửa tiếp: {why}',
   },
@@ -189,7 +189,7 @@ export default {
     },
     result: {
       notOffered: 'Tiến trình này không nằm trong danh sách được phép tắt.',
-      protected: 'Không tắt được tiến trình đang chạy My Office.',
+      protected: 'Không tắt được tiến trình đang chạy Nhà Gỗ Office.',
       gone: 'Tiến trình này đã tự tắt.',
       restarted: 'Tiến trình này đã khởi động lại hoặc số PID đã thuộc về tiến trình khác. Bấm “{refresh}” rồi thử lại.',
       stubborn: 'Tiến trình chưa chịu tắt. Bấm “{force}” để dừng ngay.',

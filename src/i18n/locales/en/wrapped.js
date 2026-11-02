@@ -23,7 +23,7 @@ export default {
   longest: '⏱️ Longest unbroken run: {time}',
   commits: { one: '🖨️ {c} commit', other: '🖨️ {c} commits' },
   pushes: { one: '🚀 {c} push', other: '🚀 {c} pushes' },
-  footer: 'My Office · a 3D office for Claude Code',
+  footer: 'Nhà Gỗ Office · a 3D office for Claude Code',
   fileName: 'my-office-week-{date}.png',
   fileNow: 'latest',
   copied: 'Image copied. Paste it into your post.',

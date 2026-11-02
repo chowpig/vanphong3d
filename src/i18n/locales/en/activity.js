@@ -47,7 +47,7 @@ export default {
   sessions: { one: '{n} session', other: '{n} sessions' },
   subsRunning: { one: '{n} subagent running', other: '{n} subagents running' },
   noSessions: 'No sessions yet',
-  docTitle: '({n}) Your turn · My Office',
+  docTitle: '({n}) Your turn · Nhà Gỗ Office',
   // net/live.js: the connection chip and the team name over each pod of desks
   live: {
     on: 'receiving data',
