@@ -7,7 +7,10 @@ export default {
     xaydung: 'Sites, building work, drawings, estimates',
     troly: 'Personal matters and everything else',
   },
-  cabin: 'The Cabin · Assistants',
+  cabin: 'Show the assistants in the office',
+  guardName: 'Security',
+  guard: ['Just doing my round, checking the doors.', 'All quiet, everyone!', 'Are the lights off? Let me check.', 'On patrol 🔦', 'Nothing unusual today.', 'Front door is locked tight!'],
+  cleanerLines: ['Just wiping here for a moment!', 'Wet floor, careful everyone!', 'A quick tidy-up 🧹'],
   bubble: {
     work: ['Let me check the ledger…', 'On it, one moment!', 'Give me a second ✍️', 'Pulling it together now!', 'I’m on it!'],
     done: ['All done! ✨', 'Finished, boss!', 'Done, have a look!', 'Complete 😊'],

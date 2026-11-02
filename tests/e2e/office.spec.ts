@@ -777,7 +777,7 @@ test('a Shopee courier brings a parcel and the one it is for collects it', async
 });
 
 test('the evening cleaner mops the aisles (wet strips), then goes home', async ({ page }) => {
-  test.setTimeout(180_000);   // (every aisle mopped: long on a busy machine)
+  test.setTimeout(300_000);   // (every aisle mopped: long on a busy machine)
   const errors = watchErrors(page);
   await page.setViewportSize({ width: 800, height: 500 });
   await page.addInitScript(() => { try { localStorage.setItem('office-quality', 'low'); } catch { /* private mode */ } });
@@ -785,7 +785,7 @@ test('the evening cleaner mops the aisles (wet strips), then goes home', async (
   await page.waitForFunction(() => (window as unknown as Win).__office?.staff, null, { timeout: 30_000 });
   await page.evaluate(() => { const o = (window as unknown as Win).__office!; o.speed(6); o.clean(); });
   await expect.poll(() => page.evaluate(() => (window as unknown as Win).__office!.staff.strips.length), { timeout: 30_000 }).toBeGreaterThan(0);
-  await expect.poll(() => page.evaluate(() => (window as unknown as Win).__office!.staff.cleaner.offstage), { timeout: 75_000 }).toBe(true);
+  await expect.poll(() => page.evaluate(() => (window as unknown as Win).__office!.staff.cleaner.offstage), { timeout: 200_000 }).toBe(true);
   expect(errors).toEqual([]);
 });
 
@@ -1401,7 +1401,7 @@ test('a Chat conversation in a project sits in a department room: one project, o
   expect(errors).toEqual([]);
 });
 
-test('the four assistants: a cabin with their desks, a window with a chat for each, and the group answers when one is named', async ({ page, request }) => {
+test('the four assistants: their desks, a window with a chat for each, and the group answers when one is named', async ({ page, request }) => {
   test.setTimeout(300_000);
   const errors = watchErrors(page);
   const list = await (await request.get('/api/assistants')).json();

@@ -152,7 +152,8 @@ function greetings(r) {
 function hello(r, key) { greetAt = state.sim + 6; say(r, key, null, 3500); r.waveUntil = state.sim + 1.3; r.faceTarget = 0; }
 
 /* ---------- the cleaner: trolley, mop, signs, wet strips ---------- */
-const CLEAN_FROM = 18 * 60 + 30, CLEAN_TO = 19 * 60 + 30, MOP_SPEED = 0.42;
+const CLEAN_FROM = 18 * 60 + 30, MOP_SPEED = 0.42, ROUND_EVERY = 40;   // (a round every 40 office minutes; CLEAN_FROM: after it the bin counts as emptied for the day)
+let lastRound = -1e9;
 let trolley, mopHand, mopCart, binG, heap, bagOnCart, cleanDay = '', cleanedAt = -1;
 const strips = [];   // { mesh, sign, w (the nav strip), dryAt }
 let stripGeo, stripM;
@@ -372,8 +373,8 @@ export function setup() {
   cleaner = new (class extends Staff {
     step() {
       if (!this.offstage || this.leavingNow || replay.on) return;
-      const m = minutes();
-      if (cleanDay !== today() && m >= CLEAN_FROM && m < CLEAN_TO) startCleaning();
+      const m = minutes(), at = Math.floor(officeNow().getTime() / 60000);
+      if (m >= 420 && m < 1260 && at - lastRound >= ROUND_EVERY) { lastRound = at; startCleaning(); }   // (rounds all day, on her own: the first as soon as the office is up)
     }
   })({ name: tr('people.staff.cleaner'), shirt: '#6FA8D6', hair: '#2B2B2B', style: 'bun', acc: null, outfit: 'shirt', pants: '#3B5F86', shoes: '#3A3A40' }, '__cleaner');
   cleaner.root.add(mopHand);

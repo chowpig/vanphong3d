@@ -81,7 +81,7 @@ Phones (optional): the phone button turns on "Open on phones"; phones need the 8
 
 ## The four standing assistants (Accounting, HR, Construction, Assistant)
 
-A small **wooden cabin** on the lawn east of the building holds four desks and four people. They are not Claude sessions: they are your standing assistants.
+A row of four desks along the meeting room's glass, inside the company floor, holds four people. They are not Claude sessions: they are your standing assistants. (The small Cozy office has no room for them; the chat window still works there.) Two more people walk about on their own all day: the **janitor** mops the aisles in rounds, every 40 minutes from 7:00 to 21:00, and the **security guard** patrols, stops to check, jots in his book and says a few words.
 
 - **Each one owns an area.** The office keeps a **ledger** (on your computer, in `data/assistants/`) of every Chat and Cowork conversation it sees: title, project, a short note, running or ended. A conversation belongs to an area when its title, project or note holds the area's words (accounting, invoice, tax… / HR, hiring, payroll… / construction, site, drawings…). Whatever is none of the first three goes to **Assistant** (personal matters and everything else). The words can be changed in each one's ⚙. The ledger holds only what Chat and Cowork told the office; it cannot read your claude.ai profile or history.
 - **Click one** (or the **Assistants** button, top left) to open a chat of their own. They answer with Claude Code from their ledger and your chat history only; with nothing in the ledger they say so.

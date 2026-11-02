@@ -7,7 +7,10 @@ export default {
     xaydung: 'Công trình, thi công, bản vẽ, dự toán',
     troly: 'Việc cá nhân và mọi việc còn lại',
   },
-  cabin: 'Nhà Gỗ · Trợ lý',
+  cabin: 'Xem các trợ lý trong văn phòng',
+  guardName: 'Bảo vệ',
+  guard: ['Em đi một vòng kiểm tra cửa nẻo ạ.', 'Mọi thứ yên ổn nha mọi người!', 'Đèn tắt hết chưa nhỉ, để em coi.', 'Em đi tuần đây ạ 🔦', 'Hôm nay không có gì lạ ạ.', 'Cửa chính khoá chắc rồi nha!'],
+  cleanerLines: ['Lau chỗ này một chút nha!', 'Sàn trơn nha mọi người, cẩn thận ạ!', 'Dọn dẹp xíu cho sạch sẽ ạ 🧹'],
   bubble: {
     work: ['Để em xem sổ đã ạ…', 'Em đang tra đây, sếp chờ xíu nha!', 'Đợi em một chút nha sếp ✍️', 'Em tổng hợp ngay ạ!', 'Có em đây, đang làm liền ạ!'],
     done: ['Xong rồi ạ! ✨', 'Em báo sếp xong nè!', 'Dạ xong ạ, sếp xem giúp em nhé!', 'Hoàn thành ạ 😊'],

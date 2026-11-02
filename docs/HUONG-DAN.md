@@ -165,7 +165,7 @@ Mở một tác vụ Cowork mới. Đầu phiên có dòng "Nhà Gỗ Office: đ
 
 ### Bốn trợ lý cố định (Kế Toán, Nhân Sự, Xây Dựng, Trợ Lý)
 
-Bên phải toà nhà có một **nhà gỗ** nhỏ trên bãi cỏ, bốn bàn, bốn người. Họ không phải phiên Claude: họ là trợ lý của bạn, luôn ở đó.
+Ngay trong tầng công ty, dọc kính phòng họp, có một dãy bốn bàn với bốn người. Họ không phải phiên Claude: họ là trợ lý của bạn, luôn ở đó. (Văn phòng nhỏ "Cozy" không có chỗ cho họ; khung chat vẫn dùng được.) Hai người nữa đi lại tự động cả ngày: **lao công** lau các lối đi theo vòng, cứ 40 phút một lần (7:00 đến 21:00), và **bảo vệ** đi tuần, dừng lại kiểm tra, ghi sổ và nói vài câu.
 
 - **Mỗi người nắm một mảng.** Văn phòng ghi vào một **sổ** (trên máy bạn, thư mục `data/assistants/`) mọi cuộc trò chuyện Chat và Cowork nó thấy: tiêu đề, dự án, ghi chú ngắn, đang chạy hay đã kết thúc. Một cuộc trò chuyện thuộc mảng nào khi tiêu đề, dự án hoặc ghi chú của nó có đủ từ khoá của mảng đó (kế toán, hoá đơn, thuế… / nhân sự, tuyển dụng, lương… / xây dựng, công trình, thi công… ). Cái nào không thuộc ba mảng đầu thì về **Trợ Lý** (việc cá nhân và mọi việc còn lại). Từ khoá sửa được trong ⚙ của từng người. Sổ chỉ có những gì Chat/Cowork tự báo cho văn phòng; văn phòng không đọc được hồ sơ hay lịch sử claude.ai của bạn.
 - **Bấm vào nhân vật** (hoặc nút **Trợ lý** ở góc trên bên trái) để mở khung chat riêng. Họ trả lời bằng Claude Code, chỉ dựa trên sổ của mình và lịch sử trò chuyện với bạn; không có sổ thì họ nói thẳng là chưa có.
