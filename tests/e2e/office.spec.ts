@@ -1270,7 +1270,7 @@ test('my projects: a list in Settings makes room for every name, and a Cowork se
   const errors = watchErrors(page);
   type Floor = { plan: string; projects: number; people: { id: string; project: string }[] };
   const floor = () => page.evaluate(() => (window as unknown as { __office: { floor: () => unknown } }).__office.floor()) as Promise<Floor>;
-  const names = ['INFO', 'KẾ TOÁN', 'BÁN HÀNG', 'KHO', 'KHO HÀNG', 'KẾ TOÁN', 'BÁN LẺ', 'GIAO NHẬN'];
+  const names = ['INFO', 'KẾ TOÁN', 'BÁN HÀNG', 'KHO', 'KHO HÀNG', 'TÀI CHÍNH', 'BÁN LẺ', 'GIAO NHẬN'];
   const id = `e2e-cowork-${Date.now()}`, cwd = path.join(HOME_DIR, 'ke-toan'); fs.mkdirSync(cwd, { recursive: true });
   try {
     // the server keeps the list (accents and case do not matter when matching) and refuses what is not a list
