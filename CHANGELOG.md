@@ -2,6 +2,11 @@
 
 Vanphong3d, a fork of [My Office](https://github.com/khanh020905/my-office). The first entry lists what this fork changed.
 
+## 0.4.0
+
+### Added
+- **Four standing assistants**: Kế Toán, Nhân Sự, Xây Dựng and Trợ Lý sit in a wooden cabin east of the office. Each knows the Chat and Cowork conversations of its area, running or ended, from a ledger kept on this computer (`data/assistants/`). Click one (or the Assistants button) for a chat of their own; name one in the group chat and they answer there, lively; "Give a job" runs Claude Code in their own working folder with the usual approvals. Words of each area and the folder are set in their ⚙.
+
 ## 0.3.1
 
 ### Changed

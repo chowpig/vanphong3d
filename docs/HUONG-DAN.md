@@ -163,6 +163,15 @@ Mở một tác vụ Cowork mới. Đầu phiên có dòng "Nhà Gỗ Office: đ
 - **Nhóm chat "Công ty Nhà Gỗ Office"**: các nhân vật báo việc ở đây. Họ nói về công việc thật: nhận việc gì, xong chưa, sửa bao nhiêu file, mất bao lâu. Lời thoại có nhiều biến thể và không lặp lại câu vừa nói.
 - **Cài đặt** có các tab Văn phòng, Nhân vật, Hiển thị, Khác: cỡ văn phòng, giờ ngày/đêm, thời tiết, kiểu nhân vật, ngôn ngữ, chất lượng đồ họa, dự án của tôi, hiện cả phiên Claude Code.
 
+### Bốn trợ lý cố định (Kế Toán, Nhân Sự, Xây Dựng, Trợ Lý)
+
+Bên phải toà nhà có một **nhà gỗ** nhỏ trên bãi cỏ, bốn bàn, bốn người. Họ không phải phiên Claude: họ là trợ lý của bạn, luôn ở đó.
+
+- **Mỗi người nắm một mảng.** Văn phòng ghi vào một **sổ** (trên máy bạn, thư mục `data/assistants/`) mọi cuộc trò chuyện Chat và Cowork nó thấy: tiêu đề, dự án, ghi chú ngắn, đang chạy hay đã kết thúc. Một cuộc trò chuyện thuộc mảng nào khi tiêu đề, dự án hoặc ghi chú của nó có đủ từ khoá của mảng đó (kế toán, hoá đơn, thuế… / nhân sự, tuyển dụng, lương… / xây dựng, công trình, thi công… ). Cái nào không thuộc ba mảng đầu thì về **Trợ Lý** (việc cá nhân và mọi việc còn lại). Từ khoá sửa được trong ⚙ của từng người. Sổ chỉ có những gì Chat/Cowork tự báo cho văn phòng; văn phòng không đọc được hồ sơ hay lịch sử claude.ai của bạn.
+- **Bấm vào nhân vật** (hoặc nút **Trợ lý** ở góc trên bên trái) để mở khung chat riêng. Họ trả lời bằng Claude Code, chỉ dựa trên sổ của mình và lịch sử trò chuyện với bạn; không có sổ thì họ nói thẳng là chưa có.
+- **Trong nhóm chat chung**, nhắn tên họ ("@Kế Toán tháng này sao rồi?", "Nhân sự ơi…") thì họ ngồi gõ phím và trả lời vui vẻ ngay trong nhóm.
+- **Giao việc**: ở khung chat riêng bấm **Giao việc**, hoặc trong nhóm viết một lệnh có tên họ ("Kế Toán soạn giúp anh…", "giao việc cho Xây Dựng…"). Họ chạy Claude Code **trong thư mục làm việc của họ** (đặt ở ⚙ → Thư mục làm việc, chỉ đặt được trên máy chạy văn phòng) và hỏi bạn duyệt như mọi phiên khác khi cần sửa file hay chạy lệnh. Chưa đặt thư mục thì họ không nhận việc.
+- Cần đã đăng nhập Claude Code (`claude auth login`). Mỗi câu hỏi là một lần gọi Claude (tối đa 60 lần mỗi giờ), tính vào gói của tài khoản mà các phiên mới đang dùng.
 ### Hiện cả phiên Claude Code
 
 Mặc định văn phòng **chỉ vẽ Chat và Cowork**. Muốn thấy cả các phiên Claude Code (terminal, VS Code, tab Code), tick **Cài đặt → Văn phòng → Hiện cả phiên Claude Code**. Khi đó nên chạy `node bin/cli.mjs install` để Claude Code gửi sự kiện.

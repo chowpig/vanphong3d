@@ -38,6 +38,7 @@ import { createTenure, FAREWELL_DAYS, FAREWELL_DEFAULT } from './tenure.mjs';
 import { cacheClock, cacheFromResume, cacheFromStatus, cacheGuess } from '../src/shared/cache-clock.js';
 import { createOtel } from './otel.mjs';
 import { createMyProjects } from './myprojects.mjs';
+import { ASSISTANTS, byId as asstById, byKey as asstByKey, createAssistants, isJob, mentioned } from './assistants.mjs';
 import { vmAddresses, vmHandler } from './vmlink.mjs';
 import { managedEnvs, otelOwner } from './otel-setup.mjs';
 import { pickLang, createT } from '../src/i18n/index.js';
@@ -529,7 +530,7 @@ async function replayRange(day, from, to, max = 80_000) {
    Mac's page (POST /api/chat say); you write from any page. Pages get { k: 'chat', op, m | typing } and { k: 'chatact' }. */
 const CHAT_FILE = path.join(DATA_DIR, 'chat.json');
 let chat = null, chatSaveT = null;
-const STAFF_NAME = { __reception: 'people.staff.receptionist', __hr: 'people.staff.hr', __cleaner: 'people.staff.cleaner', __accountant: 'people.accountant.name', __guard: 'people.guard.name', __director: 'people.director', __courier: 'people.staff.shipper', __claude: 'chat.claudeTag' };   // (__claude: a new conversation's answers, before it has a person)
+const STAFF_NAME = { __reception: 'people.staff.receptionist', __hr: 'people.staff.hr', __cleaner: 'people.staff.cleaner', __accountant: 'people.accountant.name', __guard: 'people.guard.name', __director: 'people.director', __courier: 'people.staff.shipper', __claude: 'chat.claudeTag', ...Object.fromEntries(ASSISTANTS.map((a) => [a.id, `asst.name.${a.key}`])) };   // (__claude: a new conversation's answers, before it has a person)
 chat = createChatEngine({
   tr, now: () => Date.now(),
   // (only the conversations the office draws: Chat and Cowork, and Claude Code's sessions when Settings shows them)
@@ -557,9 +558,10 @@ const tasks = createTasks({
   env: () => { const e = { ...process.env }; if (nowDir) e.CLAUDE_CONFIG_DIR = nowDir; return e; },   // (the account new sessions start on)
   bg: { ...bgRun, want: bgOn, settings: () => bgSettings({ port: PORT, win: true, send: SEND }) },
   printSettings: (t) => printSettings({ port: PORT, task: t.id, win: WIN, send: SEND }),   // (a `-p` run tells where its inbox is: server/steer.mjs)
-  onStep: (t, x) => cardStep(t.id, stepOf(x.name, x.input)),
+  onStep: (t, x) => { const st = stepOf(x.name, x.input); cardStep(t.id, st); if (t.from?.staff) asstStep(t, st); },
   onBg: (t, what, detail) => onBgTask(t, what, detail),
   onDone: (t) => {
+    if (t.from?.staff) { asstJobDone(t); return; }
     if (t.sid) taskSids.add(t.sid);
     const card = cards.get(t.id); cards.delete(t.id);
     if (card) { clearTimeout(card.timer); chat.setWork(card.id, { state: t.stopped ? 'stopped' : t.error && !t.result ? 'fail' : 'done', steps: card.steps, n: card.n, end: Date.now(), perm: null, ask: null }); }
@@ -582,6 +584,76 @@ const tasks = createTasks({
 /* ---------- "✨ Viết lại cho rõ", the chat's prompt helper (server/rewrite.mjs): a message for Claude, made clearer by a
    small model, on the account new sessions start on, in an empty folder of the office's ---------- */
 const rewriter = createRewriter({ claude: () => findClaude(), env: () => { const e = { ...process.env }; if (nowDir) e.CLAUDE_CONFIG_DIR = nowDir; return e; }, dir: path.join(DATA_DIR, 'rewrite') });
+/* ---------- the four assistants (server/assistants.mjs): Kế Toán, Nhân Sự, Xây Dựng, Trợ Lý ----------
+   Each knows the conversations of its area (a ledger kept in data/assistants/), answers you in its own chat or in the
+   group when it is named, and does a job in its own folder when you give it one (a run like "Giao việc": it asks for
+   approval through the office). Pages get { k: 'asst', op: 'state' | 'msg' | 'step', key, … }. */
+const assistants = createAssistants({ dataDir: DATA_DIR, claude: () => findClaude(), env: () => { const e = { ...process.env }; if (nowDir) e.CLAUDE_CONFIG_DIR = nowDir; return e; } });
+const asstName = (k) => tr(`asst.name.${k}`);
+const asstJobs = new Map();   // task id -> assistant key
+const asstBusy = new Map();   // assistant key -> how many things it is doing now (an answer, a job)
+function asstState(k, on) {
+  const n = Math.max(0, (asstBusy.get(k) || 0) + (on ? 1 : -1)); asstBusy.set(k, n);
+  broadcast({ k: 'asst', op: 'state', key: k, state: n ? 'work' : 'idle' });
+}
+const asstSay = (k, m) => broadcast({ k: 'asst', op: 'msg', key: k, m });
+function asstSweep() {   // (every conversation the office draws goes into the ledger; the ones that went stay in it, as ended)
+  assistants.touch([...sessions.values()].filter((s) => s.src || showCode()).map((s) => ({
+    id: s.id, title: s.title || s.name || '', src: s.src || '', status: s.status,
+    project: myProjects.match([s.coworkProject, s.title, gitRepoName(s), path.basename(s.cwd || '')], { loose: !!s.src }) || (s.src && s.coworkProject) || (s.src && s.title) || path.basename(s.cwd || ''),
+    note: s.lastPrompt ? clip(oneLine(unwrapPaste(s.lastPrompt)), 100) : '',
+  })));
+}
+setInterval(asstSweep, 15_000).unref();
+const asstOut = (mac) => ASSISTANTS.map((a) => ({ key: a.key, id: a.id, name: asstName(a.key), words: assistants.words()[a.key], fixedWords: a.key === 'troly', dir: mac ? assistants.dirOf(a.key) : '', hasDir: !!assistants.dirOf(a.key), counts: assistants.counts(a.key), busy: !!asstBusy.get(a.key), history: assistants.history(a.key).slice(-60) }));
+/** A question: answered by Claude from the ledger, in the assistant's chat (mode 'dm') or in the group ('group'). */
+async function asstReply(k, text, mode) {
+  const a = asstByKey(k), name = asstName(k); if (!a) return;
+  asstSay(k, assistants.remember(k, 'me', text, { via: mode }));
+  asstState(k, true); if (mode === 'group') chat.working(a.id, true);
+  const r = await assistants.ask({ key: k, name, text, mode }).catch(() => ({ ok: false, code: 'failed' }));
+  if (mode === 'group') chat.working(a.id, false);
+  asstState(k, false);
+  const said = r.ok ? r.text : tr(`asst.why.${r.code}`, { detail: r.detail || '' });
+  asstSay(k, assistants.remember(k, r.ok ? 'ai' : 'sys', said, { via: mode }));
+  if (mode === 'group') chat.say(a.id, said, { now: true, react: r.ok ? ['❤️', '👍', '😆'] : undefined, reacts: 2 });
+}
+/** A job: a run in the assistant's folder, with its tools and its approvals. via: 'dm' | 'group'. -> { ok, code? } */
+function asstWork(k, text, via) {
+  const a = asstByKey(k), name = asstName(k), dir = assistants.dirOf(k); if (!a) return { ok: false, code: 'empty' };
+  if (!dir) return { ok: false, code: 'noDir' };
+  const mine = via === 'dm' ? assistants.remember(k, 'me', text, { via, job: true }) : null; if (mine) asstSay(k, mine);
+  const r = tasks.start({ dir, text, from: { name, orig: `asst:${k}`, chat: true, staff: a.id, via }, system: assistants.jobSystem(k, name) });
+  if (!r.ok) { const m = assistants.remember(k, 'sys', tr(`asst.why.${r.code}`, { detail: '' }), { via }); asstSay(k, m); if (via === 'group') chat.say(a.id, m.t, { now: true }); return r; }
+  asstJobs.set(r.task.id, k); asstState(k, true);
+  if (via === 'group') {   // (in the group, a card with its steps, like any run from the office)
+    const card = chat.workCard(a.id, { state: 'work', steps: [], n: 0, at: Date.now(), task: r.task.id });
+    if (card) cards.set(r.task.id, { id: card.id, steps: [], n: 0, at: Date.now(), timer: 0 });
+  }
+  fsp.appendFile(ACTION_LOG, `${new Date().toISOString()} assistant ${k} job in ${dir} started ${clip(oneLine(text), 100)}\n`).catch(() => {});
+  return { ok: true };
+}
+function asstStep(t, st) { const k = asstJobs.get(t.id); if (k) broadcast({ k: 'asst', op: 'step', key: k, step: st }); }
+function asstJobDone(t) {
+  const k = asstJobs.get(t.id); asstJobs.delete(t.id); const a = asstByKey(k) || asstById(t.from?.staff); if (!a) return;
+  asstState(a.key, false);
+  const card = cards.get(t.id); cards.delete(t.id);
+  if (card) { clearTimeout(card.timer); chat.setWork(card.id, { state: t.stopped ? 'stopped' : t.error && !t.result ? 'fail' : 'done', steps: card.steps, n: card.n, end: Date.now(), perm: null, ask: null }); }
+  for (const x of sessions.values()) if (x.viaOffice === t.id) delete x.viaOffice;
+  const text = t.stopped && !t.result ? tr('chat.task.stopped') : t.error && !t.result ? tr('chat.task.failed', { folder: path.basename(t.dir), error: clip(oneLine(t.error), 200) }) : clip(t.result || tr('chat.task.doneEmpty'), 3800);
+  asstSay(a.key, assistants.remember(a.key, 'ai', text, { job: true, via: t.from?.via }));
+  if (t.from?.via === 'group') chat.say(a.id, clip(text, 560), { now: true, long: true, tag: 'claude', react: ['❤️', '👍'], reacts: 2 });
+  pushOut({ title: `💬 ${asstName(a.key)}`, body: clip(oneLine(text), 180), tag: `task-${t.id}`, url: '/?chat' });
+}
+/** What you wrote in the group: the assistants it names answer (a question) or set to work (a job). */
+function asstRoute(text) {
+  for (const k of mentioned(text, Object.fromEntries(ASSISTANTS.map((a) => [a.key, asstName(a.key)])))) {
+    if (isJob(text)) {
+      const r = asstWork(k, text, 'group');
+      if (!r.ok && r.code === 'noDir') chat.say(asstByKey(k).id, tr('asst.why.noDir'), { delay: 900 });
+    } else asstReply(k, text, 'group');
+  }
+}
 /* ---------- notifications on the phones that said yes (server/push.mjs): Claude's answers, and an approval a run started
    from the office needs while nobody has the office open; none while an office page is looked at ---------- */
 const claudeVersion = createClaudeVersion({ dataDir: DATA_DIR });   // (Claude Code's version on this computer, server/claude-version.mjs)
@@ -2333,6 +2405,26 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
+  if (url.pathname === '/api/assistants' && req.method === 'POST') {   // { op: 'chat', key, text, job } | { op: 'config', key, words?, dir? } (jobs and config only from this computer)
+    if (!authorized(req, url) || !sameOriginOf(req) || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false }); return; }
+    const mac = isLoopback(req);
+    readJson(req, 64_000).then((b) => {
+      const k = String(b?.key || ''), op = String(b?.op || '');
+      if (!asstByKey(k)) { json(res, 400, { ok: false }); return; }
+      if (op === 'config') {
+        if (!mac) { json(res, 403, { ok: false, message: tr('server.api.approveOnMac') }); return; }
+        const ok = assistants.setConfig(k, { ...(Array.isArray(b.words) && { words: b.words.map(String) }), ...(typeof b.dir === 'string' && { dir: b.dir }) });
+        json(res, ok ? 200 : 400, ok ? { ok: true, list: asstOut(true) } : { ok: false, message: tr('asst.badDir') }); return;
+      }
+      const text = String(b?.text || '').trim().slice(0, 1500); if (op !== 'chat' || !text) { json(res, 400, { ok: false }); return; }
+      if (b.job) {
+        if (!mac) { json(res, 403, { ok: false, message: tr('server.api.approveOnMac') }); return; }
+        const r = asstWork(k, text, 'dm'); json(res, r.ok ? 200 : 409, r.ok ? { ok: true } : { ok: false, code: r.code, message: tr(`asst.why.${r.code}`, { detail: '' }) }); return;
+      }
+      asstReply(k, text, 'dm'); json(res, 200, { ok: true });
+    });
+    return;
+  }
   if (url.pathname.startsWith('/api/tasks') && req.method === 'POST') {   // giving Claude work: start (from a phone only when allowed on the Mac), stop, allow
     if (!authorized(req, url) || !sameOriginOf(req) || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false }); return; }
     const mac = isLoopback(req);
@@ -2375,7 +2467,7 @@ const server = http.createServer((req, res) => {
     if (!authorized(req, url) || !sameOriginOf(req) || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false }); return; }
     readJson(req, 600_000).then((b) => {
       const mac = isLoopback(req), op = String(b?.op || ''), str = (x, n) => String(x ?? '').slice(0, n);
-      if (op === 'send') chat.send({ text: str(b.text, 600), sticker: Number.isInteger(b.sticker) ? b.sticker : null, replyTo: str(b.replyTo, 40) || null });
+      if (op === 'send') { chat.send({ text: str(b.text, 600), sticker: Number.isInteger(b.sticker) ? b.sticker : null, replyTo: str(b.replyTo, 40) || null }); if (b.text) asstRoute(str(b.text, 600)); }
       else if (op === 'react') chat.react(str(b.id, 40), 'me', str(b.emoji, 8));
       else if (op === 'vote') chat.vote(str(b.id, 40), 'me', Number(b.i));
       else if (op === 'rsvp') chat.rsvp(str(b.id, 40), 'me', !!b.yes);
@@ -2593,6 +2685,7 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (url.pathname === '/api/chat') { json(res, 200, chatOut()); return; }
+  if (url.pathname === '/api/assistants') { json(res, 200, { ok: true, list: asstOut(isLoopback(req)) }); return; }
   if (url.pathname === '/api/loop') { json(res, 200, loopOut()); return; }
   if (url.pathname === '/api/tenure') { json(res, 200, tenureOut()); return; }
   if (url.pathname === '/api/cache') { json(res, 200, { ok: true, nudge: !!prefs.get('cacheNudge') }); return; }

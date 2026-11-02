@@ -65,6 +65,7 @@ import * as peopleBilliards from './people/billiards.js';
 import * as peopleKaraoke from './people/karaoke.js';
 import * as peopleFarewell from './people/farewell.js';
 import * as peopleInterns from './people/interns.js';
+import * as peopleAssistants from './people/assistants.js';
 import * as lifeTrophies from './life/trophies.js';
 import * as lifeSeasons from './life/seasons.js';
 import * as lifeRain from './life/rain.js';
@@ -94,6 +95,7 @@ import * as uiPhoto from './ui/photo.js';
 import * as uiTimelapse from './ui/timelapse.js';
 import * as uiGroupChat from './ui/group-chat.js';
 import * as uiGroupChatView from './ui/group-chat-view.js';
+import * as uiAssistants from './ui/assistants.js';
 import * as uiStuck from './ui/stuck.js';
 import * as uiCacheWords from './ui/cache-words.js';
 import * as uiTips from './ui/tips.js';
@@ -178,6 +180,7 @@ const MODULES = [
   peopleKaraoke,
   peopleFarewell,
   peopleInterns,
+  peopleAssistants,
   lifeTrophies,
   lifeSeasons,
   lifeRain,
@@ -207,6 +210,7 @@ const MODULES = [
   uiTimelapse,
   uiGroupChat,
   uiGroupChatView,
+  uiAssistants,
   uiStuck,
   uiCacheWords,
   uiTips,

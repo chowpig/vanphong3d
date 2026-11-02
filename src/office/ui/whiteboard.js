@@ -9,6 +9,7 @@ import { STICKY_COLORS, STICKY_SLOTS, board, boardFace } from '../world/furnitur
 import { ADJ, DESK_SPOTS, NODES, STATIONS, route, standBy, wayTo } from '../people/navigation.js';
 import { colorOf, dn, sessions, subs, workers } from '../people/workers.js';
 import { director } from '../people/director.js';
+import { openAssistant } from './assistants.js';
 import { applyWeather, wx } from '../life/weather.js';
 import { toast } from './activity.js';
 import { openSession, toggleSession } from './session-drawer.js';
@@ -261,6 +262,7 @@ export function setup() {
     if (per.devBox) { openMac(); return; }
     const w = per.worker;
     if (w && w === director) { openPlace('director'); return; }
+    if (w?.asst) { openAssistant(w.asst); return; }
     if (w?.sub) { if (w.parent) openSession(w.parent.id, { tab: 'subs', agent: w.id }); return; }
     if (w && w.anim === 'sleep' && w.phase !== 'walk') w.poke();
     else if (w && state.selectedId !== w.id) errands.lookUp(w);

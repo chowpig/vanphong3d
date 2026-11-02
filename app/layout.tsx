@@ -22,6 +22,7 @@ import '@/styles/todos.css';
 import '@/styles/drawers.css';
 import '@/styles/chat.css';
 import '@/styles/group-chat.css';
+import '@/styles/assistants.css';
 import '@/styles/mac.css';
 import '@/styles/burn.css';
 import '@/styles/modal.css';

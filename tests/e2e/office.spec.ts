@@ -1400,3 +1400,36 @@ test('a Chat conversation in a project sits in a department room: one project, o
   }
   expect(errors).toEqual([]);
 });
+
+test('the four assistants: a cabin with their desks, a window with a chat for each, and the group answers when one is named', async ({ page, request }) => {
+  test.setTimeout(300_000);
+  const errors = watchErrors(page);
+  const list = await (await request.get('/api/assistants')).json();
+  expect(list.list.map((a: { key: string }) => a.key)).toEqual(['ketoan', 'nhansu', 'xaydung', 'troly']);
+  await page.goto('/?debug');
+  await page.waitForFunction(() => !!(window as unknown as { __office?: { openAssistant?: unknown } }).__office?.openAssistant, null, { timeout: 120_000 });
+  await page.evaluate(() => (window as unknown as { __office: { openAssistant: (k: string) => void } }).__office.openAssistant('nhansu'));
+  const panel = page.locator('#asst-panel');
+  await expect(panel).toBeVisible();
+  await expect(panel.locator('.asst-tab')).toHaveText(['Accounting', 'HR', 'Construction', 'Assistant']);
+  await expect(panel.locator('.asst-tab.on')).toHaveText('HR');
+  await expect(panel.locator('.asst-input')).toHaveAttribute('placeholder', /HR/);
+  await panel.locator('.asst-tab', { hasText: 'Construction' }).click();
+  await expect(panel.locator('.asst-input')).toHaveAttribute('placeholder', /Construction/);
+  // a question gets an answer or, where Claude Code is not signed in, the reason: always a reply in its own chat
+  await panel.locator('.asst-input').fill('hello, is anything running this month?');
+  await panel.locator('.asst-send').click();
+  await expect(panel.locator('.asst-msg--me')).toContainText('this month');
+  await expect(panel.locator('.asst-msg--ai, .asst-msg--sys').first()).toBeVisible({ timeout: 100_000 });
+  // naming one in the group: they answer there, and a line that names no one is not answered by them
+  const post = (text: string) => request.post('/api/chat', { data: { op: 'send', text } });
+  await post('@Accounting hello there');
+  await expect.poll(async () => (await (await request.get('/api/chat')).json()).msgs.some((m: { name: string }) => m.name === 'Accounting'), { timeout: 100_000 }).toBe(true);
+  // a job in a folder that was not set is refused with the way out, not started
+  const job = await request.post('/api/assistants', { data: { op: 'chat', key: 'troly', text: 'write a note', job: true } });
+  expect(job.status()).toBe(409);
+  // a folder that is not a folder is refused
+  const bad = await request.post('/api/assistants', { data: { op: 'config', key: 'ketoan', dir: 'relative/path' } });
+  expect(bad.status()).toBe(400);
+  expect(errors.filter((e) => !/Failed to load resource|fetching the script/i.test(e))).toEqual([]);
+});

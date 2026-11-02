@@ -4,6 +4,7 @@ import { $, STATIC, officeNow, rand, replay } from '../core/env.js';
 import { CHAIR_IDLE, chairs } from '../world/desks.js';
 import { sessions, subs, workers } from '../people/workers.js';
 import { chatAct, chatApply, chatLeft, chatLoad } from '../ui/group-chat.js';
+import { asstApply } from '../ui/assistants.js';
 import { setTrophies } from '../life/trophies.js';
 import { addFeed, queueFeed, queueUi, renderFeed, toast } from '../ui/activity.js';
 import { closeSession, drM } from '../ui/session-drawer.js';
@@ -261,6 +262,7 @@ export function applyMsg(d, quiet = false) {
   else if (d.k === 'acctswitch') acctSwitched(d);   // (new sessions moved to another account)
   else if (d.k === 'acctmove') { if (!quiet) acctMoved(d); }
   else if (d.k === 'chat') chatApply(d);   // (the group chat, the same on every page: server/index.mjs)
+  else if (d.k === 'asst') asstApply(d);   // (an assistant answering or on a job: server/assistants.mjs)
   else if (d.k === 'chatact') { if (!quiet) chatAct(d.what); }   // (open conversations moved over too)
   else if (d.k === 'limits') { state.limits = d.limits || null; state.limitsNote = d.note || ''; renderLimits(); if (!drM.hidden) renderMac(); }
   else if (d.k === 'sysauto') { if (!quiet) { toast(d.message, 8000); loadMac(); } }   // (idle sessions closed on the drawer's timer)
