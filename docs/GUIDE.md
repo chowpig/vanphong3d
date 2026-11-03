@@ -75,7 +75,7 @@ creates `cowork-plugin.plugin`. In the Claude app: Customize → Plugins → upl
 
 ## Using the office
 
-Drag to rotate; the wheel zooms about 8% a notch; **W A S D** or the arrow keys move the view across the floor (Shift is faster; they do nothing while you type or while a session is open, and in first person they walk). The group chat reports real work with varied lines. To also draw Claude Code sessions: Settings → Office → **Also show Claude Code sessions** and run `node bin/cli.mjs install`.
+Drag to rotate; hold the right button and drag to slide the view across the floor; the wheel zooms about 8% a notch; **W A S D** or the arrow keys move the view across the floor (Shift is faster; they do nothing while you type or while a session is open, and in first person they walk). The group chat reports real work with varied lines. To also draw Claude Code sessions: Settings → Office → **Also show Claude Code sessions** and run `node bin/cli.mjs install`.
 
 Phones (optional): the phone button turns on "Open on phones"; phones need the 8-digit PIN; use only on a network you trust (plain HTTP).
 

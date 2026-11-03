@@ -13,6 +13,7 @@ const KEYS = /^(Key[WASD]|Arrow(Up|Down|Left|Right))$/;
 const held = new Set();
 const typing = (e) => e.target?.closest?.('input, textarea, select, [contenteditable="true"]');
 const _f = { x: 0, z: 0 };
+const drag = { x: 0, z: 0 };   // what the right button's drag has asked for since the last frame, in floor units
 
 /** the zoom a wheel turn asks for from where the view is (or is already heading), within the camera's limits */
 export const zoomAfter = (from, deltaY, deltaMode = 0, min = 0.1, max = 10) => {
@@ -25,7 +26,13 @@ const bounds = () => ({ x0: -10, x1: 17, z0: -10, z1: (LAYOUT === 'hq' ? 28.3 + 
 
 /** slide the focus point for dt seconds of the held keys (called every frame by the loop; the loop eases the camera to it) */
 export function panStep(dt, focus) {
-  if (!held.size || fp.on || state.selectedId) return;
+  if (fp.on) return;
+  if (drag.x || drag.z) {   // (the right button dragged: the view follows the hand)
+    const b = bounds();
+    focus.x = Math.max(b.x0, Math.min(b.x1, focus.x + drag.x)); focus.z = Math.max(b.z0, Math.min(b.z1, focus.z + drag.z));
+    drag.x = drag.z = 0; state.lastUserCam = performance.now(); setView(null);
+  }
+  if (!held.size || state.selectedId) return;
   const k = (a, b) => (held.has(a) || held.has(b) ? 1 : 0);
   const fwd = k('KeyW', 'ArrowUp') - k('KeyS', 'ArrowDown'), side = k('KeyD', 'ArrowRight') - k('KeyA', 'ArrowLeft');
   if (!fwd && !side) return;
@@ -39,7 +46,30 @@ export function panStep(dt, focus) {
   state.lastUserCam = performance.now(); setView(null);
 }
 
+/** the floor distance a drag of (dx, dy) screen pixels moves the view: the scene follows the hand, so the view goes the other way */
+export function dragToFloor(dx, dy, perPixel, sinElev, fx, fz) {
+  const k = perPixel, back = (dy * k) / Math.max(0.2, sinElev);
+  // right of the view on the floor is (-fz, fx); forward is (fx, fz)
+  return { x: -(-fz) * dx * k + fx * back, z: -fx * dx * k + fz * back };
+}
+
 export function setupCamKeys() {
+  // the right button held and dragged on the 3D view: the view slides across the floor (the left button turns it)
+  const cv = renderer.domElement;
+  let from = null;
+  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+  cv.addEventListener('pointerdown', (e) => { if (e.button === 2 && !fp.on) { from = { x: e.clientX, y: e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch { /* gone */ } } });
+  cv.addEventListener('pointermove', (e) => {
+    if (!from) return;
+    if (!(e.buttons & 2)) { from = null; return; }
+    const dx = e.clientX - from.x, dy = e.clientY - from.y; from = { x: e.clientX, y: e.clientY };
+    _f.x = controls.target.x - camera.position.x; _f.z = controls.target.z - camera.position.z;
+    const len = Math.hypot(_f.x, _f.z) || 1, perPixel = (camera.top - camera.bottom) / camera.zoom / (cv.clientHeight || 1);
+    const m = dragToFloor(dx, dy, perPixel, Math.cos(controls.getPolarAngle()), _f.x / len, _f.z / len);
+    drag.x += m.x; drag.z += m.z;
+  });
+  const end = (e) => { if (e.button === 2 || e.type === 'pointercancel') from = null; };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   addEventListener('keydown', (e) => {
     if (fp.on || typing(e) || e.metaKey || e.ctrlKey || e.altKey || !KEYS.test(e.code)) return;
     held.add(e.code); if (e.code.startsWith('Arrow')) e.preventDefault();

@@ -159,6 +159,7 @@ Mở một tác vụ Cowork mới. Đầu phiên có dòng "Nhà Gỗ Office: đ
 ## 7. Dùng văn phòng
 
 - **Chuột**: kéo để xoay, cuộn để phóng to/thu nhỏ từng chút (mỗi nấc khoảng 8%).
+- **Chuột phải**: giữ nút phải và kéo để di chuyển khung nhìn (cảnh đi theo tay bạn); nút trái vẫn xoay.
 - **Bàn phím**: **W A S D** hoặc phím mũi tên di chuyển khung nhìn ngang dọc, giữ **Shift** để đi nhanh. Khi đang gõ trong ô nhập hoặc đang mở một phiên (khung nhìn bám theo nhân vật), các phím này không di chuyển khung nhìn. Ở chế độ **Hoá thân** (góc nhìn thứ nhất) WASD là đi bộ.
 - **Nhóm chat "Công ty Nhà Gỗ Office"**: các nhân vật báo việc ở đây. Họ nói về công việc thật: nhận việc gì, xong chưa, sửa bao nhiêu file, mất bao lâu. Lời thoại có nhiều biến thể và không lặp lại câu vừa nói.
 - **Cài đặt** có các tab Văn phòng, Nhân vật, Hiển thị, Khác: cỡ văn phòng, giờ ngày/đêm, thời tiết, kiểu nhân vật, ngôn ngữ, chất lượng đồ họa, dự án của tôi, hiện cả phiên Claude Code.

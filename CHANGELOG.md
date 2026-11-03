@@ -2,6 +2,14 @@
 
 Vanphong3d, a fork of [My Office](https://github.com/khanh020905/my-office). The first entry lists what this fork changed.
 
+## 0.4.1
+
+### Added
+- **Right-button drag** slides the view across the floor.
+
+### Fixed
+- The assistants answered "OAuth session expired" when the main Claude account was signed out, even with another account signed in: they now use the first account that has a login.
+
 ## 0.4.0
 
 ### Added

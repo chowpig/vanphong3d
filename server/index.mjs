@@ -588,7 +588,16 @@ const rewriter = createRewriter({ claude: () => findClaude(), env: () => { const
    Each knows the conversations of its area (a ledger kept in data/assistants/), answers you in its own chat or in the
    group when it is named, and does a job in its own folder when you give it one (a run like "Giao việc": it asks for
    approval through the office). Pages get { k: 'asst', op: 'state' | 'msg' | 'step', key, … }. */
-const assistants = createAssistants({ dataDir: DATA_DIR, claude: () => findClaude(), env: () => { const e = { ...process.env }; if (nowDir) e.CLAUDE_CONFIG_DIR = nowDir; return e; } });
+// The account the assistants ask on: the one new sessions start on; if that has no usable login (tokens empty or gone), the
+// first other account folder (~/.claude-*) that has one, so a signed-out main account does not stop them answering.
+const hasLogin = (d) => { try { const o = JSON.parse(fs.readFileSync(path.join(d, '.credentials.json'), 'utf8')).claudeAiOauth; return !!(o?.refreshToken || o?.accessToken); } catch { return false; } };
+function asstAccount() {
+  const main = nowDir || CLAUDE_DIR;
+  if (hasLogin(main)) return nowDir || '';
+  try { for (const n of fs.readdirSync(HOME)) if (/^\.claude-/.test(n) && hasLogin(path.join(HOME, n))) return path.join(HOME, n); } catch { /* none */ }
+  return nowDir || '';
+}
+const assistants = createAssistants({ dataDir: DATA_DIR, claude: () => findClaude(), env: () => { const e = { ...process.env }, d = asstAccount(); if (d) e.CLAUDE_CONFIG_DIR = d; return e; } });
 const asstName = (k) => tr(`asst.name.${k}`);
 const asstJobs = new Map();   // task id -> assistant key
 const asstBusy = new Map();   // assistant key -> how many things it is doing now (an answer, a job)
@@ -623,7 +632,7 @@ function asstWork(k, text, via) {
   const a = asstByKey(k), name = asstName(k), dir = assistants.dirOf(k); if (!a) return { ok: false, code: 'empty' };
   if (!dir) return { ok: false, code: 'noDir' };
   const mine = via === 'dm' ? assistants.remember(k, 'me', text, { via, job: true }) : null; if (mine) asstSay(k, mine);
-  const r = tasks.start({ dir, text, from: { name, orig: `asst:${k}`, chat: true, staff: a.id, via }, system: assistants.jobSystem(k, name) });
+  const r = tasks.start({ dir, text, from: { name, orig: `asst:${k}`, chat: true, staff: a.id, via }, system: assistants.jobSystem(k, name), env: asstAccount() ? { CLAUDE_CONFIG_DIR: asstAccount() } : null });
   if (!r.ok) { const m = assistants.remember(k, 'sys', tr(`asst.why.${r.code}`, { detail: '' }), { via }); asstSay(k, m); if (via === 'group') chat.say(a.id, m.t, { now: true }); return r; }
   asstJobs.set(r.task.id, k); asstState(k, true);
   if (via === 'group') {   // (in the group, a card with its steps, like any run from the office)
