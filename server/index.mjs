@@ -630,11 +630,13 @@ async function asstReply(k, text, mode) {
   if (mode === 'group') chat.say(a.id, said, { now: true, react: r.ok ? ['❤️', '👍', '😆'] : undefined, reacts: 2 });
 }
 /** A job: a run in the assistant's folder, with its tools and its approvals. via: 'dm' | 'group'. -> { ok, code? } */
+// What a job may do with no one at a keyboard (a -p run cannot ask): read, search and read the web, and make or change files in its own folder (the run's folder is its only place to write). Commands are not among them.
+const ASST_JOB_ARGS = ['--permission-mode', 'acceptEdits', '--allowedTools', 'Read', 'Glob', 'Grep', 'WebSearch', 'WebFetch', 'Edit', 'Write'];
 function asstWork(k, text, via) {
   const a = asstByKey(k), name = asstName(k), dir = assistants.dirOf(k); if (!a) return { ok: false, code: 'empty' };
   if (!dir) return { ok: false, code: 'noDir' };
   const mine = via === 'dm' ? assistants.remember(k, 'me', text, { via, job: true }) : null; if (mine) asstSay(k, mine);
-  const r = tasks.start({ dir, text, from: { name, orig: `asst:${k}`, chat: true, staff: a.id, via }, system: assistants.jobSystem(k, name), env: asstAccount() ? { CLAUDE_CONFIG_DIR: asstAccount() } : null });
+  const r = tasks.start({ dir, text, from: { name, orig: `asst:${k}`, chat: true, staff: a.id, via }, system: assistants.jobSystem(k, name), args: ASST_JOB_ARGS, env: asstAccount() ? { CLAUDE_CONFIG_DIR: asstAccount() } : null });
   if (!r.ok) { const m = assistants.remember(k, 'sys', tr(`asst.why.${r.code}`, { detail: '' }), { via }); asstSay(k, m); if (via === 'group') chat.say(a.id, m.t, { now: true }); return r; }
   asstJobs.set(r.task.id, k); asstState(k, true);
   if (via === 'group') {   // (in the group, a card with its steps, like any run from the office)

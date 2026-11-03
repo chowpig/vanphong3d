@@ -9,6 +9,7 @@ Vanphong3d, a fork of [My Office](https://github.com/khanh020905/my-office). The
 - **Open folder**: an assistant's working folder is chosen with the computer's own folder dialog (Windows, macOS, Linux with zenity), no longer typed.
 
 ### Fixed
+- A job given to an assistant could not use the web or write files (a run with no keyboard cannot ask, so it was refused): it now may read, search and read the web, and create or change files in its own folder; commands stay refused.
 - The assistants answered "OAuth session expired" when the main Claude account was signed out, even with another account signed in: they now use the first account that has a login.
 
 ## 0.4.0

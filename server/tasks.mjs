@@ -27,7 +27,7 @@ export function createTasks({ dataDir, claude, env, onStart, onStep, onDone, onB
   const imgDir = path.join(dataDir, 'task-images');
   const pub = (t) => ({ id: t.id, dir: t.dir, text: t.text.slice(0, 200), at: t.at, from: t.from || null, sid: t.sid || null, mode: t.mode, job: t.job || null });
   /** { dir, text, images: [data URLs], from: { sid, name, fork } | null } -> { ok, task } or { ok: false, code } */
-  function start({ dir, text, images = [], from = null, env: extra = null, system = '', stopAfter = false }) {
+  function start({ dir, text, images = [], from = null, env: extra = null, system = '', stopAfter = false, args: more = [] }) {
     text = String(text || '').trim().slice(0, MAX_TEXT);
     if (!text) return { ok: false, code: 'empty' };
     if (running.size >= max) return { ok: false, code: 'busy' };
@@ -47,7 +47,7 @@ export function createTasks({ dataDir, claude, env, onStart, onStep, onDone, onB
     const prompt = files.length ? `${text}\n\n${files.length > 1 ? 'Attached images' : 'Attached image'} (read ${files.length > 1 ? 'them' : 'it'}):\n${files.join('\n')}` : text;
     const e = { ...env(), ...extra }; for (const k of Object.keys(e)) if (e[k] == null) delete e[k];   // (extra: the conversation's own account; null unsets)
     // (stopAfter: a conversation taken from your editor, stopped once done so the editor takes it up again alone)
-    const t = { id, dir, text, at: now, from, sid: null, result: '', error: '', buf: '', bin, env: e, prompt, system, stopAfter, mode: bg?.want() ? 'bg' : 'print' };
+    const t = { id, dir, text, at: now, from, sid: null, result: '', error: '', buf: '', bin, env: e, prompt, system, stopAfter, more, mode: bg?.want() ? 'bg' : 'print' };
     if (t.mode === 'print' && !runPrint(t)) return { ok: false, code: 'noClaude' };
     running.set(id, t); recent.push(now);
     if (t.mode === 'bg') startBg(t);
@@ -59,7 +59,7 @@ export function createTasks({ dataDir, claude, env, onStart, onStep, onDone, onB
     const { from, system } = t;
     // (from.fork false: carry on that very conversation, one this office started for you, instead of a branch of it)
     const set = printSettings?.(t);
-    const args = ['-p', t.prompt, '--output-format', 'stream-json', '--verbose', ...(from?.sid ? ['--resume', from.sid, ...(from.fork === false ? [] : ['--fork-session'])] : []), ...(system ? ['--append-system-prompt', system] : []), ...(set ? ['--settings', set] : [])];   // (system: a word from the office, outside the conversation)
+    const args = ['-p', t.prompt, '--output-format', 'stream-json', '--verbose', ...(from?.sid ? ['--resume', from.sid, ...(from.fork === false ? [] : ['--fork-session'])] : []), ...(system ? ['--append-system-prompt', system] : []), ...(set ? ['--settings', set] : []), ...(t.more || [])];   // (system: a word from the office, outside the conversation)
     let proc;
     try { proc = spawn(t.bin.file, args, { cwd: t.dir, env: t.env, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true }); }
     catch { return false; }

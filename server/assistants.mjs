@@ -143,7 +143,7 @@ export function createAssistants({ dataDir, claude, env, perHour = 60, timeout =
     } finally { running.delete(key); }
   }
   /** The system words a job run gets: who it is, its area's ledger (the run itself has its tools and its approvals). */
-  const jobSystem = (k, name) => { const a = byKey(k); return `Bạn là ${name}, ${a.role} của chủ văn phòng. Làm đúng việc sếp giao, trong thư mục này. Sổ các cuộc trò chuyện thuộc mảng của bạn:\n${digest(k)}\nKhông bịa; báo lại ngắn gọn bằng tiếng Việt những gì đã làm, file nào đã tạo hoặc sửa.`; };
+  const jobSystem = (k, name) => { const a = byKey(k); return `Bạn là ${name}, ${a.role} của chủ văn phòng. Làm đúng việc sếp giao, trong thư mục này. Sổ các cuộc trò chuyện thuộc mảng của bạn:\n${digest(k)}\nBạn đọc được file, tìm trên web và tạo hoặc sửa file trong thư mục này; bạn KHÔNG chạy được lệnh (Bash): cần lệnh thì nói sếp tự chạy. Không bịa; báo lại ngắn gọn bằng tiếng Việt những gì đã làm, file nào đã tạo hoặc sửa.`; };
 
   return { ASSISTANTS, words, dirOf, setConfig, touch, counts, digest, entriesOf, history, remember, ask, jobSystem, busy: (k) => running.has(k), classify: (e) => classify(e, words()) };
 }

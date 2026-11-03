@@ -21,7 +21,7 @@ There is no tunnel and no path from the internet. The page is plain HTTP, so onl
 - Google translation is off by default (it would send descriptions of Claude's actions to Google).
 - The Chat tool `office_report` sends a title, a project name and a short note only. The office does not read your claude.ai account.
 
-- The assistants (`/api/assistants`): their ledger and chats are kept in `data/assistants/` (never commit it). A question sends Claude Code the ledger's titles, projects and short notes of that assistant's area and your last turns with it, never the conversations. Answers run with no tools at all. A job runs Claude Code in the assistant's working folder, which only this computer can set, with the usual approvals.
+- The assistants (`/api/assistants`): their ledger and chats are kept in `data/assistants/` (never commit it). A question sends Claude Code the ledger's titles, projects and short notes of that assistant's area and your last turns with it, never the conversations. Answers run with no tools at all. A job runs Claude Code in the assistant's working folder, which only this computer can set. With no one to approve, it is allowed to read, search the web, and create or change files in that folder, and nothing else: no commands.
 ## Your responsibilities
 
 - Never commit or share the `data/` folder. It holds the key (`data/token`), the PIN, your project list and the group chat.
