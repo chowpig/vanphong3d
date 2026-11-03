@@ -48,3 +48,4 @@
 .asst-job { background: var(--card-3); color: var(--ink); border: 1px solid var(--line-2); }
 .asst-job:disabled { opacity: .45; cursor: default; }
 @media (max-width: 760px) { .asst-btn { top: 54px; } .asst-panel { top: 100px; max-height: calc(100% - 250px); } }
+.asst-dirrow { display: flex; gap: 6px; align-items: center; } .asst-dirrow .asst-dir { flex: 1; min-width: 0; cursor: default; text-overflow: ellipsis; } .asst-dirrow button { white-space: nowrap; padding: 6px 10px; }

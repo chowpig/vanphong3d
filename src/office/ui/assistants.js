@@ -12,7 +12,7 @@ import { t as tr } from '../../i18n/index.js';
 let list = [], active = 'ketoan', open = false, showSettings = false, step = '';
 const nodes = {};
 const url = () => `/api/assistants${TOKEN ? `?k=${encodeURIComponent(TOKEN)}` : ''}`;
-const post = (body) => fetch(url(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json().catch(() => ({ ok: false }))).catch(() => ({ ok: false }));
+const post = (body, path = '/api/assistants') => fetch(`${path}${TOKEN ? `?k=${encodeURIComponent(TOKEN)}` : ''}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json().catch(() => ({ ok: false }))).catch(() => ({ ok: false }));
 const item = (k) => list.find((x) => x.key === k);
 const colorOf = (k) => ASST.find((a) => a.key === k)?.color || '#888';
 
@@ -73,7 +73,7 @@ function render(scroll = false) {
     nodes.wordsFor = it.key;
     nodes.words.value = (it.words || []).join('\n'); nodes.words.disabled = !!it.fixedWords;
     nodes.wordsNote.textContent = it.fixedWords ? tr('asst.wordsFixed') : tr('asst.wordsHint');
-    nodes.dir.value = it.dir || ''; nodes.dir.disabled = !state.isLocal; nodes.words.disabled = !!it.fixedWords || !state.isLocal;
+    nodes.dir.value = it.dir || ''; nodes.dirOpen.disabled = nodes.dirClear.disabled = !state.isLocal; nodes.words.disabled = !!it.fixedWords || !state.isLocal;
     nodes.save.disabled = !state.isLocal; nodes.saved.textContent = state.isLocal ? '' : tr('asst.macOnly');
   }
   renderStatus();
@@ -101,16 +101,29 @@ export function setup() {
   const note = el('div', 'asst-note', ''); note.textContent = tr('asst.ledgerNote');
   const set = el('div', 'asst-set'); set.hidden = true;
   const words = el('textarea', 'asst-words'); words.rows = 4; const wordsNote = el('div', 'asst-hint');
-  const dir = el('input', 'asst-dir'); dir.type = 'text'; dir.placeholder = tr('asst.dirPlaceholder'); dir.spellcheck = false;
+  const dir = el('input', 'asst-dir'); dir.type = 'text'; dir.placeholder = tr('asst.dirPlaceholder'); dir.readOnly = true;   // (chosen, never typed)
+  const dirRow = el('div', 'asst-dirrow'), dirOpen = el('button', 'asst-save', tr('asst.dirOpen')), dirClear = el('button', 'asst-job', tr('asst.dirClear')); dirOpen.type = dirClear.type = 'button';
+  dirRow.append(dir, dirOpen, dirClear);
   const save = el('button', 'asst-save', tr('asst.save')); save.type = 'button'; const saved = el('span', 'asst-saved');
   save.onclick = async () => {
     const it = item(active); if (!it) return;
-    const body = { op: 'config', key: it.key, dir: dir.value.trim(), ...(it.fixedWords ? {} : { words: words.value.split('\n').map((x) => x.trim()).filter(Boolean) }) };
+    const body = { op: 'config', key: it.key, ...(it.fixedWords ? {} : { words: words.value.split('\n').map((x) => x.trim()).filter(Boolean) }) };
     const r = await post(body);
     saved.textContent = r.ok ? tr('asst.saved') : r.message || tr('asst.badDir');
     if (r.ok) { list = r.list; nodes.wordsFor = ''; render(); saved.textContent = tr('asst.saved'); }
   };
-  set.append(el('label', 'asst-lbl', tr('asst.words')), words, wordsNote, el('label', 'asst-lbl', tr('asst.dir')), dir, el('div', 'asst-hint', tr('asst.dirHint')), el('div', 'asst-row', ''), save, saved);
+  const setDir = async (path) => {
+    const it = item(active); if (!it) return;
+    const r = await post({ op: 'config', key: it.key, dir: path });
+    if (r.ok) { list = r.list; nodes.wordsFor = ''; render(); saved.textContent = tr('asst.saved'); } else saved.textContent = r.message || tr('asst.badDir');
+  };
+  dirOpen.onclick = async () => {
+    saved.textContent = '';
+    const r = await post({ op: 'pick' }, '/api/pick-folder');
+    if (r.ok) setDir(r.path); else saved.textContent = r.message || tr('asst.pick.failed');
+  };
+  dirClear.onclick = () => setDir('');
+  set.append(el('label', 'asst-lbl', tr('asst.words')), words, wordsNote, el('label', 'asst-lbl', tr('asst.dir')), dirRow, el('div', 'asst-hint', tr('asst.dirHint')), el('div', 'asst-row', ''), save, saved);
   const msgs = el('div', 'asst-msgs'), status = el('div', 'asst-status'); status.hidden = true;
   const form = el('div', 'asst-form'), input = el('textarea', 'asst-input'); input.rows = 2;
   const send = el('button', 'asst-send', tr('asst.send')); send.type = 'button'; send.onclick = () => ask(false);
@@ -121,7 +134,7 @@ export function setup() {
   form.lastChild.append(send, job);
   panel.append(head, tabs, sub, note, set, msgs, status, form);
   wrap.append(btn, panel);
-  Object.assign(nodes, { btn, panel, tabs, role, counts, msgs, status, input, job, set, setBtn, words, wordsNote, dir, save, saved, wordsFor: '' });
+  Object.assign(nodes, { btn, panel, tabs, role, counts, msgs, status, input, job, set, setBtn, words, wordsNote, dir, dirOpen, dirClear, save, saved, wordsFor: '' });
   list = ASST.map((a) => ({ key: a.key, id: a.id, name: tr(`asst.name.${a.key}`), words: [], fixedWords: a.key === 'troly', dir: '', counts: { running: 0, open: 0, total: 0 }, busy: false, history: [] }));
   render();
   if (DEMO || new URLSearchParams(location.search).has('demo')) { btn.hidden = true; return; }

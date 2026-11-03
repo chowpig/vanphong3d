@@ -6,6 +6,7 @@ Vanphong3d, a fork of [My Office](https://github.com/khanh020905/my-office). The
 
 ### Added
 - **Right-button drag** slides the view across the floor.
+- **Open folder**: an assistant's working folder is chosen with the computer's own folder dialog (Windows, macOS, Linux with zenity), no longer typed.
 
 ### Fixed
 - The assistants answered "OAuth session expired" when the main Claude account was signed out, even with another account signed in: they now use the first account that has a login.

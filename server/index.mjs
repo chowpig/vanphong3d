@@ -25,6 +25,7 @@ import { createTasks } from './tasks.mjs';
 import { createBg, bgSettings, printSettings } from './bg-sessions.mjs';
 import { steerable, inboundFrom, isSocket, deliver } from './steer.mjs';
 import { createRewriter } from './rewrite.mjs';
+import { createPicker } from './pick-folder.mjs';
 import { createPush } from './push.mjs';
 import { SHOT_ASK, shoot, shotsIn } from './shots.mjs';
 import { createClaudeVersion } from './claude-version.mjs';
@@ -598,6 +599,7 @@ function asstAccount() {
   return nowDir || '';
 }
 const assistants = createAssistants({ dataDir: DATA_DIR, claude: () => findClaude(), env: () => { const e = { ...process.env }, d = asstAccount(); if (d) e.CLAUDE_CONFIG_DIR = d; return e; } });
+const pickFolder = createPicker();
 const asstName = (k) => tr(`asst.name.${k}`);
 const asstJobs = new Map();   // task id -> assistant key
 const asstBusy = new Map();   // assistant key -> how many things it is doing now (an answer, a job)
@@ -2414,7 +2416,11 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
-  if (url.pathname === '/api/assistants' && req.method === 'POST') {   // { op: 'chat', key, text, job } | { op: 'config', key, words?, dir? } (jobs and config only from this computer)
+  if (url.pathname === '/api/pick-folder' && req.method === 'POST') {   // the computer's own folder dialog, on this screen (this computer only)
+    if (!isLoopback(req) || !sameOriginOf(req) || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false, message: tr('server.api.approveOnMac') }); return; }
+    readJson(req, 2000).then(() => pickFolder(tr('asst.dir'))).then((r) => json(res, r.ok ? 200 : 409, r.ok ? r : { ...r, message: tr(`asst.pick.${r.code}`) }));
+    return;
+  }  if (url.pathname === '/api/assistants' && req.method === 'POST') {   // { op: 'chat', key, text, job } | { op: 'config', key, words?, dir? } (jobs and config only from this computer)
     if (!authorized(req, url) || !sameOriginOf(req) || !String(req.headers['content-type'] || '').startsWith('application/json')) { json(res, 403, { ok: false }); return; }
     const mac = isLoopback(req);
     readJson(req, 64_000).then((b) => {
